@@ -1,4 +1,11 @@
+package sokoban;
+
 import com.google.gson.Gson;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.robot.Robot;
+import javafx.scene.shape.Rectangle;
+import sokoban.Cell;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -49,17 +56,19 @@ public class GameBoard {
         columns = parsed[1].length;
 
         //Forming the matrix of Cell objects representing the board
-        //and finding the goal Cells and the initial position of Sokoban
+        //and finding the goal Cells and the initial position of Sokoban and the boxes
         board = new Cell[rows][columns];
         int i; int j;
         for (i = 0; i < rows; i++) {
             for (j = 0; j < columns; j++) {
-                board[i][j] = new Cell(i, j, parsed[i][j]);
+                board[i][j] = new Cell(i, j, parsed[i][j], false);
                 if (parsed[i][j].equals(CellContent.SOKOBAN)) {
-                    sokobanCell = new Cell(i, j, CellContent.SOKOBAN);
+                    sokobanCell = new Cell(i, j, CellContent.SOKOBAN, false);
                 }
                 else if (parsed[i][j].equals(CellContent.GOAL)) {
-                    goalCells.add(new Cell (i, j, CellContent.GOAL));
+                    board[i][j].setContent(CellContent.EMPTY);
+                    board[i][j].setGoal(true);
+                    goalCells.add(board[i][j]);
                 }
             }
         }
@@ -74,7 +83,6 @@ public class GameBoard {
     public boolean takeAction (Action action) {
         Cell neighbour = new Cell();
         Cell boxNeighbour = new Cell();
-
 /*
         Depending on the action given, we update the cells involved in the possible changes together with Sokoban's,
         e.g. if we were told to move up, the two cells involved in the "transaction" would be the north neighbour of Sokoban,
@@ -91,7 +99,7 @@ public class GameBoard {
             }
             case MOVE_DOWN: {
                 neighbour = board[sokobanCell.getRow() + 1][sokobanCell.getColumn()];
-                if (sokobanCell.getRow() - 2 < board.length)
+                if (sokobanCell.getRow() + 2 < board.length)
                     boxNeighbour = board[sokobanCell.getRow() + 2][sokobanCell.getColumn()];
 
                 break;
@@ -105,7 +113,7 @@ public class GameBoard {
             }
             case MOVE_RIGHT: {
                 neighbour = board[sokobanCell.getRow()][sokobanCell.getColumn() + 1];
-                if (sokobanCell.getColumn() - 2 < board[1].length)
+                if (sokobanCell.getColumn() + 2 < board[1].length)
                     boxNeighbour = board[sokobanCell.getRow()][sokobanCell.getColumn() + 2];
 
                 break;
@@ -114,7 +122,7 @@ public class GameBoard {
         }
 
         //if we were told to move on a free cell, we just swap Sokoban's cell content with that free cell
-        if (neighbour.getContent() == CellContent.EMPTY || neighbour.getContent() == CellContent.GOAL) {
+        if (neighbour.getContent() == CellContent.EMPTY) {
             swapCells(neighbour, sokobanCell);
             return true;
         }
@@ -123,7 +131,7 @@ public class GameBoard {
         }
         else if (neighbour.getContent() == CellContent.BOX) {
             //we were told to move "against" a box
-            if (boxNeighbour.getContent() == CellContent.EMPTY || neighbour.getContent() == CellContent.GOAL) {
+            if (boxNeighbour.getContent() == CellContent.EMPTY) {
                 //the box's neighbour is a free cell, so the box moves there and Sokoban moves to the cell where the box was
                 swapCells(neighbour, boxNeighbour);
                 swapCells(neighbour, sokobanCell);
@@ -150,6 +158,57 @@ public class GameBoard {
         else if (second.getContent() == CellContent.SOKOBAN) {
             sokobanCell = second.clone();
         }
+    }
+
+/*
+    Checks for the victory conditions: every goal cell must contain a box
+*/
+    public boolean checkVictory() {
+        for (Cell c : goalCells) {
+            if (c.getContent() != CellContent.BOX)
+                return false;
+        }
+        return true;
+    }
+
+    public Cell getNorth(Cell given) {
+        Cell neighbour = new Cell();
+        neighbour = board[given.getRow() - 1][given.getColumn()];
+        return neighbour;
+    }
+
+    public Cell getSouth(Cell given) {
+        Cell neighbour = new Cell();
+        neighbour = board[given.getRow() + 1][given.getColumn()];
+        return neighbour;
+    }
+
+    public Cell getEast(Cell given) {
+        Cell neighbour = new Cell();
+        neighbour = board[given.getRow()][given.getColumn() + 1];
+        return neighbour;
+    }
+
+    public Cell getWest(Cell given) {
+        Cell neighbour = new Cell();
+        neighbour = board[given.getRow()][given.getColumn() - 1];
+        return neighbour;
+    }
+
+    public Cell getSokobanCell() {
+        return sokobanCell;
+    }
+
+    public Cell[][] getBoard () {
+        return board;
+    }
+
+    public int getRows() {
+        return rows;
+    }
+
+    public int getColumns() {
+        return columns;
     }
 
 /*

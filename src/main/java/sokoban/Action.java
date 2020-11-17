@@ -1,3 +1,5 @@
+package sokoban;
+
 /*
 Enumerates the possible actions on the board
 */
