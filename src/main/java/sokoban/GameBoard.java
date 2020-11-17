@@ -211,16 +211,4 @@ public class GameBoard {
         return columns;
     }
 
-/*
-    Just a temporary print method to debug action handling until I have a GUI
-*/
-    public void printBoard() {
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                System.out.print(board[i][j].toString() + " ");
-            }
-            System.out.println("\n");
-        }
-    }
-
 }
