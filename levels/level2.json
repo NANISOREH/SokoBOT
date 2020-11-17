@@ -1,0 +1,11 @@
+[
+  ["WALL","WALL","WALL","WALL"],
+  ["WALL","SOKOBAN","GOAL","WALL"],
+  ["WALL","BOX","EMPTY","WALL"],
+  ["WALL","EMPTY","EMPTY","WALL"],
+  ["WALL","EMPTY","BOX","WALL"],
+  ["WALL","GOAL","EMPTY","WALL"],
+  ["WALL","EMPTY","EMPTY","WALL"],
+  ["WALL","EMPTY","BOX","WALL"],
+  ["WALL","WALL","WALL","WALL"]
+]
