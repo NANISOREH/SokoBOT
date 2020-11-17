@@ -1,3 +1,6 @@
+/*
+This class models a cell on the board
+*/
 public class Cell {
     private int row;
     private int column;

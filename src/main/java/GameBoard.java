@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 
 /*
-This class models a level of the game, and encapsulates the actions you can take to alter the state of the level itself.
+This class contains the logic of the game, and encapsulates both the state of the board and the actions you can take to alter it.
 The starting condition of the level is read from a json file.
 */
-public class Level {
+public class GameBoard {
     Logger log = Logger.getLogger("Level");
     private Cell[][] board;
     private Cell sokobanCell = null;
@@ -19,13 +19,13 @@ public class Level {
     private int columns;
 
 /*
-    Level constructor, reads and parses a level from a json file.
-    The client of the class can choose which level to load via the number parameter.
+    GameBoard constructor, reads and parses a level from a json file, then uses parsed data to initialize the instance variables.
+    The client of the class can choose which level to load via the level parameter.
 */
-    public Level(int number){
+    public GameBoard(int level){
         //Reading the json file into a string
         StringBuilder jsonBuilder = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new FileReader("levels/level" + number + ".json")))
+        try (BufferedReader br = new BufferedReader(new FileReader("levels/level" + level + ".json")))
         {
             String sCurrentLine;
             while ((sCurrentLine = br.readLine()) != null)
@@ -48,8 +48,8 @@ public class Level {
         rows = parsed.length;
         columns = parsed[1].length;
 
-        //Forming the matrix of Cell object representing the board
-        //and finding the initial position of Sokoban
+        //Forming the matrix of Cell objects representing the board
+        //and finding the goal Cells and the initial position of Sokoban
         board = new Cell[rows][columns];
         int i; int j;
         for (i = 0; i < rows; i++) {

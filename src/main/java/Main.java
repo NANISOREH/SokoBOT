@@ -1,14 +1,14 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+
 
 public class Main {
     public static void main(String[] args){
 
-        Level level = new Level(1);
+        GameBoard level = new GameBoard(1);
         level.takeAction(Action.MOVE_UP);
+        level.takeAction(Action.MOVE_LEFT);
+        level.takeAction(Action.MOVE_LEFT);
+        level.takeAction(Action.MOVE_DOWN);
+        level.takeAction(Action.MOVE_DOWN);
         level.printBoard();
     }
 }
