@@ -1,14 +1,10 @@
 package solver;
 
-import sample.Main;
 import sokoban.Action;
 import sokoban.Cell;
 import sokoban.CellContent;
 import sokoban.GameBoard;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class SokobanSolver {
