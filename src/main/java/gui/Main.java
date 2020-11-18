@@ -1,4 +1,4 @@
-package sample;
+package gui;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -9,18 +9,22 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
-import sokoban.Action;
-import sokoban.Cell;
-import sokoban.GameBoard;
-import solver.SokobanSolver;
+import sokoban.game.Action;
+import sokoban.game.Cell;
+import sokoban.game.GameBoard;
+import sokoban.solver.SokobanSolver;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +34,20 @@ public class Main extends Application {
     Logger log = Logger.getLogger("Main");
     private static Rectangle[][] tiles;
     private static GameBoard game;
+    private static Image sokoban;
+    private static Image box;
+    private static Image wall;
+    private static Image goal;
+    static {
+        try {
+            sokoban = new Image(new FileInputStream("src/main/resources/sokoban.png"));
+            box = new Image(new FileInputStream("src/main/resources/cassa.png"));
+            wall = new Image(new FileInputStream("src/main/resources/wall.png"));
+            goal = new Image(new FileInputStream("src/main/resources/goal.png"));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public void start(Stage primaryStage) {
@@ -40,6 +58,8 @@ public class Main extends Application {
         for (int i = 1; i <= new File("levels").listFiles().length; i++) {
             levels.add(i);
         }
+        choiceBox.setValue(levels.get(0));
+
         VBox layout = new VBox();
         layout.setAlignment(Pos.CENTER);
         layout.setSpacing(15);
@@ -47,22 +67,24 @@ public class Main extends Application {
         TextField text = new TextField();
         text.setMaxWidth(100);
         Button button = new Button("Start");
+
         layout.getChildren().addAll(label1, choiceBox, button);
         Scene menu = new Scene(layout, 300, 300);
 
-        //The button on the first scene triggers the switch to the gameplay scene and starts the game
+        //The button on the first scene triggers the switch to the gameplay scene and starts the sokoban.game
         button.setOnAction(e -> {
-            //Creating, configuring and finally setting the scene for the game itself
+            //Creating, configuring and finally setting the scene for the sokoban.game itself
             game = new GameBoard(choiceBox.getValue());
             GridPane gameBoard = createBoard(game);
             Scene gameplay = new Scene(gameBoard);
+            primaryStage.setResizable(false);
             primaryStage.setScene(gameplay);
 
             //Scheduling an update of the board every second
             ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
             executorService.scheduleAtFixedRate(Main::updateBoard, 0, 1, TimeUnit.SECONDS);
 
-            //Starting the thread that will execute the solver and actually move sokoban on the board
+            //Starting the thread that will execute the sokoban.solver and actually move sokoban on the board
             Thread t1 = new Thread(() -> {
                 try {
                     SokobanSolver.solve(game);
@@ -82,7 +104,7 @@ public class Main extends Application {
         //setting and showing the primary stage for the first start of the application
         primaryStage.setTitle("Sokoban");
         primaryStage.setScene(menu);
-        //primaryStage.setResizable(false);
+        primaryStage.setResizable(false);
         primaryStage.show();
     }
 
@@ -93,6 +115,7 @@ public class Main extends Application {
 
     private static GridPane createBoard(GameBoard game) {
         GridPane gameBoard = new GridPane();
+        //gameBoard.setBackground(new Background());
         Cell[][] board = game.getBoard();
         tiles = new Rectangle[game.getRows()][game.getColumns()];
 
@@ -102,20 +125,17 @@ public class Main extends Application {
                 Rectangle tile = new Rectangle(50, 50);
 
                 switch (board[i][j].getContent()) {
-                    case WALL : tile.setFill(Color.SLATEGRAY);
-                        break;
-                    case EMPTY: if (!board[i][j].isGoal()) tile.setFill(Color.BEIGE);
-                                else tile.setFill(Color.TOMATO);
-                        break;
-                    case GOAL:  tile.setFill(Color.TOMATO);
-                        break;
-                    case BOX:   tile.setFill(Color.YELLOW);
-                        break;
-                    case SOKOBAN: tile.setFill(Color.BLUE);
-                        break;
+                    case WALL : tile.setFill(new ImagePattern(wall));
+                                break;
+                    case EMPTY: if (board[i][j].isGoal()) tile.setFill(new ImagePattern(goal));
+                                break;
+                    case BOX:   tile.setFill(new ImagePattern(box));
+                                break;
+                    case SOKOBAN: tile.setFill(new ImagePattern(sokoban));
+                                break;
                 }
 
-                tile.setStroke(Color.BLACK);
+                //tile.setStroke(Color.DIMGREY);
 
                 tiles[i][j] = tile;
                 gameBoard.add(tile, j, i);
@@ -133,15 +153,13 @@ public class Main extends Application {
                 Rectangle tile = tiles[i][j];
 
                 switch (board[i][j].getContent()) {
-                    case WALL : tile.setFill(Color.SLATEGRAY);
-                        break;
-                    case EMPTY: if (!board[i][j].isGoal()) tile.setFill(Color.BEIGE);
-                                else tile.setFill(Color.TOMATO);
-                        break;
-                    case BOX:   tile.setFill(Color.YELLOW);
-                        break;
-                    case SOKOBAN: tile.setFill(Color.BLUE);
-                        break;
+                    case EMPTY: if (!board[i][j].isGoal()) tile.setFill(Color.WHITE);
+                                else tile.setFill(new ImagePattern(goal));
+                                break;
+                    case BOX:   tile.setFill(new ImagePattern(box));
+                                break;
+                    case SOKOBAN: tile.setFill(new ImagePattern(sokoban));
+                                break;
                 }
 
                 tiles[i][j] = tile;

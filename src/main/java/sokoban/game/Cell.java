@@ -1,4 +1,4 @@
-package sokoban;
+package sokoban.game;
 
 /*
 This class models a cell on the board
