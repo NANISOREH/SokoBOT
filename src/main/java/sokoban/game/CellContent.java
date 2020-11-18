@@ -1,4 +1,4 @@
-package sokoban;
+package sokoban.game;
 
 /*
 Enumerates the possible content of a cell

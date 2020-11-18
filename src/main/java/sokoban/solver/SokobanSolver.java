@@ -1,9 +1,9 @@
-package solver;
+package sokoban.solver;
 
-import sokoban.Action;
-import sokoban.Cell;
-import sokoban.CellContent;
-import sokoban.GameBoard;
+import sokoban.game.Action;
+import sokoban.game.Cell;
+import sokoban.game.CellContent;
+import sokoban.game.GameBoard;
 
 import java.util.logging.Logger;
 
@@ -19,7 +19,7 @@ public class SokobanSolver {
     int a = (int) (4 * Math.random());
 
 /*
-    Temporary mock solver created for testing purposes
+    Temporary mock sokoban.solver created for testing purposes
 */
     private static void mockSolver() throws InterruptedException {
         Cell sokobanCell;

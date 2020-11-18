@@ -6,6 +6,6 @@
   ["WALL","EMPTY","BOX","WALL"],
   ["WALL","GOAL","EMPTY","WALL"],
   ["WALL","EMPTY","EMPTY","WALL"],
-  ["WALL","EMPTY","BOX","WALL"],
+  ["WALL","EMPTY","EMPTY","WALL"],
   ["WALL","WALL","WALL","WALL"]
 ]

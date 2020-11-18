@@ -1,11 +1,6 @@
-package sokoban;
+package sokoban.game;
 
 import com.google.gson.Gson;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.robot.Robot;
-import javafx.scene.shape.Rectangle;
-import sokoban.Cell;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -14,7 +9,7 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 
 /*
-This class contains the logic of the game, and encapsulates both the state of the board and the actions you can take to alter it.
+This class contains the logic of the sokoban.game, and encapsulates both the state of the board and the actions you can take to alter it.
 The starting condition of the level is read from a json file.
 */
 public class GameBoard {

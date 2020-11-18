@@ -5,5 +5,5 @@ module sample {
     requires java.logging;
     requires com.google.gson;
 
-    opens sample;
+    opens gui;
 }
