@@ -16,26 +16,16 @@ Seeing it from the point of view of the search algorithms, an instance of this c
 In fact, GameBoard objects are duplicated and then altered whenever it's needed to expand a state to obtain all its neighbours.
 */
 public class GameBoard implements Cloneable{
-    Logger log = Logger.getLogger("Level");
+    Logger log = Logger.getLogger("GameBoard");
     private Cell[][] board;
     private Cell sokobanCell = null;
     private ArrayList<Cell> goalCells = new ArrayList<>();
+    private ArrayList<Cell> boxCells = new ArrayList<>();
     private int rows;
     private int columns;
 
-/*
-    GameBoard standard constructor
-*/
-    public GameBoard(Cell[][] board, Cell sokobanCell, ArrayList<Cell> goalCells, int rows, int columns) {
-        this.board = board;
-        this.sokobanCell = sokobanCell;
-        this.goalCells = goalCells;
-        this.rows = rows;
-        this.columns = columns;
-    }
-
     /*
-        GameBoard alternate constructor, reads and parses a level from a json file, then uses parsed data to initialize the instance variables.
+        GameBoard constructor, reads and parses a level from a json file, then uses parsed data to initialize the instance variables.
         The client of the class can choose which level to load via the level parameter.
     */
     public GameBoard(int level){
@@ -74,21 +64,26 @@ public class GameBoard implements Cloneable{
                 if (parsed[i][j].equals(CellContent.SOKOBAN)) {
                     sokobanCell = new Cell(i, j, CellContent.SOKOBAN, false);
                 }
+                //Goal tiles are treated as if they were empty tiles with a "goal" boolean set to true
+                //because they can also have Sokoban or boxes on them, so I'd like to avoid setting double content
                 else if (parsed[i][j].equals(CellContent.GOAL)) {
                     board[i][j].setContent(CellContent.EMPTY);
                     board[i][j].setGoal(true);
                     goalCells.add(board[i][j]);
+                }
+                else if (parsed[i][j].equals(CellContent.BOX)) {
+                    boxCells.add(board[i][j]);
                 }
             }
         }
 
     }
 
-/*
-    Receives an action from the client and modifies the state of the level based on said action.
-    Returns true if the action given actually modified the state of the board, or false if it didn't,
-    e.g. if the action told Sokoban to move towards a cell occupied by a wall.
-*/
+    /*
+        Receives an action from the client and modifies the state of the level based on said action.
+        Returns true if the action given actually modified the state of the board, or false if it didn't,
+        e.g. if the action told Sokoban to move towards a cell occupied by a wall.
+    */
     public boolean takeAction (Action action) throws CloneNotSupportedException {
         Cell neighbour = new Cell();
         Cell boxNeighbour = new Cell();
@@ -100,31 +95,23 @@ public class GameBoard implements Cloneable{
         switch (action) {
 
             case MOVE_UP: {
-                neighbour = board[sokobanCell.getRow() - 1][sokobanCell.getColumn()];
-                if (sokobanCell.getRow() - 2 >= 0)
-                    boxNeighbour = board[sokobanCell.getRow() - 2][sokobanCell.getColumn()];
-
+                neighbour = getNorth(sokobanCell);
+                boxNeighbour = getNorth(neighbour);
                 break;
             }
             case MOVE_DOWN: {
-                neighbour = board[sokobanCell.getRow() + 1][sokobanCell.getColumn()];
-                if (sokobanCell.getRow() + 2 < board.length)
-                    boxNeighbour = board[sokobanCell.getRow() + 2][sokobanCell.getColumn()];
-
+                neighbour = getSouth(sokobanCell);
+                boxNeighbour = getSouth(neighbour);
                 break;
             }
             case MOVE_LEFT: {
-                neighbour = board[sokobanCell.getRow()][sokobanCell.getColumn() - 1];
-                if (sokobanCell.getColumn() - 2 >= 0)
-                    boxNeighbour = board[sokobanCell.getRow()][sokobanCell.getColumn() - 2];
-
+                neighbour = getWest(sokobanCell);
+                boxNeighbour = getWest(neighbour);
                 break;
             }
             case MOVE_RIGHT: {
-                neighbour = board[sokobanCell.getRow()][sokobanCell.getColumn() + 1];
-                if (sokobanCell.getColumn() + 2 < board[1].length)
-                    boxNeighbour = board[sokobanCell.getRow()][sokobanCell.getColumn() + 2];
-
+                neighbour = getEast(sokobanCell);
+                boxNeighbour = getEast(neighbour);
                 break;
             }
 
@@ -146,32 +133,46 @@ public class GameBoard implements Cloneable{
                 swapCells(neighbour, sokobanCell);
                 return true;
             }
-            else //the box's neighbour is a wall or another box, we can't move
+            else //the box's neighbour is a wall or another box, we can't move it
                 return false;
         }
 
         return false;
     }
 
-/*
-    Private helper method that swaps the content of two cells and updates the instance variable with Sokoban position
-*/
+    /*
+        Private helper method that swaps the content of two cells and updates the instance variable with Sokoban position
+    */
     private void swapCells (Cell first, Cell second) throws CloneNotSupportedException {
+
+        //Swapping the content of the two cells
         Cell temp = (Cell) board[first.getRow()][first.getColumn()].clone();
         board[first.getRow()][first.getColumn()].setContent(second.getContent());
         board[second.getRow()][second.getColumn()].setContent(temp.getContent());
 
+        //Sokoban surely changed position after the swap, we update the instance variable accordingly
         if (first.getContent() == CellContent.SOKOBAN) {
             sokobanCell = (Cell) first.clone();
         }
         else if (second.getContent() == CellContent.SOKOBAN) {
             sokobanCell = (Cell) second.clone();
         }
+
+        //if one of the two cells contains a box after the swap, it means that it was in the other one before:
+        //we update the boxCells structure by removing the old box cell and adding the new one
+        if (first.getContent() == CellContent.BOX) {
+            boxCells.remove(second);
+            boxCells.add(first);
+        }
+        else if (second.getContent() == CellContent.BOX) {
+            boxCells.remove(first);
+            boxCells.add(second);
+        }
     }
 
-/*
-    Checks for the victory conditions: every goal cell must contain a box
-*/
+    /*
+        Checks for the victory conditions: every goal cell must contain a box
+    */
     public boolean checkVictory() {
         for (Cell c : goalCells) {
             if (c.getContent() != CellContent.BOX)
@@ -180,10 +181,10 @@ public class GameBoard implements Cloneable{
         return true;
     }
 
-/*
-    Returns the number of boxes that are currently in a goal cell
-*/
-    public int checkPartialVictory() {
+    /*
+        Returns the number of boxes that are currently in a goal cell
+    */
+    public int countReachedGoals() {
         int count = 0;
         for (Cell c : goalCells) {
             if (c.getContent() == CellContent.BOX)
@@ -192,28 +193,57 @@ public class GameBoard implements Cloneable{
         return count;
     }
 
+    /*
+        Takes a given cell on the board, returns the adjacent cell to the north of it
+    */
     public Cell getNorth(Cell given) {
-        Cell neighbour = new Cell();
-        neighbour = board[given.getRow() - 1][given.getColumn()];
-        return neighbour;
+        Cell neighbour;
+
+        if (given.getRow() - 1 >= 0) {
+            neighbour = board[given.getRow() - 1][given.getColumn()];
+            return neighbour;
+        }
+        else
+            return null;
     }
 
+    /*
+        Takes a cell on the board, returns the adjacent cell to the south of it
+    */
     public Cell getSouth(Cell given) {
-        Cell neighbour = new Cell();
-        neighbour = board[given.getRow() + 1][given.getColumn()];
-        return neighbour;
+        Cell neighbour;
+        if (given.getRow() + 1 < rows) {
+            neighbour = board[given.getRow() + 1][given.getColumn()];
+            return neighbour;
+        }
+        else
+            return null;
     }
 
+    /*
+        Takes a cell on the board, returns the adjacent cell to the east of it
+    */
     public Cell getEast(Cell given) {
-        Cell neighbour = new Cell();
-        neighbour = board[given.getRow()][given.getColumn() + 1];
-        return neighbour;
+        Cell neighbour;
+        if (given.getColumn() + 1 < columns) {
+            neighbour = board[given.getRow()][given.getColumn() + 1];
+            return neighbour;
+        }
+        else
+            return null;
     }
 
+    /*
+        Takes a cell on the board, returns the adjacent cell to the west of it
+    */
     public Cell getWest(Cell given) {
-        Cell neighbour = new Cell();
-        neighbour = board[given.getRow()][given.getColumn() - 1];
-        return neighbour;
+        Cell neighbour;
+        if (given.getColumn() - 1 >= 0) {
+            neighbour = board[given.getRow()][given.getColumn() - 1];
+            return neighbour;
+        }
+        else
+            return null;
     }
 
     public Cell getSokobanCell() {
@@ -244,13 +274,24 @@ public class GameBoard implements Cloneable{
         this.goalCells = goalCells;
     }
 
+    public ArrayList<Cell> getBoxCells() {
+        return boxCells;
+    }
 
+    public void setBoxCells(ArrayList<Cell> boxCells) {
+        this.boxCells = boxCells;
+    }
+
+    /*
+        Returns a deep copy of a GameBoard object
+    */
     @Override
     public Object clone() throws CloneNotSupportedException {
         Object obj = super.clone();
         GameBoard cloned = (GameBoard) obj;
         cloned.sokobanCell = new Cell();
         cloned.goalCells = new ArrayList<Cell>();
+        cloned.boxCells = new ArrayList<>();
 
         Cell [][] copy = new Cell[rows][columns];
         for(int i = 0; i < rows; i++) {
@@ -260,8 +301,9 @@ public class GameBoard implements Cloneable{
                     cloned.sokobanCell = copy[i][j];
                 if (copy[i][j].isGoal())
                     cloned.goalCells.add(copy[i][j]);
+                if (copy[i][j].getContent() == CellContent.BOX)
+                    cloned.boxCells.add(copy[i][j]);
             }
-
         }
 
         cloned.setBoard(copy);
