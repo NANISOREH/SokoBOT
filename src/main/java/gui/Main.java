@@ -21,6 +21,7 @@ import sokoban.game.Action;
 import sokoban.game.Cell;
 import sokoban.game.GameBoard;
 import sokoban.solver.SokobanSolver;
+import sokoban.solver.Strategy;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -77,22 +78,23 @@ public class Main extends Application {
             game = new GameBoard(choiceBox.getValue());
             GridPane gameBoard = createBoard(game);
             Scene gameplay = new Scene(gameBoard);
-            primaryStage.setResizable(false);
+            //primaryStage.setResizable(false);
             primaryStage.setScene(gameplay);
-
-            //Scheduling an update of the board every second
-            ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-            executorService.scheduleAtFixedRate(Main::updateBoard, 0, 1, TimeUnit.SECONDS);
 
             //Starting the thread that will execute the sokoban.solver and actually move sokoban on the board
             Thread t1 = new Thread(() -> {
                 try {
-                    SokobanSolver.solve(game);
-                } catch (InterruptedException e1) {
+                    SokobanSolver.solve(game, Strategy.IDBFS);
+                    //SokobanSolver.solve(game, Strategy.IDDFS);
+                } catch (InterruptedException | CloneNotSupportedException e1) {
                     e1.printStackTrace();
                 }
             });
             t1.start();
+
+            //Scheduling an update of the board every second
+            ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+            executorService.scheduleAtFixedRate(Main::updateBoard, 0, 1, TimeUnit.SECONDS);
         });
 
         //Closing the application when the window gets closed
@@ -104,7 +106,7 @@ public class Main extends Application {
         //setting and showing the primary stage for the first start of the application
         primaryStage.setTitle("Sokoban");
         primaryStage.setScene(menu);
-        primaryStage.setResizable(false);
+        //primaryStage.setResizable(false);
         primaryStage.show();
     }
 
@@ -167,7 +169,7 @@ public class Main extends Application {
         }
     }
 
-    private void playManually(Scene gameplay) {
+    /*private void playManually(Scene gameplay) {
         gameplay.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
             switch (keyEvent.getCode()) {
                 case UP : {
@@ -203,5 +205,5 @@ public class Main extends Application {
                 }
             }
         });
-    }
+    }*/
 }
