@@ -8,9 +8,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Logger;
 
-public class IDBFS {
-    final static int breadthLimit = 90;
-
+/*
+Implementation of a simple BFS search
+*/
+public class BFS {
     private static Logger log = Logger.getLogger("IDBFS");
 
     public static ArrayList<Action> launch(GameBoard game) throws CloneNotSupportedException {
@@ -29,7 +30,7 @@ public class IDBFS {
         //I'm using an iterative version: every node in the frontier is expanded and the children (the next frontier) are added
         //to a second utility structure that will be expanded the same way on the next iteration.
         //The stopping condition is, of course, finding a node that represents a winning state.
-        for (int j=0;  j < breadthLimit; j++) {
+        while (true) {
             log.info("tree size " + tree.size() + "\nfront size " + front.size());
             ArrayList<Node> nextLevel = new ArrayList<>();
             for (Node n : front) {
@@ -55,7 +56,5 @@ public class IDBFS {
 
         }
 
-        return null;
     }
-
 }

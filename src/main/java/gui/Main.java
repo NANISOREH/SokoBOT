@@ -133,7 +133,12 @@ public class Main extends Application {
 
         //You can click on the board to get back to the menu
         gameBoard.setOnMouseClicked(keyEvent -> {
-                primaryStage.setScene(menu);
+            try {
+                t1.join(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            primaryStage.setScene(menu);
         });
     }
 

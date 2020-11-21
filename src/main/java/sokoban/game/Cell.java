@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
+import static java.lang.StrictMath.abs;
+
 /*
 This class models a cell on the board
 */
@@ -88,6 +90,12 @@ public class Cell implements Cloneable, Serializable {
         return cloned;
     }
 
+/*
+    Returns the Manhattan distance between the argument cell and the parameter cell
+*/
+    public int manhattanDistance (Cell target) {
+        return abs(this.getColumn() - target.getColumn()) + abs(this.getRow() - target.getRow());
+    }
 
     public String toString() {
         switch (content) {
