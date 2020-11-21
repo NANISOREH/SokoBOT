@@ -13,7 +13,9 @@ import java.util.Collection;
 import java.util.logging.Logger;
 
 /*This class represents a node in the search graph.
-It stores a Node's parent, the information about the game state it models and the history of actions that led to said state.*/
+It stores a Node's parent, the information about the game state it models and the history of actions that led to said state.
+The class also stores a transposition table of the visited nodes as a static variable.
+*/
 public class Node {
     private static Logger log = Logger.getLogger("Node");
     private static ArrayList<Long> transpositionTable = new ArrayList<>();
@@ -30,19 +32,7 @@ public class Node {
         this.game = game;
         this.actionHistory = actions;
         this.visited = false;
-    }
-
-/*
-    Generates a new game state by executing a move and updates the action history.
-    Returns true if a new state was reachable by executing the input move,
-    false if the move was not legal and there was no state transition.
-*/
-    public boolean executeMove (Action move) throws CloneNotSupportedException {
-        if (game.takeAction(move)) {
-            actionHistory.add(move);
-            return true;
-        }
-        return false;
+        this.pathCost = 0;
     }
 
     //Node expansion method
@@ -58,30 +48,48 @@ public class Node {
         ArrayList<Node> expanded = new ArrayList<>();
 
         Node first = new Node(this, (GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
+        first.setPathCost(this.pathCost);
         if (first.executeMove(Action.MOVE_DOWN) && !transpositionTable.contains(first.hash())) {
             expanded.add(first);
             transpositionTable.add(first.hash());
         }
 
         Node second = new Node(this, (GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
+        second.setPathCost(this.pathCost);
         if (second.executeMove(Action.MOVE_UP) && !transpositionTable.contains(second.hash())) {
             expanded.add(second);
             transpositionTable.add(second.hash());
         }
 
         Node third = new Node(this, (GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
+        third.setPathCost(this.pathCost);
         if (third.executeMove(Action.MOVE_LEFT) && !transpositionTable.contains(third.hash())) {
             expanded.add(third);
             transpositionTable.add(third.hash());
         }
 
         Node fourth = new Node(this, (GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
+        fourth.setPathCost(this.pathCost);
         if (fourth.executeMove(Action.MOVE_RIGHT)&& !transpositionTable.contains(fourth.hash())) {
             expanded.add(fourth);
             transpositionTable.add(fourth.hash());
         }
 
         return expanded;
+    }
+
+    /*
+    Generates a new game state by executing a move and updates the action history.
+    Returns true if a new state was reachable by executing the input move,
+    false if the move was not legal and there was no state transition.
+*/
+    private boolean executeMove (Action move) throws CloneNotSupportedException {
+        if (game.takeAction(move)) {
+            actionHistory.add(move);
+            pathCost++;
+            return true;
+        }
+        return false;
     }
 
     public Node getParent() {
@@ -160,5 +168,9 @@ public class Node {
         byte[] hashed = md.digest(toHash);
         BigInteger no = new BigInteger(1, hashed);
         return no.longValue();
+    }
+
+    public static void resetTranspositionTable () {
+        transpositionTable = new ArrayList<>();
     }
 }
