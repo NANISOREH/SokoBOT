@@ -4,53 +4,62 @@ import sokoban.game.Action;
 import sokoban.game.GameBoard;
 import sokoban.solver.Node;
 import java.util.ArrayList;
+import java.util.Stack;
 import java.util.logging.Logger;
 
 public class IDDFS {
     private static Logger log = Logger.getLogger("IDDFS");
-    private static ArrayList<Action> solution = null;
-    private static ArrayList<Action> partialSolution = null;
-    private static int currentBest = 0;
-    private static final int depthLimit = 5;
-    private static ArrayList<Action> oracle = new ArrayList<>();
+    private static ArrayList<Action> solution;
+    private static int depthLimit = 100;
 
     public static ArrayList<Action> launch(GameBoard game) throws CloneNotSupportedException {
 
-        //The node representing the initial state of the GameBoard is passed to the recursive method
+        //resetting the solution in case this method was already called in this execution of the program
+        solution = new ArrayList<>();
+
+        //The node representing the initial state of the GameBoard is pushed into the search stack
         Node root = new Node(null, game, new ArrayList<Action>());
-        recursiveComponent(root, depthLimit);
+        Stack<Node> search = new Stack();
+        search.push(root);
 
-        return solution;
-    }
+        //Algorithm cycle
+        //It will keep popping off the stack until it's empty
+        while (!search.isEmpty()) {
+            Node toCheck = search.pop();
+            toCheck.setVisited(true);
 
-    private static void recursiveComponent(Node current, int limit) throws CloneNotSupportedException {
-        current.setVisited(true);
-
-        if (current.getGame().checkVictory()) { // We found a solution, stop the recursion!
-            if (solution!= null && current.getActionHistory().size() < solution.size()) {
-                log.info("" + current.getActionHistory());
-                solution = current.getActionHistory();
+            //We will stop expanding the nodes if we reached the depth limit
+            if (toCheck.getPathCost() > depthLimit) {
+                continue;
             }
-            return;
-        }
-        if (limit == 0) { // We reached the depth limit, stop the recursion!
-            return;
+
+            //Breaking the cycle if we found a solution
+            //It's not guaranteed to be the best one, but it should be pretty close
+            //because if the lower bound estimate was done correctly, we surely didn't go too much deeper than needed
+            if (toCheck.getGame().checkVictory()) {
+                log.info(toCheck.getPathCost() + ": " + toCheck.getActionHistory());
+                solution = new ArrayList<>((ArrayList<Action>) toCheck.getActionHistory().clone());
+                break;
+            }
+
+            //Expanding the node by generating his neighbours
+            //If they weren't visited already, they are pushed on top of the stack
+            //Under the hood, the expand() method is also checking for duplicate hashes in a transposition table,
+            //trying to discard nodes representing states that we already encountered.
+            //This is necessary because of the way Sokoban works: you can find yourself in the same state despite
+            //following different search branches, but duplicate states in different nodes of the search tree are not useful.
+            ArrayList <Node> neighbours = new ArrayList<>();
+            neighbours.addAll(toCheck.expand());
+            for (Node n : neighbours) {
+                if (!n.isVisited()) {
+                    search.push(n);
+                }
+            }
+
         }
 
-        else if (current.getGame().checkPartialVictory() > currentBest) {
-            // We didn't find a solution but the current sequence of actions quite literally checks some boxes,
-            // so we keep track of it
-            currentBest = current.getGame().checkPartialVictory();
-            partialSolution = current.getActionHistory();
-        }
-
-        ArrayList <Node> front = new ArrayList<>();
-        front.addAll(current.expand());
-
-        for (Node n : front) {
-            if (!n.isVisited())
-                recursiveComponent(n, limit -1);
-        }
+        if (!solution.isEmpty()) return solution;
+        else return null;
     }
 
 }
