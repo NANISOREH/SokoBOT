@@ -3,6 +3,7 @@ package gui;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -10,6 +11,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
@@ -50,19 +52,24 @@ public class Main extends Application {
             e.printStackTrace();
         }
     }
+    private ChoiceBox<Integer> level = new ChoiceBox<>();
+    private ChoiceBox<Strategy> algorithm = new ChoiceBox<>();
+    private Scene menu;
+    private Scene gameScene;
+    private GridPane gameBoard;
+
+
 
     @Override
     public void start(Stage primaryStage) {
         //Creating and configuring the scene for the menu
-        ChoiceBox<Integer> choiceBox = new ChoiceBox<>();
-        choiceBox.setValue(null);
-        ObservableList<Integer> levels = choiceBox.getItems();
+        level.setValue(null);
+        ObservableList<Integer> levels = level.getItems();
         for (int i = 1; i <= new File("levels").listFiles().length; i++) {
             levels.add(i);
         }
-        choiceBox.setValue(levels.get(0));
+        level.setValue(levels.get(0));
 
-        ChoiceBox<Strategy> algorithm = new ChoiceBox<>();
         algorithm.setValue(null);
         ObservableList<Strategy> strategies = algorithm.getItems();
         strategies.addAll(Arrays.asList(Strategy.values()));
@@ -77,38 +84,18 @@ public class Main extends Application {
         text.setMaxWidth(100);
         Button button = new Button("Start");
 
-        layout.getChildren().addAll(label1, choiceBox, label2, algorithm, button);
-        Scene menu = new Scene(layout, 300, 300);
+        layout.getChildren().addAll(label1, level, label2, algorithm, button);
+        menu = new Scene(layout, 300, 300);
 
         //The button on the first scene triggers the switch to the gameplay scene and starts the sokoban.game
-        button.setOnAction(e -> {
-            //Creating, configuring and finally setting the scene for the sokoban.game itself
-            game = new GameBoard(choiceBox.getValue());
-            GridPane gameBoard = createBoard(game);
-            Scene gameplay = new Scene(gameBoard);
-            //primaryStage.setResizable(false);
-            primaryStage.setScene(gameplay);
-
-            //Starting the thread that will execute the sokoban.solver and actually move sokoban on the board
-            Thread t1 = new Thread(() -> {
-                try {
-                    SokobanSolver.solve(game, algorithm.getValue());
-                } catch (InterruptedException | CloneNotSupportedException e1) {
-                    e1.printStackTrace();
-                }
-            });
-            t1.start();
-
-            //Scheduling an update of the board every second
-            ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-            executorService.scheduleAtFixedRate(Main::updateBoard, 0, 200, TimeUnit.MILLISECONDS);
-        });
+        button.setOnAction(actionEvent -> {configureGame(primaryStage);});
 
         //Closing the application when the window gets closed
         primaryStage.setOnCloseRequest(t -> {
             Platform.exit();
             System.exit(0);
         });
+
 
         //setting and showing the primary stage for the first start of the application
         primaryStage.setTitle("Sokoban");
@@ -120,6 +107,34 @@ public class Main extends Application {
     public static void main(String[] args) {
         launch(args);
 
+    }
+
+    private void configureGame(Stage primaryStage) {
+        //Creating, configuring and finally setting the scene for the game itself
+        game = new GameBoard(level.getValue());
+        gameBoard = createBoard(game);
+        gameScene = new Scene(gameBoard);
+        //primaryStage.setResizable(false);
+        primaryStage.setScene(gameScene);
+
+        //Starting the thread that will execute the sokoban solver and actually move sokoban on the board
+        Thread t1 = new Thread(() -> {
+            try {
+                SokobanSolver.solve(game, algorithm.getValue());
+            } catch (InterruptedException | CloneNotSupportedException e1) {
+                e1.printStackTrace();
+            }
+        });
+        t1.start();
+
+        //Scheduling an update of the board every second
+        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+        executorService.scheduleAtFixedRate(Main::updateBoard, 0, 200, TimeUnit.MILLISECONDS);
+
+        //You can click on the board to get back to the menu
+        gameBoard.setOnMouseClicked(keyEvent -> {
+                primaryStage.setScene(menu);
+        });
     }
 
     private static GridPane createBoard(GameBoard game) {
