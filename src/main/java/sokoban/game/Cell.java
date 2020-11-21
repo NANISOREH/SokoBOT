@@ -3,7 +3,7 @@ package sokoban.game;
 /*
 This class models a cell on the board
 */
-public class Cell {
+public class Cell implements Cloneable{
     private int row;
     private int column;
     private CellContent content;
@@ -50,10 +50,39 @@ public class Cell {
         this.goal = goal;
     }
 
-    public Cell clone () {
-        CellContent content = this.getContent();
-        return new Cell (this.getRow(), this.getColumn(), content, this.goal);
+/*    public Cell clone () {
+        return new Cell (this.getRow(), this.getColumn(), this.content, this.goal);
+    }*/
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        Object obj = super.clone();
+        Cell cloned = (Cell) obj;
+        cloned.row = this.row;
+        cloned.column = this.column;
+        cloned.goal = this.goal;
+        switch (this.content) {
+            case BOX -> {
+                cloned.content = CellContent.BOX;
+                break;
+            }
+            case SOKOBAN -> {
+                cloned.content = CellContent.SOKOBAN;
+                break;
+            }
+            case WALL -> {
+                cloned.content = CellContent.WALL;
+                break;
+            }
+            case EMPTY -> {
+                cloned.content = CellContent.EMPTY;
+                break;
+            }
+
+        }
+
+        return cloned;
     }
+
 
     public String toString() {
         switch (content) {

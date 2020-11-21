@@ -9,10 +9,13 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 
 /*
-This class contains the logic of the sokoban.game, and encapsulates both the state of the board and the actions you can take to alter it.
+This class contains the logic of the game, and encapsulates both the state of the board and the actions you can take to alter it.
 The starting condition of the level is read from a json file.
+
+Seeing it from the point of view of the search algorithms, an instance of this class represents a state in the state space.
+In fact, GameBoard objects are duplicated and then altered whenever it's needed to expand a state to obtain all its neighbours.
 */
-public class GameBoard {
+public class GameBoard implements Cloneable{
     Logger log = Logger.getLogger("Level");
     private Cell[][] board;
     private Cell sokobanCell = null;
@@ -21,9 +24,20 @@ public class GameBoard {
     private int columns;
 
 /*
-    GameBoard constructor, reads and parses a level from a json file, then uses parsed data to initialize the instance variables.
-    The client of the class can choose which level to load via the level parameter.
+    GameBoard standard constructor
 */
+    public GameBoard(Cell[][] board, Cell sokobanCell, ArrayList<Cell> goalCells, int rows, int columns) {
+        this.board = board;
+        this.sokobanCell = sokobanCell;
+        this.goalCells = goalCells;
+        this.rows = rows;
+        this.columns = columns;
+    }
+
+    /*
+        GameBoard alternate constructor, reads and parses a level from a json file, then uses parsed data to initialize the instance variables.
+        The client of the class can choose which level to load via the level parameter.
+    */
     public GameBoard(int level){
         //Reading the json file into a string
         StringBuilder jsonBuilder = new StringBuilder();
@@ -75,7 +89,7 @@ public class GameBoard {
     Returns true if the action given actually modified the state of the board, or false if it didn't,
     e.g. if the action told Sokoban to move towards a cell occupied by a wall.
 */
-    public boolean takeAction (Action action) {
+    public boolean takeAction (Action action) throws CloneNotSupportedException {
         Cell neighbour = new Cell();
         Cell boxNeighbour = new Cell();
 /*
@@ -142,16 +156,16 @@ public class GameBoard {
 /*
     Private helper method that swaps the content of two cells and updates the instance variable with Sokoban position
 */
-    private void swapCells (Cell first, Cell second) {
-        Cell temp = board[first.getRow()][first.getColumn()].clone();
+    private void swapCells (Cell first, Cell second) throws CloneNotSupportedException {
+        Cell temp = (Cell) board[first.getRow()][first.getColumn()].clone();
         board[first.getRow()][first.getColumn()].setContent(second.getContent());
         board[second.getRow()][second.getColumn()].setContent(temp.getContent());
 
         if (first.getContent() == CellContent.SOKOBAN) {
-            sokobanCell = first.clone();
+            sokobanCell = (Cell) first.clone();
         }
         else if (second.getContent() == CellContent.SOKOBAN) {
-            sokobanCell = second.clone();
+            sokobanCell = (Cell) second.clone();
         }
     }
 
@@ -164,6 +178,18 @@ public class GameBoard {
                 return false;
         }
         return true;
+    }
+
+/*
+    Returns the number of boxes that are currently in a goal cell
+*/
+    public int checkPartialVictory() {
+        int count = 0;
+        for (Cell c : goalCells) {
+            if (c.getContent() == CellContent.BOX)
+                count++;
+        }
+        return count;
     }
 
     public Cell getNorth(Cell given) {
@@ -198,12 +224,51 @@ public class GameBoard {
         return board;
     }
 
+    public void setBoard (Cell[][] board) {
+        this.board = board;
+    }
+
     public int getRows() {
         return rows;
     }
 
     public int getColumns() {
         return columns;
+    }
+
+    public ArrayList<Cell> getGoalCells() {
+        return goalCells;
+    }
+
+    public void setGoalCells(ArrayList<Cell> goalCells) {
+        this.goalCells = goalCells;
+    }
+
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        Object obj = super.clone();
+        GameBoard cloned = (GameBoard) obj;
+        cloned.sokobanCell = new Cell();
+        cloned.goalCells = new ArrayList<Cell>();
+
+        Cell [][] copy = new Cell[rows][columns];
+        for(int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                copy[i][j] = (Cell) board[i][j].clone();
+                if (copy[i][j].getContent() == CellContent.SOKOBAN)
+                    cloned.sokobanCell = copy[i][j];
+                if (copy[i][j].isGoal())
+                    cloned.goalCells.add(copy[i][j]);
+            }
+
+        }
+
+        cloned.setBoard(copy);
+        cloned.rows = this.rows;
+        cloned.columns = this.columns;
+
+        return cloned;
     }
 
 }
