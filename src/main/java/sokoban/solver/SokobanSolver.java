@@ -29,15 +29,19 @@ public class SokobanSolver {
                 solution = IDDFS.launch((GameBoard) toSolve.clone());
                 break;
             }
+            case MOCK -> {
+                mockSolver(toSolve);
+                break;
+            }
         }
 
         if (solution != null) {
-            logger.info("solution found!");
+            logger.info("solution found in " + solution.size() + " moves!");
             logger.info("" + solution);
             for (Action a : solution) {
                 //we execute every action in the solution: the board will automagically solve the puzzle as a result
                 toSolve.takeAction(a);
-                Thread.sleep(1000);
+                Thread.sleep(200);
             }
         }
         else
@@ -59,28 +63,28 @@ public class SokobanSolver {
                 case 0 : {
                     if (toSolve.getNorth(sokobanCell).getContent() == CellContent.EMPTY) {
                         toSolve.takeAction(Action.MOVE_UP);
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                     }
                     break;
                 }
                 case 1 : {
                     if (toSolve.getEast(sokobanCell).getContent() == CellContent.EMPTY) {
                         toSolve.takeAction(Action.MOVE_RIGHT);
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                     }
                     break;
                 }
                 case 2 : {
                     if (toSolve.getSouth(sokobanCell).getContent() == CellContent.EMPTY) {
                         toSolve.takeAction(Action.MOVE_DOWN);
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                     }
                     break;
                 }
                 case 3 : {
                     if (toSolve.getWest(sokobanCell).getContent() == CellContent.EMPTY) {
                         toSolve.takeAction(Action.MOVE_LEFT);
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                     }
                     break;
                 }

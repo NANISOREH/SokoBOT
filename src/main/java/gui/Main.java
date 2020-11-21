@@ -26,6 +26,7 @@ import sokoban.solver.Strategy;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -61,15 +62,22 @@ public class Main extends Application {
         }
         choiceBox.setValue(levels.get(0));
 
+        ChoiceBox<Strategy> algorithm = new ChoiceBox<>();
+        algorithm.setValue(null);
+        ObservableList<Strategy> strategies = algorithm.getItems();
+        strategies.addAll(Arrays.asList(Strategy.values()));
+        algorithm.setValue(strategies.get(0));
+
         VBox layout = new VBox();
         layout.setAlignment(Pos.CENTER);
         layout.setSpacing(15);
         Label label1 = new Label("Select a level");
+        Label label2 = new Label("Select an algorithm");
         TextField text = new TextField();
         text.setMaxWidth(100);
         Button button = new Button("Start");
 
-        layout.getChildren().addAll(label1, choiceBox, button);
+        layout.getChildren().addAll(label1, choiceBox, label2, algorithm, button);
         Scene menu = new Scene(layout, 300, 300);
 
         //The button on the first scene triggers the switch to the gameplay scene and starts the sokoban.game
@@ -84,8 +92,7 @@ public class Main extends Application {
             //Starting the thread that will execute the sokoban.solver and actually move sokoban on the board
             Thread t1 = new Thread(() -> {
                 try {
-                    SokobanSolver.solve(game, Strategy.IDBFS);
-                    //SokobanSolver.solve(game, Strategy.IDDFS);
+                    SokobanSolver.solve(game, algorithm.getValue());
                 } catch (InterruptedException | CloneNotSupportedException e1) {
                     e1.printStackTrace();
                 }
@@ -94,7 +101,7 @@ public class Main extends Application {
 
             //Scheduling an update of the board every second
             ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-            executorService.scheduleAtFixedRate(Main::updateBoard, 0, 1, TimeUnit.SECONDS);
+            executorService.scheduleAtFixedRate(Main::updateBoard, 0, 200, TimeUnit.MILLISECONDS);
         });
 
         //Closing the application when the window gets closed

@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.logging.Logger;
 
 public class IDBFS {
+    final static int breadthLimit = 90;
 
     private static Logger log = Logger.getLogger("IDBFS");
 
@@ -19,7 +20,7 @@ public class IDBFS {
         ArrayList<Node> tree = new ArrayList<>();
 
         //Utility data structure used to isolate the nodes inside the "frontier" of the search, the ones we will need to
-        //expand in the current iteration. It's initialized by adding the first front, with only the root node inside
+        //expand in the current iteration. It's initialized by adding the first frontier, with only the root node inside
         ArrayList<Node> front = new ArrayList<>();
         Node root = new Node(null, game, new ArrayList<Action>());
         front.add(root);
@@ -28,7 +29,7 @@ public class IDBFS {
         //I'm using an iterative version: every node in the frontier is expanded and the children (the next frontier) are added
         //to a second utility structure that will be expanded the same way on the next iteration.
         //The stopping condition is, of course, finding a node that represents a winning state.
-        for (int j=0;  j < 8; j++) {
+        for (int j=0;  j < breadthLimit; j++) {
             log.info("tree size " + tree.size() + "\nfront size " + front.size());
             ArrayList<Node> nextLevel = new ArrayList<>();
             for (Node n : front) {
@@ -42,10 +43,12 @@ public class IDBFS {
                 }
             }
 
+            //Moving the old frontier to the tree structure
             for (int i = front.size() - 1; i>=0; i--) {
                 tree.add(front.remove(i));
             }
 
+            //"Promoting" the nodes found by expanding the current frontier for the next iteration
             for (int i = nextLevel.size() - 1; i>=0; i--) {
                 front.add(nextLevel.remove(i));
             }
