@@ -9,30 +9,39 @@ import java.util.logging.Logger;
 public class IDDFS {
     private static Logger log = Logger.getLogger("IDDFS");
     private static ArrayList<Action> solution = null;
+    private static ArrayList<Action> partialSolution = null;
     private static int currentBest = 0;
+    private static final int depthLimit = 5;
     private static ArrayList<Action> oracle = new ArrayList<>();
 
     public static ArrayList<Action> launch(GameBoard game) throws CloneNotSupportedException {
 
+        //The node representing the initial state of the GameBoard is passed to the recursive method
         Node root = new Node(null, game, new ArrayList<Action>());
-        recursiveComponent(root, 6);
+        recursiveComponent(root, depthLimit);
+
         return solution;
     }
 
     private static void recursiveComponent(Node current, int limit) throws CloneNotSupportedException {
-
         current.setVisited(true);
-        if (limit == 0) {
+
+        if (current.getGame().checkVictory()) { // We found a solution, stop the recursion!
+            if (solution!= null && current.getActionHistory().size() < solution.size()) {
+                log.info("" + current.getActionHistory());
+                solution = current.getActionHistory();
+            }
             return;
         }
-        if (current.getGame().checkVictory()) {
-            solution = current.getActionHistory();
+        if (limit == 0) { // We reached the depth limit, stop the recursion!
             return;
         }
 
         else if (current.getGame().checkPartialVictory() > currentBest) {
+            // We didn't find a solution but the current sequence of actions quite literally checks some boxes,
+            // so we keep track of it
             currentBest = current.getGame().checkPartialVictory();
-            solution = current.getActionHistory();
+            partialSolution = current.getActionHistory();
         }
 
         ArrayList <Node> front = new ArrayList<>();

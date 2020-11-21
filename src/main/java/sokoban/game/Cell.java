@@ -1,9 +1,14 @@
 package sokoban.game;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
 /*
 This class models a cell on the board
 */
-public class Cell implements Cloneable{
+public class Cell implements Cloneable, Serializable {
     private int row;
     private int column;
     private CellContent content;
@@ -94,5 +99,15 @@ public class Cell implements Cloneable{
         }
 
         return null;
+    }
+
+    public byte[] toBytes() throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(this);
+        oos.flush();
+        byte [] data = bos.toByteArray();
+
+        return data;
     }
 }

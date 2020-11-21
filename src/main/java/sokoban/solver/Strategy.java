@@ -1,5 +1,5 @@
 package sokoban.solver;
 
 public enum Strategy {
-    IDBFS, IDDFS, IDASTAR
+    IDBFS, IDDFS, IDASTAR, MOCK
 }
