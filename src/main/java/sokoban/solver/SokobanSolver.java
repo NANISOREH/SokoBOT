@@ -12,14 +12,18 @@ import java.util.logging.Logger;
 
 public class SokobanSolver {
     private static Logger logger = Logger.getLogger("SokobanSolver");
-    private static ArrayList<Action> solution = null;
-
 /*
     Static method that acts as a façade between the client and the actual algorithms.
     It takes a GameBoard configured with the level to solve, and the strategy chosen by the client to solve it,
     and launches the search accordingly. If a solution is found, it acts upon the original GameBoard to show it.
 */
     public static void solve(GameBoard toSolve, Strategy strategy) throws InterruptedException, CloneNotSupportedException {
+
+        ArrayList<Action> solution = null;
+
+        //Resetting the transposition table stored in the Node class just in case we are launching
+        //a search on the same level in the same session of the program
+        Node.resetTranspositionTable();
 
         switch (strategy) {
             case IDBFS -> {
@@ -33,8 +37,9 @@ public class SokobanSolver {
 
         }
 
+        //Showing the list of actions in the console and executing the corresponding moves on the board
         if (solution != null) {
-            logger.info("solution found in " + solution.size() + " moves!");
+            logger.info("Solution found in " + solution.size() + " moves!");
             logger.info("" + solution);
             for (Action a : solution) {
                 //we execute every action in the solution: the board will automagically solve the puzzle as a result
@@ -43,7 +48,7 @@ public class SokobanSolver {
             }
         }
         else
-            logger.info("solution not found");
+            logger.info("Sorry, no solution was found!");
     }
 
 }
