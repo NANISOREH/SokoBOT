@@ -9,9 +9,7 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.TreeSet;
 import java.util.logging.Logger;
 
 /*This class represents a node in the search graph.
@@ -21,6 +19,7 @@ public class Node {
     private static ArrayList<Long> transpositionTable = new ArrayList<>();
     private Node parent;
     private GameBoard game;
+    private int pathCost;
     private ArrayList<Action> actionHistory = new ArrayList<>();
     private boolean visited;
 
@@ -30,7 +29,7 @@ public class Node {
         this.parent = parent;
         this.game = game;
         this.actionHistory = actions;
-        visited = false;
+        this.visited = false;
     }
 
 /*
@@ -117,9 +116,17 @@ public class Node {
         this.visited = visited;
     }
 
-/*
-    This method uses MD5 to produce a unique (I hope) representation of the state represented by this node
-*/
+    public int getPathCost() {
+        return pathCost;
+    }
+
+    public void setPathCost(int pathCost) {
+        this.pathCost = pathCost;
+    }
+
+    /*
+        This method uses MD5 to produce a unique (I hope) representation of the state encapsulated by this node
+    */
     public long hash() {
 
         MessageDigest md = null;
@@ -141,17 +148,17 @@ public class Node {
             }
         }
 
-        byte[] hashed = new byte[bytes.get(0).length * (bytes.size() + 1)];
+        byte[] toHash = new byte[bytes.get(0).length * (bytes.size() + 1)];
         int count = 0;
         for (byte[] array : bytes) {
             for (int i = 0; i < array.length; i++) {
-                hashed[count] = array[i];
+                toHash[count] = array[i];
                 count++;
             }
         }
 
-        byte[] messageDigest = md.digest(hashed);
-        BigInteger no = new BigInteger(1, messageDigest);
+        byte[] hashed = md.digest(toHash);
+        BigInteger no = new BigInteger(1, hashed);
         return no.longValue();
     }
 }

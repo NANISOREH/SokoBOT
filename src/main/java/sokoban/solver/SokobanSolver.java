@@ -20,6 +20,7 @@ public class SokobanSolver {
     and launches the search accordingly. If a solution is found, it acts upon the original GameBoard to show it.
 */
     public static void solve(GameBoard toSolve, Strategy strategy) throws InterruptedException, CloneNotSupportedException {
+
         switch (strategy) {
             case IDBFS -> {
                 solution = IDBFS.launch((GameBoard) toSolve.clone());
@@ -29,10 +30,7 @@ public class SokobanSolver {
                 solution = IDDFS.launch((GameBoard) toSolve.clone());
                 break;
             }
-            case MOCK -> {
-                mockSolver(toSolve);
-                break;
-            }
+
         }
 
         if (solution != null) {
@@ -48,49 +46,4 @@ public class SokobanSolver {
             logger.info("solution not found");
     }
 
-/*
-    Mock sokoban solver created for testing purposes.
-    It just randomly moves on free tiles.
-*/
-    private static void mockSolver(GameBoard toSolve) throws InterruptedException, CloneNotSupportedException {
-        Cell sokobanCell;
-        int random = 0;
-        while (true) {
-            sokobanCell = toSolve.getSokobanCell();
-            random = (int) (4 * Math.random());
-
-            switch (random) {
-                case 0 : {
-                    if (toSolve.getNorth(sokobanCell).getContent() == CellContent.EMPTY) {
-                        toSolve.takeAction(Action.MOVE_UP);
-                        Thread.sleep(500);
-                    }
-                    break;
-                }
-                case 1 : {
-                    if (toSolve.getEast(sokobanCell).getContent() == CellContent.EMPTY) {
-                        toSolve.takeAction(Action.MOVE_RIGHT);
-                        Thread.sleep(500);
-                    }
-                    break;
-                }
-                case 2 : {
-                    if (toSolve.getSouth(sokobanCell).getContent() == CellContent.EMPTY) {
-                        toSolve.takeAction(Action.MOVE_DOWN);
-                        Thread.sleep(500);
-                    }
-                    break;
-                }
-                case 3 : {
-                    if (toSolve.getWest(sokobanCell).getContent() == CellContent.EMPTY) {
-                        toSolve.takeAction(Action.MOVE_LEFT);
-                        Thread.sleep(500);
-                    }
-                    break;
-                }
-            }
-
-        }
-
-    }
 }
