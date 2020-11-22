@@ -1,6 +1,107 @@
 package sokoban.solver.algorithms;
 
 import sokoban.game.Action;
+import sokoban.game.Cell;
+import sokoban.game.CellContent;
+import sokoban.game.GameBoard;
+import sokoban.solver.Node;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.logging.Logger;
+
+/*
+Implementation of a simple DFS search with Iterative Deepening
+*/
+public class IDDFS {
+    private static Logger log = Logger.getLogger("IDDFS");
+    private static ArrayList<Action> solution;
+    //private static ArrayList<Long> transpositionTable = new ArrayList<>();
+
+    public static ArrayList<Action> launch(GameBoard game, int lowerBound) throws CloneNotSupportedException {
+
+        //resetting the solution in case this method was already called in this execution of the program
+        solution = new ArrayList<>();
+
+        int limit = lowerBound;
+        log.info("The lower bound estimate is: " + limit);
+
+        //Iterative deepening cycle
+        while (true) {
+            //Resetting the transposition table and initializing the variables for the search.
+            //The node representing the initial state of the GameBoard is pushed into the search stack
+            Node.resetTranspositionTable();
+            Node root = new Node(null, game, new ArrayList<>());
+
+            //Starting the search up to the current depth limit
+            recursiveComponent(root, limit);
+
+            log.info("visited nodes at depth " + limit + ": " + Node.getExaminedNodes());
+
+            //If we didn't find a solution after the iteration, we deepen the search
+            if (!solution.isEmpty()) return solution;
+            else limit = limit + lowerBound/2;
+        }
+
+    }
+
+    private static void recursiveComponent(Node root, int limit) throws CloneNotSupportedException {
+        //exit conditions first
+        if (root.getGame().checkVictory()) {
+            solution = new ArrayList<>(root.getActionHistory());
+            return;
+        }
+        if (limit == 0)
+            return;
+
+        //creating the children of the current root node
+        ArrayList<Node> expanded = moveOrder(root, (ArrayList<Node>) root.expand());
+
+        //recursively calling this method on root's children, lowering by one the depth they are allowed to explore
+        for (Node n : expanded) {
+            recursiveComponent(n, limit - 1);
+        }
+        log.info("end loop");
+
+    }
+
+/*
+    A simple move ordering optimization: states that involve pushing a box that was pushed by their parents too
+    are considered before the others. That's useful because a lot of Sokoban proper solutions involve a certain number of consecutive
+    pushes to the same box.
+*/
+    private static ArrayList<Node> moveOrder(Node root, ArrayList<Node> expanded) {
+        ArrayList<Node> result = new ArrayList<>();
+
+        Cell box = root.getLastMovedBox();
+        if (box == null) {
+            return expanded;
+        }
+
+        int index = 0;
+        for (Node n : expanded) {
+            if (n.getLastMovedBox() != null && n.getGame().getBoard()[box.getRow()][box.getColumn()].getContent() != CellContent.BOX) {
+                result.add(index, n);
+                index++;
+            }
+        }
+
+        for (Node n : expanded) {
+            if (!result.contains(n)) {
+                result.add(n);
+            }
+        }
+
+        return result;
+    }
+}
+
+
+
+/*
+package sokoban.solver.algorithms;
+
+import sokoban.game.Action;
 import sokoban.game.GameBoard;
 import sokoban.solver.Node;
 
@@ -10,9 +111,11 @@ import java.util.Deque;
 import java.util.Stack;
 import java.util.logging.Logger;
 
+*/
 /*
 Implementation of a simple DFS search with Iterative Deepening
-*/
+*//*
+
 public class IDDFS {
     private static Logger log = Logger.getLogger("IDDFS");
     private static ArrayList<Action> solution;
@@ -69,3 +172,4 @@ public class IDDFS {
 
     }
 }
+*/

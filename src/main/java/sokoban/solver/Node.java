@@ -22,6 +22,7 @@ public class Node {
     private Node parent;
     private GameBoard game;
     private int pathCost;
+    private Cell lastMovedBox; //Cell currently occupied by the last box moved, needed for move ordering
     private ArrayList<Action> actionHistory = new ArrayList<>();
 
     public Node(){};
@@ -31,6 +32,7 @@ public class Node {
         this.game = game;
         this.actionHistory = actions;
         this.pathCost = 0;
+        lastMovedBox = null;
     }
 
     //Node expansion method
@@ -80,13 +82,31 @@ public class Node {
     Generates a new game state by executing a move and updates the action history.
     Returns true if a new state was reachable by executing the input move,
     false if the move was not legal and there was no state transition.
+    It also updates the instance variable with the last moved box (if one was moved), to help with
+    move ordering optimizations.
 */
     private boolean executeMove (Action move) throws CloneNotSupportedException {
+        ArrayList<Cell> beforeBoxCells = new ArrayList<>(game.getBoxCells());
+        ArrayList<Cell> afterBoxCells;
+
         if (game.takeAction(move)) {
             actionHistory.add(move);
             pathCost++;
+
+            //we check is a box was moved in the move and update the lastMovedBox variable
+            afterBoxCells = new ArrayList<>(game.getBoxCells());
+            if (!afterBoxCells.equals(beforeBoxCells)) {
+                for (Cell c : afterBoxCells) {
+                    if (!beforeBoxCells.contains(c)) {
+                        lastMovedBox = c;
+                        return true;
+                    }
+                }
+            }
+            lastMovedBox = null;
             return true;
         }
+
         return false;
     }
 
@@ -122,9 +142,13 @@ public class Node {
         this.pathCost = pathCost;
     }
 
+    public Cell getLastMovedBox() {
+        return lastMovedBox;
+    }
+
     /*
-        This method uses MD5 to produce a unique (I hope) representation of the state encapsulated by this node
-    */
+            This method uses MD5 to produce a unique (I hope) representation of the state encapsulated by this node
+        */
     public long hash() {
 
         MessageDigest md = null;
@@ -161,7 +185,7 @@ public class Node {
     }
 
     public static void resetTranspositionTable () {
-        transpositionTable = new ArrayList<>();
+        transpositionTable.clear();
     }
 
     public static long getExaminedNodes () {
