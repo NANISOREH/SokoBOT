@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 Implementation of a simple BFS search
 */
 public class BFS {
-    private static Logger log = Logger.getLogger("IDBFS");
+    private static Logger log = Logger.getLogger("BFS");
 
     public static ArrayList<Action> launch(GameBoard game) throws CloneNotSupportedException {
 
@@ -37,9 +37,7 @@ public class BFS {
                 if (n.getGame().checkVictory()) {
                     return n.getActionHistory();
                 }
-                n.setVisited(true);
                 for (Node v : n.expand()){
-                    if (!v.isVisited())
                         nextLevel.add(v);
                 }
             }
