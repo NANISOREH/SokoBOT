@@ -23,7 +23,6 @@ public class Node {
     private GameBoard game;
     private int pathCost;
     private ArrayList<Action> actionHistory = new ArrayList<>();
-    private boolean visited;
 
     public Node(){};
 
@@ -31,12 +30,11 @@ public class Node {
         this.parent = parent;
         this.game = game;
         this.actionHistory = actions;
-        this.visited = false;
         this.pathCost = 0;
     }
 
     //Node expansion method
-    //It simply takes a node in input and creates a collection of 4 nodes representing a maximum of 4 states relative to the
+    //It simply takes a node in input and creates a collection of nodes representing a maximum of 4 states relative to the
     //4 possible moves of Sokoban. Of course, if a move is not legal it would generate the same node as the input node,
     //so it's discarded.
     //A state is also discarded if its hashed value is already in the transposition table: that would mean that we already
@@ -116,14 +114,6 @@ public class Node {
         this.actionHistory = actions;
     }
 
-    public boolean isVisited() {
-        return visited;
-    }
-
-    public void setVisited(boolean visited) {
-        this.visited = visited;
-    }
-
     public int getPathCost() {
         return pathCost;
     }
@@ -172,5 +162,9 @@ public class Node {
 
     public static void resetTranspositionTable () {
         transpositionTable = new ArrayList<>();
+    }
+
+    public static long getExaminedNodes () {
+        return transpositionTable.size();
     }
 }
