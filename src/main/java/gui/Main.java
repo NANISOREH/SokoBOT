@@ -22,6 +22,7 @@ import javafx.stage.Stage;
 import sokoban.game.Action;
 import sokoban.game.Cell;
 import sokoban.game.GameBoard;
+import sokoban.solver.Node;
 import sokoban.solver.SokobanSolver;
 import sokoban.solver.Strategy;
 
@@ -62,6 +63,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+
         //Creating and configuring the scene for the menu
         level.setValue(null);
         ObservableList<Integer> levels = level.getItems();
