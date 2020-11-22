@@ -8,6 +8,7 @@ import sokoban.solver.Node;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.logging.Logger;
 
 /*
@@ -55,13 +56,12 @@ public class IDDFS {
             return;
 
         //creating the children of the current root node
-        ArrayList<Node> expanded = moveOrder(root, (ArrayList<Node>) root.expand());
+        ArrayList<Node> expanded = orderMoves(root, (ArrayList<Node>) root.expand());
 
         //recursively calling this method on root's children, lowering by one the depth they are allowed to explore
         for (Node n : expanded) {
             recursiveComponent(n, limit - 1);
         }
-        log.info("end loop");
 
     }
 
@@ -70,20 +70,19 @@ public class IDDFS {
     are considered before the others. That's useful because a lot of Sokoban proper solutions involve a certain number of consecutive
     pushes to the same box.
 */
-    private static ArrayList<Node> moveOrder(Node root, ArrayList<Node> expanded) {
-        ArrayList<Node> result = new ArrayList<>();
-
-        Cell box = root.getLastMovedBox();
-        if (box == null) {
+    private static ArrayList<Node> orderMoves(Node root, ArrayList<Node> expanded) {
+        Integer boxNumber = root.getLastMovedBox();
+        if (boxNumber == null) {
             return expanded;
         }
 
-        int index = 0;
+        ArrayList<Node> result = new ArrayList<>();
+
         for (Node n : expanded) {
-            if (n.getLastMovedBox() != null && n.getGame().getBoard()[box.getRow()][box.getColumn()].getContent() != CellContent.BOX) {
-                result.add(index, n);
-                index++;
-            }
+            if (n.getLastMovedBox() == null)
+                continue;
+            else if (n.getLastMovedBox().equals(boxNumber))
+                result.add(n);
         }
 
         for (Node n : expanded) {
