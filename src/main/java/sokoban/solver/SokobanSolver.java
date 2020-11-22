@@ -7,6 +7,7 @@ import sokoban.solver.algorithms.BFS;
 import sokoban.solver.algorithms.IDDFS;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 
@@ -70,16 +71,14 @@ public class SokobanSolver {
     between the two. It obtains the lower bound by summing the manhattan distances between the members of the matching couples.
 */
     private static int estimateLowerBound(GameBoard toSolve) {
-        ArrayList<Cell> boxes = (ArrayList<Cell>) toSolve.getBoxCells().clone();
+        HashMap<Integer, Cell> boxes = (HashMap<Integer, Cell>) toSolve.getBoxCells().clone();
         ArrayList<Cell> goals = (ArrayList<Cell>) toSolve.getGoalCells().clone();
         int result = 0;
 
-        while (!boxes.isEmpty() && !goals.isEmpty()) {
-            int boxIndex = 0; int goalIndex = 0;
-            result = result + boxes.get(boxIndex).manhattanDistance(goals.get(goalIndex));
-            boxes.remove(boxIndex);
-            goals.remove(goalIndex);
-
+        for (int i = 0; i < boxes.size(); i++) {
+            result = result + boxes.get(i).manhattanDistance(goals.get(0));
+            boxes.remove(i);
+            goals.remove(0);
         }
 
         return result;

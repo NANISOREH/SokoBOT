@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.logging.Logger;
 
 /*
@@ -20,7 +21,8 @@ public class GameBoard implements Cloneable{
     private Cell[][] board;
     private Cell sokobanCell = null;
     private ArrayList<Cell> goalCells = new ArrayList<>();
-    private ArrayList<Cell> boxCells = new ArrayList<>();
+    //Boxes are identified by an integer to easily track them down in their roaming
+    private HashMap<Integer, Cell> boxCells = new HashMap<>();
     private int rows;
     private int columns;
 
@@ -58,11 +60,12 @@ public class GameBoard implements Cloneable{
         //and finding the goal Cells and the initial position of Sokoban and the boxes
         board = new Cell[rows][columns];
         int i; int j;
+        int countBoxes = 0;
         for (i = 0; i < rows; i++) {
             for (j = 0; j < columns; j++) {
-                board[i][j] = new Cell(i, j, parsed[i][j], false);
+                board[i][j] = new Cell(i, j, parsed[i][j], false, null);
                 if (parsed[i][j].equals(CellContent.SOKOBAN)) {
-                    sokobanCell = new Cell(i, j, CellContent.SOKOBAN, false);
+                    sokobanCell = new Cell(i, j, CellContent.SOKOBAN, false, null);
                 }
                 //Goal tiles are treated as if they were empty tiles with a "goal" boolean set to true
                 //because they can also have Sokoban or boxes on them, so I'd like to avoid setting double content
@@ -72,7 +75,9 @@ public class GameBoard implements Cloneable{
                     goalCells.add(board[i][j]);
                 }
                 else if (parsed[i][j].equals(CellContent.BOX)) {
-                    boxCells.add(board[i][j]);
+                    board[i][j].setBoxNumber(countBoxes);
+                    boxCells.put(countBoxes, board[i][j]);
+                    countBoxes++;
                 }
             }
         }
@@ -141,7 +146,7 @@ public class GameBoard implements Cloneable{
     }
 
     /*
-        Private helper method that swaps the content of two cells and updates the instance variable with Sokoban position
+        Private helper method that swaps the content of two cells and updates the instance variables accordingly
     */
     private void swapCells (Cell first, Cell second) throws CloneNotSupportedException {
 
@@ -159,15 +164,25 @@ public class GameBoard implements Cloneable{
         }
 
         //if one of the two cells contains a box after the swap, it means that it was in the other one before:
-        //we update the boxCells structure by removing the old box cell and adding the new one
+        //we update the boxCells structure by removing the old box cell and adding the new one in its place
         if (first.getContent() == CellContent.BOX) {
-            boxCells.remove(second);
-            boxCells.add(first);
+            if (second.getBoxNumber() != null) {
+                first.setBoxNumber(second.getBoxNumber());
+                second.setBoxNumber(null);
+                boxCells.remove(first.getBoxNumber());
+                boxCells.put(first.getBoxNumber(), first);
+            }
         }
         else if (second.getContent() == CellContent.BOX) {
-            boxCells.remove(first);
-            boxCells.add(second);
+            if (first.getBoxNumber() != null) {
+                second.setBoxNumber(first.getBoxNumber());
+                first.setBoxNumber(null);
+                boxCells.remove(second.getBoxNumber());
+                boxCells.put(second.getBoxNumber(), second);
+            }
         }
+
+
     }
 
     /*
@@ -270,16 +285,8 @@ public class GameBoard implements Cloneable{
         return goalCells;
     }
 
-    public void setGoalCells(ArrayList<Cell> goalCells) {
-        this.goalCells = goalCells;
-    }
-
-    public ArrayList<Cell> getBoxCells() {
+    public HashMap<Integer, Cell> getBoxCells() {
         return boxCells;
-    }
-
-    public void setBoxCells(ArrayList<Cell> boxCells) {
-        this.boxCells = boxCells;
     }
 
     /*
@@ -291,9 +298,10 @@ public class GameBoard implements Cloneable{
         GameBoard cloned = (GameBoard) obj;
         cloned.sokobanCell = new Cell();
         cloned.goalCells = new ArrayList<Cell>();
-        cloned.boxCells = new ArrayList<>();
+        cloned.boxCells = new HashMap<>();
 
         Cell [][] copy = new Cell[rows][columns];
+        int countBoxes = 0;
         for(int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
                 copy[i][j] = (Cell) board[i][j].clone();
@@ -301,8 +309,10 @@ public class GameBoard implements Cloneable{
                     cloned.sokobanCell = copy[i][j];
                 if (copy[i][j].isGoal())
                     cloned.goalCells.add(copy[i][j]);
-                if (copy[i][j].getContent() == CellContent.BOX)
-                    cloned.boxCells.add(copy[i][j]);
+                if (copy[i][j].getContent() == CellContent.BOX) {
+                    cloned.boxCells.put(countBoxes, copy[i][j]);
+                    countBoxes++;
+                }
             }
         }
 

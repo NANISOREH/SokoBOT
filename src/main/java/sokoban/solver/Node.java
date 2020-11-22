@@ -10,6 +10,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.logging.Logger;
 
 /*This class represents a node in the search graph.
@@ -22,7 +23,7 @@ public class Node {
     private Node parent;
     private GameBoard game;
     private int pathCost;
-    private Cell lastMovedBox; //Cell currently occupied by the last box moved, needed for move ordering
+    private Integer lastMovedBox; //Key of the cell currently occupied by the last box moved, needed for move ordering
     private ArrayList<Action> actionHistory = new ArrayList<>();
 
     public Node(){};
@@ -86,21 +87,20 @@ public class Node {
     move ordering optimizations.
 */
     private boolean executeMove (Action move) throws CloneNotSupportedException {
-        ArrayList<Cell> beforeBoxCells = new ArrayList<>(game.getBoxCells());
-        ArrayList<Cell> afterBoxCells;
+        HashMap<Integer, Cell> beforeBoxCells = new HashMap<>(game.getBoxCells());
+        HashMap<Integer, Cell> afterBoxCells;
 
         if (game.takeAction(move)) {
             actionHistory.add(move);
             pathCost++;
 
-            //we check is a box was moved in the move and update the lastMovedBox variable
-            afterBoxCells = new ArrayList<>(game.getBoxCells());
-            if (!afterBoxCells.equals(beforeBoxCells)) {
-                for (Cell c : afterBoxCells) {
-                    if (!beforeBoxCells.contains(c)) {
-                        lastMovedBox = c;
-                        return true;
-                    }
+            //we check if a box was moved in the move and update the lastMovedBox variable
+            afterBoxCells = new HashMap<>(game.getBoxCells());
+            for (int i = 0; i < beforeBoxCells.size(); i++) {
+                if (beforeBoxCells.get(i).getRow() != afterBoxCells.get(i).getRow() ||
+                    beforeBoxCells.get(i).getColumn() != afterBoxCells.get(i).getColumn()) {
+                    lastMovedBox = i;
+                    return true;
                 }
             }
             lastMovedBox = null;
@@ -142,7 +142,7 @@ public class Node {
         this.pathCost = pathCost;
     }
 
-    public Cell getLastMovedBox() {
+    public Integer getLastMovedBox() {
         return lastMovedBox;
     }
 

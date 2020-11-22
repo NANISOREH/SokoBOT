@@ -15,14 +15,16 @@ public class Cell implements Cloneable, Serializable {
     private int column;
     private CellContent content;
     private boolean goal;
+    private Integer boxNumber;
 
     public Cell() {}
 
-    public Cell(int row, int column, CellContent content, boolean goal) {
+    public Cell(int row, int column, CellContent content, boolean goal, Integer boxNumber) {
         this.row = row;
         this.column = column;
         this.content = content;
         this.goal = goal;
+        this.boxNumber = boxNumber;
     }
 
     public int getRow() {
@@ -57,9 +59,17 @@ public class Cell implements Cloneable, Serializable {
         this.goal = goal;
     }
 
-/*    public Cell clone () {
-        return new Cell (this.getRow(), this.getColumn(), this.content, this.goal);
-    }*/
+    public Integer getBoxNumber() {
+        return boxNumber;
+    }
+
+    public void setBoxNumber(Integer boxNumber) {
+        this.boxNumber = boxNumber;
+    }
+
+    /*    public Cell clone () {
+            return new Cell (this.getRow(), this.getColumn(), this.content, this.goal);
+        }*/
     @Override
     public Object clone() throws CloneNotSupportedException {
         Object obj = super.clone();
@@ -67,6 +77,7 @@ public class Cell implements Cloneable, Serializable {
         cloned.row = this.row;
         cloned.column = this.column;
         cloned.goal = this.goal;
+        cloned.boxNumber = this.boxNumber;
         switch (this.content) {
             case BOX -> {
                 cloned.content = CellContent.BOX;
@@ -90,6 +101,15 @@ public class Cell implements Cloneable, Serializable {
         return cloned;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        Cell cell = (Cell) obj;
+        if (cell.getColumn() == this.column && cell.getRow() == this.row && cell.getContent() == this.content && cell.isGoal() == this.goal)
+            return true;
+        else
+            return false;
+    }
+
 /*
     Returns the Manhattan distance between the argument cell and the parameter cell
 */
@@ -98,15 +118,22 @@ public class Cell implements Cloneable, Serializable {
     }
 
     public String toString() {
+        String output = "";
         switch (content) {
-            case SOKOBAN: return "S";
-            case BOX: return "B";
-            case GOAL: return "G";
-            case EMPTY: return "E";
-            case WALL: return  "W";
+            case SOKOBAN: output = "S";
+            break;
+            case BOX: output = "B";
+            break;
+            case GOAL: output = "G";
+            break;
+            case EMPTY: output = "E";
+            break;
+            case WALL: output =  "W";
+            break;
         }
 
-        return null;
+        output = output + "\n" + row + " - " + column;
+        return output;
     }
 
     public byte[] toBytes() throws IOException {
@@ -118,4 +145,6 @@ public class Cell implements Cloneable, Serializable {
 
         return data;
     }
+
+
 }
