@@ -13,6 +13,8 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -47,6 +49,7 @@ public class Main extends Application {
     private static Image box;
     private static Image wall;
     private static Image goal;
+    private static Background background = new Background(new BackgroundFill(Color.rgb(54, 54, 54), null, null));
     static {
         try {
             sokoban = new Image(new FileInputStream("src/main/resources/sokoban.png"));
@@ -85,9 +88,12 @@ public class Main extends Application {
 
         VBox layout = new VBox();
         layout.setAlignment(Pos.CENTER);
+        layout.setBackground(background);
         layout.setSpacing(15);
         Label label1 = new Label("Select a level");
+        label1.setTextFill(Color.LIGHTGRAY);
         Label label2 = new Label("Select an algorithm");
+        label2.setTextFill(Color.LIGHTGRAY);
         TextField text = new TextField();
         text.setMaxWidth(100);
         Button button = new Button("Start");
@@ -120,12 +126,15 @@ public class Main extends Application {
     private void configureGame(Stage primaryStage) {
 
         boardLayout = new VBox();
+        boardLayout.setBackground(background);
         boardLayout.setAlignment(Pos.CENTER);
         boardLayout.setSpacing(15);
 
         Level toLoad = new Level(level.getValue());
         Label label1 = new Label("Level" + level.getValue() + "   -   Requires " + toLoad.getBestSolution() + " steps");
+        label1.setTextFill(Color.LIGHTGRAY);
         result = new Text("Search in progress...");
+        result.setFill(Color.LIGHTGRAY);
 
         //Creating, configuring and finally setting the scene for the game itself
         game = new GameBoard(toLoad);
@@ -163,6 +172,7 @@ public class Main extends Application {
     private static GridPane createBoard(GameBoard game) {
         GridPane gameBoard = new GridPane();
         gameBoard.setAlignment(Pos.CENTER);
+        gameBoard.setBackground(background);
         //gameBoard.setBackground(new Background());
         Cell[][] board = game.getBoard();
         tiles = new Rectangle[game.getRows()][game.getColumns()];

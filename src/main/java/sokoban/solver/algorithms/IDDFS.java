@@ -16,44 +16,84 @@ Implementation of a simple DFS search with Iterative Deepening
 */
 public class IDDFS {
     private static Logger log = Logger.getLogger("IDDFS");
-    private static ArrayList<Action> solution;
+    private static ArrayList<Action> solution = new ArrayList<>();
+    private static ArrayList<Long> transpositionTableCopy;
+    private static boolean memoryFull = false;
+
+    //these two hashmaps are used as a cache to avoid re-exploring the lower levels in iterative deepening
+    private static HashMap<Long, Node> cache = new HashMap<>();
+    private static HashMap<Long, Node> candidateCache = new HashMap<>();
+
     //private static ArrayList<Long> transpositionTable = new ArrayList<>();
 
     public static ArrayList<Action> launch(GameBoard game, int lowerBound) throws CloneNotSupportedException {
 
-        //resetting the solution in case this method was already called in this execution of the program
+        Node root = new Node(null, game, new ArrayList<>());
+        cache.put(root.hash(), root);
         solution = new ArrayList<>();
-
         int limit = lowerBound;
         log.info("The lower bound estimate is: " + limit);
 
         //Iterative deepening cycle
-        while (true) {
-            //Resetting the transposition table and initializing the variables for the search.
-            //The node representing the initial state of the GameBoard is pushed into the search stack
-            Node.resetTranspositionTable();
-            Node root = new Node(null, game, new ArrayList<>());
+        for (int count = 0; true; count++) {
 
-            //Starting the search up to the current depth limit
-            recursiveComponent(root, limit);
+            //Before every iteration, if the memory is not full yet, we make a copy of the transposition table so that,
+            //when we finally have no more space, we can can restore its state to effectively start a proper, uncached
+            //IDDFS starting from the last cached frontier
+            if (!memoryFull) {
+                transpositionTableCopy = new ArrayList<>(Node.getTranspositionTable());
+            }
+            //If memory is full, we have to restore the transposition table backup and increment the limit of the search:
+            //from now on, no more cached nodes and we will start over from the last cached frontier
+            else if (memoryFull){
+                Node.setTranspositionTable(transpositionTableCopy);
+                limit = limit + lowerBound;
+            }
 
-            log.info("visited nodes at depth " + limit + ": " + Node.getExaminedNodes());
+            //In every iteration, cache will store the nodes in the deepest level reached by the previous iteration.
+            //This way, we can keep expanding from there and avoid the burden of having to store the whole path.
+            //candidateCache, instead, will store the nodes found in the deepest allowed level of the current iteration,
+            //in other words, if the memory doesn't run out during recursiveComponent calls, it will be the next cache.
+            if (!memoryFull) candidateCache = new HashMap<>();
+            for (Long key : cache.keySet()) { //launching the DFS on every element in the cache
+                recursiveComponent(cache.get(key), limit);
+            }
+            if (!memoryFull) cache = new HashMap<>(candidateCache);
 
-            //If we didn't find a solution after the iteration, we deepen the search
-            if (!solution.isEmpty()) return solution;
-            else limit = limit + lowerBound/2;
+            log.info("visited nodes at depth " + lowerBound * count + ": " + Node.getExaminedNodes());
+
+            //If we found a solution in this iteration, we put out the garbage and then return it
+            if (!solution.isEmpty() && solution.size() > 0) {
+                transpositionTableCopy.clear();
+                cache.clear();
+                candidateCache.clear();
+                return solution;
+            }
+
         }
-
     }
 
-    private static void recursiveComponent(Node root, int limit) throws CloneNotSupportedException {
-        //exit conditions first
+/*
+    Private helper method that actually kickstarts the DFS recursive call stack
+*/
+    private static void recursiveComponent (Node root,int limit) throws CloneNotSupportedException {
+        //solution checking
         if (root.getGame().checkVictory()) {
             solution = new ArrayList<>(root.getActionHistory());
             return;
         }
-        if (limit == 0)
+        //if we reached the bottom without finding a solution, the search will stop and
+        //(if the memory allows it) this node will be in the cache for the next iteration
+        if (limit == 0 && !memoryFull) {
+            if ((Runtime.getRuntime().freeMemory() / 1024) / 1024 > 100) {
+                candidateCache.put(root.hash(), root);
+            }
+            else {
+                memoryFull = true;
+                candidateCache.clear();
+            }
             return;
+        }
 
         //creating the children of the current root node
         ArrayList<Node> expanded = orderMoves(root, (ArrayList<Node>) root.expand());
@@ -70,7 +110,7 @@ public class IDDFS {
     are considered before the others. That's useful because a lot of Sokoban proper solutions involve a certain number of consecutive
     pushes to the same box.
 */
-    private static ArrayList<Node> orderMoves(Node root, ArrayList<Node> expanded) {
+    private static ArrayList<Node> orderMoves (Node root, ArrayList < Node > expanded){
         Integer boxNumber = root.getLastMovedBox();
         if (boxNumber == null) {
             return expanded;
@@ -94,81 +134,3 @@ public class IDDFS {
         return result;
     }
 }
-
-
-
-/*
-package sokoban.solver.algorithms;
-
-import sokoban.game.Action;
-import sokoban.game.GameBoard;
-import sokoban.solver.Node;
-
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.Stack;
-import java.util.logging.Logger;
-
-*/
-/*
-Implementation of a simple DFS search with Iterative Deepening
-*//*
-
-public class IDDFS {
-    private static Logger log = Logger.getLogger("IDDFS");
-    private static ArrayList<Action> solution;
-
-    public static ArrayList<Action> launch(GameBoard game, int lowerBound) throws CloneNotSupportedException {
-
-        //resetting the solution in case this method was already called in this execution of the program
-        solution = new ArrayList<>();
-
-        int limit = lowerBound;
-        log.info("The lower bound estimate is: " + limit);
-
-        //Iterative deepening cycle
-        while (true) {
-            log.info("Starting the search over: depth " + limit);
-
-            //Resetting the transposition table and initializing the variables for the search
-            //The node representing the initial state of the GameBoard is pushed into the search stack
-            Node.resetTranspositionTable();
-            Node root = new Node(null, game, new ArrayList<Action>());
-            Deque<Node> search = new ArrayDeque<>();
-            search.push(root);
-
-            //Algorithm cycle
-            //It will keep popping off the stack until it's empty
-            while (!search.isEmpty()) {
-                Node toCheck = search.pop();
-                log.info("" + toCheck.getActionHistory());
-
-                //Breaking the cycle if we found a solution
-                if (toCheck.getGame().checkVictory()) {
-                    solution = new ArrayList<>((ArrayList<Action>) toCheck.getActionHistory());
-                    break;
-                }
-
-                //Expanding the node by generating his neighbours
-                //If they weren't visited already, they are pushed on top of the stack
-                //Under the hood, the expand() method is checking for duplicate hashes in a transposition table,
-                //trying to discard nodes representing states that we already encountered.
-                //This is necessary because of the way Sokoban works: you can find yourself in the same state despite
-                //following different search branches, but duplicate states in different nodes of the search tree are not useful.
-                for (Node n : toCheck.expand()) {
-                    if (toCheck.getActionHistory().size() < limit) {
-                        search.push(n);
-                    }
-                }
-
-            }
-
-            //If we didn't find a solution after the iteration, we deepen the search
-            if (!solution.isEmpty()) return solution;
-            else limit += lowerBound/2;
-        }
-
-    }
-}
-*/
