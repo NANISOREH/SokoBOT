@@ -146,9 +146,17 @@ public class Node {
         return lastMovedBox;
     }
 
+    public static ArrayList<Long> getTranspositionTable() {
+        return transpositionTable;
+    }
+
+    public static void setTranspositionTable(ArrayList<Long> transpositionTable) {
+        Node.transpositionTable = transpositionTable;
+    }
+
     /*
-            This method uses MD5 to produce a unique (I hope) representation of the state encapsulated by this node
-        */
+                    This method uses MD5 to produce a unique (I hope) representation of the state encapsulated by this node
+                */
     public long hash() {
 
         MessageDigest md = null;
