@@ -3,25 +3,27 @@ package gui;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import sokoban.game.Action;
 import sokoban.game.Cell;
 import sokoban.game.GameBoard;
+import sokoban.game.Level;
 import sokoban.solver.Node;
 import sokoban.solver.SokobanSolver;
 import sokoban.solver.Strategy;
@@ -29,7 +31,9 @@ import sokoban.solver.Strategy;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EventObject;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -53,11 +57,13 @@ public class Main extends Application {
             e.printStackTrace();
         }
     }
-    private ChoiceBox<Integer> level = new ChoiceBox<>();
-    private ChoiceBox<Strategy> algorithm = new ChoiceBox<>();
-    private Scene menu;
-    private Scene gameScene;
-    private GridPane gameBoard;
+    private static ChoiceBox<Integer> level = new ChoiceBox<>();
+    private static ChoiceBox<Strategy> algorithm = new ChoiceBox<>();
+    private static Scene menu;
+    private static Scene gameScene;
+    private static GridPane gameBoard;
+    private static VBox boardLayout;
+    private static Text result;
 
 
 
@@ -87,7 +93,7 @@ public class Main extends Application {
         Button button = new Button("Start");
 
         layout.getChildren().addAll(label1, level, label2, algorithm, button);
-        menu = new Scene(layout, 300, 300);
+        menu = new Scene(layout, 800, 680);
 
         //The button on the first scene triggers the switch to the gameplay scene and starts the sokoban.game
         button.setOnAction(actionEvent -> {configureGame(primaryStage);});
@@ -112,12 +118,23 @@ public class Main extends Application {
     }
 
     private void configureGame(Stage primaryStage) {
+
+        boardLayout = new VBox();
+        boardLayout.setAlignment(Pos.CENTER);
+        boardLayout.setSpacing(15);
+
+        Level toLoad = new Level(level.getValue());
+        Label label1 = new Label("Level" + level.getValue() + "   -   Requires " + toLoad.getBestSolution() + " steps");
+        result = new Text("Search in progress...");
+
         //Creating, configuring and finally setting the scene for the game itself
-        game = new GameBoard(level.getValue());
+        game = new GameBoard(toLoad);
         gameBoard = createBoard(game);
         gameScene = new Scene(gameBoard);
         //primaryStage.setResizable(false);
-        primaryStage.setScene(gameScene);
+        boardLayout.getChildren().addAll(label1, gameBoard, result);
+        primaryStage.setScene(new Scene(boardLayout, 800, 680));
+        primaryStage.setResizable(false);
 
         //Starting the thread that will execute the sokoban solver and actually move sokoban on the board
         Thread t1 = new Thread(() -> {
@@ -129,7 +146,6 @@ public class Main extends Application {
         });
         t1.start();
 
-        //Scheduling an update of the board every second
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(Main::updateBoard, 0, 200, TimeUnit.MILLISECONDS);
 
@@ -146,6 +162,7 @@ public class Main extends Application {
 
     private static GridPane createBoard(GameBoard game) {
         GridPane gameBoard = new GridPane();
+        gameBoard.setAlignment(Pos.CENTER);
         //gameBoard.setBackground(new Background());
         Cell[][] board = game.getBoard();
         tiles = new Rectangle[game.getRows()][game.getColumns()];
@@ -153,7 +170,7 @@ public class Main extends Application {
         for (int i = 0; i < game.getRows(); i++) {
             for (int j = 0; j < game.getColumns(); j++) {
 
-                Rectangle tile = new Rectangle(50, 50);
+                Rectangle tile = new Rectangle(60, 60);
 
                 switch (board[i][j].getContent()) {
                     case WALL : tile.setFill(new ImagePattern(wall));
@@ -196,6 +213,12 @@ public class Main extends Application {
                 tiles[i][j] = tile;
             }
         }
+
+        if (SokobanSolver.getSolution() != null) {
+            result.setText(algorithm.getValue() + " found a solution in " + SokobanSolver.getSolution().size() + " steps" +
+                    " after examining " + Node.getExaminedNodes() + " unique game states");
+        }
+
     }
 
     /*private void playManually(Scene gameplay) {

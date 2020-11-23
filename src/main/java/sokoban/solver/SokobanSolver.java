@@ -22,6 +22,7 @@ import static java.lang.StrictMath.abs;
 
 public class SokobanSolver {
     private static Logger log = Logger.getLogger("SokobanSolver");
+    private static ArrayList<Action> solution = null;
 /*
     Static method that acts as a façade between the client and the actual algorithms.
     It takes a GameBoard configured with the level to solve, and the strategy chosen by the client to solve it,
@@ -29,7 +30,7 @@ public class SokobanSolver {
 */
     public static void solve(GameBoard toSolve, Strategy strategy) throws InterruptedException, CloneNotSupportedException {
 
-        ArrayList<Action> solution = null;
+        solution = null;
 
         //Resetting the transposition table stored in the Node class just in case we are launching
         //a search on the same level in the same session of the program
@@ -82,5 +83,9 @@ public class SokobanSolver {
         }
 
         return result;
+    }
+
+    public static ArrayList<Action> getSolution() {
+        return solution;
     }
 }

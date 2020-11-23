@@ -170,7 +170,7 @@ public class Node {
             }
         }
 
-        byte[] toHash = new byte[bytes.get(0).length * (bytes.size() + 1)];
+        byte[] toHash = new byte[(bytes.get(0).length) * (bytes.size() + 3)];
         int count = 0;
         for (byte[] array : bytes) {
             for (int i = 0; i < array.length; i++) {
