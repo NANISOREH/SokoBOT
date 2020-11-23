@@ -27,30 +27,12 @@ public class GameBoard implements Cloneable{
     private int columns;
 
     /*
-        GameBoard constructor, reads and parses a level from a json file, then uses parsed data to initialize the instance variables.
-        The client of the class can choose which level to load via the level parameter.
+        GameBoard constructor, takes a Level and uses it to initialize the instance variables.
     */
-    public GameBoard(int level){
-        //Reading the json file into a string
-        StringBuilder jsonBuilder = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new FileReader("levels/level" + level + ".json")))
-        {
-            String sCurrentLine;
-            while ((sCurrentLine = br.readLine()) != null)
-            {
-                jsonBuilder.append(sCurrentLine).append("\n");
-            }
-        }
-        catch (IOException e)
-        {
-            log.warning("The selected level was not found");
-            e.printStackTrace();
-        }
-        String jsonLevel = jsonBuilder.toString();
+    public GameBoard(Level level){
 
-        //Parsing the json my mapping it to a matrix of the enum CellContent
-        Gson gson = new Gson();
-        CellContent[][] parsed = gson.fromJson(jsonLevel, CellContent[][].class);
+        //Gets the content of the level
+        CellContent[][] parsed = level.getContent();
 
         //updating the instance variables with the number of rows and columns
         rows = parsed.length;
