@@ -178,7 +178,7 @@ public class Node {
             }
         }
 
-        byte[] toHash = new byte[(bytes.get(0).length) * (bytes.size() + 3)];
+        byte[] toHash = new byte[(bytes.get(0).length) * (bytes.size() + 3)]; //TODO: check why it goes out of bounds if you don't add 3 (?!)
         int count = 0;
         for (byte[] array : bytes) {
             for (int i = 0; i < array.length; i++) {

@@ -6,6 +6,7 @@ import sokoban.game.GameBoard;
 import sokoban.solver.algorithms.BFS;
 import sokoban.solver.algorithms.IDDFS;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -23,6 +24,7 @@ import static java.lang.StrictMath.abs;
 public class SokobanSolver {
     private static Logger log = Logger.getLogger("SokobanSolver");
     private static ArrayList<Action> solution = null;
+    private static double timeElapsed;
 /*
     Static method that acts as a façade between the client and the actual algorithms.
     It takes a GameBoard configured with the level to solve, and the strategy chosen by the client to solve it,
@@ -31,22 +33,25 @@ public class SokobanSolver {
     public static void solve(GameBoard toSolve, Strategy strategy) throws InterruptedException, CloneNotSupportedException {
 
         solution = null;
+        Long start;
 
         //Resetting the transposition table stored in the Node class just in case we are launching
         //a search on the same level in the same session of the program
         Node.resetTranspositionTable();
 
+        start = Instant.now().toEpochMilli();
         switch (strategy) {
             case BFS -> {
                 solution = BFS.launch((GameBoard) toSolve.clone());
                 break;
             }
-            case IDDFS -> {
-                solution = IDDFS.launch((GameBoard) toSolve.clone(), estimateLowerBound(toSolve));
+            case IDDFS, IDDFS_MO -> {
+                solution = IDDFS.launch((GameBoard) toSolve.clone(), estimateLowerBound(toSolve), strategy);
                 break;
             }
 
         }
+        timeElapsed = (double) (Instant.now().toEpochMilli() - start) / 1000;
 
         //Showing the list of actions in the console and executing the corresponding moves on the board
         if (solution != null && !solution.isEmpty()) {
@@ -69,14 +74,14 @@ public class SokobanSolver {
 /*
     This methods roughly estimates a lower bound to get a starting point for iterative deepening algorithms.
     It sees boxes tiles and goal tiles as two partitions of a bipartite graph and it constructs a complete matching
-    between the two. It obtains the lower bound by summing the manhattan distances between the members of the matching couples.
+    between the two. It obtains the final value by summing the manhattan distances between the members of the matching couples.
 */
     private static int estimateLowerBound(GameBoard toSolve) {
         HashMap<Integer, Cell> boxes = (HashMap<Integer, Cell>) toSolve.getBoxCells().clone();
         ArrayList<Cell> goals = (ArrayList<Cell>) toSolve.getGoalCells().clone();
         int result = 0;
 
-        for (int i = 0; i < boxes.size(); i++) {
+        for (int i = 0; i <= boxes.size(); i++) {
             result = result + boxes.get(i).manhattanDistance(goals.get(0));
             boxes.remove(i);
             goals.remove(0);
@@ -87,5 +92,9 @@ public class SokobanSolver {
 
     public static ArrayList<Action> getSolution() {
         return solution;
+    }
+
+    public static double getTimeElapsed() {
+        return timeElapsed;
     }
 }
