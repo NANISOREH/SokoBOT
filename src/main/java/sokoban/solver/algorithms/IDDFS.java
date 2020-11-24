@@ -1,24 +1,24 @@
 package sokoban.solver.algorithms;
 
 import sokoban.game.Action;
-import sokoban.game.Cell;
-import sokoban.game.CellContent;
 import sokoban.game.GameBoard;
 import sokoban.solver.Node;
+import sokoban.solver.Strategy;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
 /*
-Implementation of a simple DFS search with Iterative Deepening
+Implementation of a DFS search with Iterative Deepening and a couple of optimization,
+namely move ordering by inertia and caching of the lower depths of the search to speed up the initial part of the search.
 */
 public class IDDFS {
     private static Logger log = Logger.getLogger("IDDFS");
     private static ArrayList<Action> solution = new ArrayList<>();
     private static ArrayList<Long> transpositionTableCopy;
     private static boolean memoryFull = false;
+    private static Strategy strategy;
 
     //these two hashmaps are used as a cache to avoid re-exploring the lower levels in iterative deepening
     private static HashMap<Long, Node> cache = new HashMap<>();
@@ -26,8 +26,9 @@ public class IDDFS {
 
     //private static ArrayList<Long> transpositionTable = new ArrayList<>();
 
-    public static ArrayList<Action> launch(GameBoard game, int lowerBound) throws CloneNotSupportedException {
+    public static ArrayList<Action> launch(GameBoard game, int lowerBound, Strategy chosenStrategy) throws CloneNotSupportedException {
 
+        strategy = chosenStrategy;
         Node root = new Node(null, game, new ArrayList<>());
         cache.put(root.hash(), root);
         solution = new ArrayList<>();
@@ -47,7 +48,7 @@ public class IDDFS {
             //from now on, no more cached nodes and we will start over from the last cached frontier
             else if (memoryFull){
                 Node.setTranspositionTable(transpositionTableCopy);
-                limit = limit + lowerBound;
+                limit = limit + lowerBound/2;
             }
 
             //In every iteration, cache will store the nodes in the deepest level reached by the previous iteration.
@@ -55,12 +56,19 @@ public class IDDFS {
             //candidateCache, instead, will store the nodes found in the deepest allowed level of the current iteration,
             //in other words, if the memory doesn't run out during recursiveComponent calls, it will be the next cache.
             if (!memoryFull) candidateCache = new HashMap<>();
-            for (Long key : cache.keySet()) { //launching the DFS on every element in the cache
-                recursiveComponent(cache.get(key), limit);
+            for (Long key : cache.keySet()) {
+                //Launching the DFS on every element in the cache.
+                //We go all the way down to the depth of the estimated lower bound on the first iteration of the algorithm
+                //but then, with every unsuccessful iteration, we only deepen the search by a third of the initial limit
+                //to increase the likelihood of the solution being the optimal one (or near to the optimal one)
+                if (count == 0)
+                    recursiveComponent(cache.get(key), limit);
+                else
+                    recursiveComponent(cache.get(key), limit/3);
             }
             if (!memoryFull) cache = new HashMap<>(candidateCache);
 
-            log.info("visited nodes at depth " + lowerBound * count + ": " + Node.getExaminedNodes());
+            log.info("visited nodes at depth " + (lowerBound + (lowerBound/3 * (count-1))) + ": " + Node.getExaminedNodes());
 
             //If we found a solution in this iteration, we put out the garbage and then return it
             if (!solution.isEmpty() && solution.size() > 0) {
@@ -90,13 +98,18 @@ public class IDDFS {
             }
             else {
                 memoryFull = true;
+                log.info("NO MORE MEM");
                 candidateCache.clear();
             }
             return;
         }
 
         //creating the children of the current root node
-        ArrayList<Node> expanded = orderMoves(root, (ArrayList<Node>) root.expand());
+        ArrayList<Node> expanded = new ArrayList<>();
+        if (strategy == Strategy.IDDFS_MO)
+            expanded = orderMoves(root, (ArrayList<Node>) root.expand());
+        else
+            expanded = (ArrayList<Node>) root.expand();
 
         //recursively calling this method on root's children, lowering by one the depth they are allowed to explore
         for (Node n : expanded) {
