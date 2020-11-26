@@ -79,19 +79,19 @@ public class Cell implements Cloneable, Serializable {
         cloned.goal = this.goal;
         cloned.boxNumber = this.boxNumber;
         switch (this.content) {
-            case BOX -> {
+            case BOX : {
                 cloned.content = CellContent.BOX;
                 break;
             }
-            case SOKOBAN -> {
+            case SOKOBAN : {
                 cloned.content = CellContent.SOKOBAN;
                 break;
             }
-            case WALL -> {
+            case WALL : {
                 cloned.content = CellContent.WALL;
                 break;
             }
-            case EMPTY -> {
+            case EMPTY : {
                 cloned.content = CellContent.EMPTY;
                 break;
             }

@@ -94,7 +94,7 @@ public class Node {
             actionHistory.add(move);
             pathCost++;
 
-            //we check if a box was moved in the move and update the lastMovedBox variable
+            //we check if a box was moved in this turn and update the lastMovedBox variable
             afterBoxCells = new HashMap<>(game.getBoxCells());
             for (int i = 0; i < beforeBoxCells.size(); i++) {
                 if (beforeBoxCells.get(i).getRow() != afterBoxCells.get(i).getRow() ||
@@ -155,8 +155,8 @@ public class Node {
     }
 
     /*
-                    This method uses MD5 to produce a unique (I hope) representation of the state encapsulated by this node
-                */
+        This method uses MD5 to produce a unique (I hope) representation of the state encapsulated by this node
+    */
     public long hash() {
 
         MessageDigest md = null;
