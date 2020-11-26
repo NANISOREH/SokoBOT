@@ -23,9 +23,7 @@ import sokoban.solver.Node;
 import sokoban.solver.SokobanSolver;
 import sokoban.solver.Strategy;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,14 +42,10 @@ public class Main extends Application {
     private static Image goal;
     private static Background background = new Background(new BackgroundFill(Color.rgb(54, 54, 54), null, null));
     static {
-        try {
-            sokoban = new Image(new FileInputStream("src/main/resources/sokoban.png"));
-            box = new Image(new FileInputStream("src/main/resources/cassa.png"));
-            wall = new Image(new FileInputStream("src/main/resources/wall.png"));
-            goal = new Image(new FileInputStream("src/main/resources/goal.png"));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        sokoban = new Image(Main.class.getResourceAsStream("/sokoban.png"));
+        box = new Image(Main.class.getResourceAsStream("/cassa.png"));
+        wall = new Image(Main.class.getResourceAsStream("/wall.png"));
+        goal = new Image(Main.class.getResourceAsStream("/goal.png"));
     }
     private static ChoiceBox<Integer> level = new ChoiceBox<>();
     private static ChoiceBox<String> algorithm = new ChoiceBox<>();

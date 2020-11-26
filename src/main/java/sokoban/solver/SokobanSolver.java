@@ -41,11 +41,12 @@ public class SokobanSolver {
 
         start = Instant.now().toEpochMilli();
         switch (strategy) {
-            case BFS -> {
+            case BFS : {
                 solution = BFS.launch((GameBoard) toSolve.clone());
                 break;
             }
-            case IDDFS, IDDFS_MO -> {
+            case IDDFS :
+            case IDDFS_MO : {
                 solution = IDDFS.launch((GameBoard) toSolve.clone(), estimateLowerBound(toSolve), strategy);
                 break;
             }

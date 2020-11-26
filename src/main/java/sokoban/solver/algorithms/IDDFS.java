@@ -1,3 +1,4 @@
+
 package sokoban.solver.algorithms;
 
 import sokoban.game.Action;
@@ -16,7 +17,7 @@ namely move ordering by inertia and caching of the lower depths of the search to
 public class IDDFS {
     private static Logger log = Logger.getLogger("IDDFS");
     private static ArrayList<Action> solution = new ArrayList<>();
-    private static ArrayList<Long> transpositionTableCopy;
+    private static ArrayList<Long> transpositionTableCopy = new ArrayList<>();
     private static boolean memoryFull = false;
     private static Strategy strategy;
 
@@ -42,12 +43,13 @@ public class IDDFS {
             //when we finally have no more space, we can can restore its state to effectively start a proper, uncached
             //IDDFS starting from the last cached frontier
             if (!memoryFull) {
-                transpositionTableCopy = new ArrayList<>(Node.getTranspositionTable());
+                transpositionTableCopy.clear();
+                transpositionTableCopy = (ArrayList<Long>) Node.getTranspositionTable().clone();
             }
             //If memory is full, we have to restore the transposition table backup and increment the limit of the search:
             //from now on, no more cached nodes and we will start over from the last cached frontier
             else if (memoryFull){
-                Node.setTranspositionTable(transpositionTableCopy);
+                Node.setTranspositionTable((ArrayList<Long>) transpositionTableCopy.clone());
                 limit = limit + lowerBound/2;
             }
 
@@ -81,9 +83,9 @@ public class IDDFS {
         }
     }
 
-/*
-    Private helper method that actually kickstarts the DFS recursive call stack
-*/
+    /*
+        Private helper method that actually kickstarts the DFS recursive call stack
+    */
     private static void recursiveComponent (Node root,int limit) throws CloneNotSupportedException {
         //solution checking
         if (root.getGame().checkVictory()) {
@@ -98,12 +100,15 @@ public class IDDFS {
             }
             else {
                 memoryFull = true;
-                log.info("NO MORE MEM");
+                log.info("NO MORE MEMORY");
                 candidateCache.clear();
             }
             return;
         }
-
+        else if (limit == 0 && memoryFull) {
+            candidateCache.clear();
+            return;
+        }
         //creating the children of the current root node
         ArrayList<Node> expanded = new ArrayList<>();
         if (strategy == Strategy.IDDFS_MO)
@@ -118,11 +123,11 @@ public class IDDFS {
 
     }
 
-/*
-    A simple move ordering optimization: states that involve pushing a box that was pushed by their parents too
-    are considered before the others. That's useful because a lot of Sokoban proper solutions involve a certain number of consecutive
-    pushes to the same box.
-*/
+    /*
+        A simple move ordering optimization: states that involve pushing a box that was pushed by their parents too
+        are considered before the others. That's useful because a lot of Sokoban proper solutions involve a certain number of consecutive
+        pushes to the same box.
+    */
     private static ArrayList<Node> orderMoves (Node root, ArrayList < Node > expanded){
         Integer boxNumber = root.getLastMovedBox();
         if (boxNumber == null) {
@@ -130,7 +135,7 @@ public class IDDFS {
         }
 
         ArrayList<Node> result = new ArrayList<>();
-
+        
         for (Node n : expanded) {
             if (n.getLastMovedBox() == null)
                 continue;
