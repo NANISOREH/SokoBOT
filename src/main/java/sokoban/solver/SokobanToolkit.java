@@ -65,92 +65,11 @@ public class SokobanToolkit {
         return result;
     }
 
-/*
-    Given a game state and a cell, it determines if Sokoban can reach that cell and returns a list of actions
-    containing the best path that Sokoban can use to get there, or a null list in case there's no way to reach the target.
-    It uses a modified version of Dijkstra's algorithm to do so.
-*//*
-    public static ArrayList<Action> searchPath (GameBoard state, Cell target) throws CloneNotSupportedException {
-
-        if (state.getSokobanCell().equals(target)) {
-            return new ArrayList<>();
-        }
-        
-        //Local class modeling a node for dijkstra
-        class DijkstraNode {
-            ArrayList<Action> path;
-            Cell node;
-            int label;
-
-            public DijkstraNode(ArrayList<Action> path, Cell node, int label) {
-                this.path = path;
-                this.node = node;
-                this.label = label;
-            }
-
-            public void addAction (Action a) {
-                path.add(a);
-            }
-            
-            public DijkstraNode clone () throws CloneNotSupportedException {
-                DijkstraNode d = new DijkstraNode((ArrayList) this.path.clone(), (Cell) this.node.clone(), this.label);
-                return d;
-            }
-        }
-
-        //Creating a comparator to let the priority queue know how to order the nodes
-        Comparator<DijkstraNode> cellComparator = new Comparator<>() {
-            @Override
-            public int compare(DijkstraNode cell, DijkstraNode t1) {
-                return cell.label - t1.label;
-            }
-        };
-
-        //Creating the priority queue that will host nodes without the definitive labels
-        PriorityQueue<DijkstraNode> cells = new PriorityQueue<>(cellComparator);
-
-        //This structure will host cells that were already examined and received a label, the source node is the first
-        PriorityQueue<DijkstraNode> labeledCells = new PriorityQueue<>(cellComparator);
-        labeledCells.add(new DijkstraNode(new ArrayList<>(), state.getSokobanCell(), 0));
-
-        while (true) {
-            //forming the "neighbourhood" of every already labeled cell so that we can do dijkstra stuff on it
-            //what we're doing is basicly a version of dijjkstra that works on an implicit graph
-            for (int i = 0; i < labeledCells.size(); i++) {
-                DijkstraNode created;
-
-                created = labeledCells.peek().clone();
-                created.node = state.getNorth(created.node);
-                created.label++;
-                if (!cells.contains(created) && created.node.getContent() == CellContent.EMPTY) cells.add(created);
-
-                created = labeledCells.peek().clone();
-                created.node = state.getSouth(created.node);
-                created.label++;
-                if (!cells.contains(created) && created.node.getContent() == CellContent.EMPTY) cells.add(created);
-
-                created = labeledCells.peek().clone();
-                created.node = state.getEast(created.node);
-                created.label++;
-                if (!cells.contains(created) && created.node.getContent() == CellContent.EMPTY) cells.add(created);
-
-                created = labeledCells.peek().clone();
-                created.node = state.getWest(created.node);
-                created.label++;
-                if (!cells.contains(created) && created.node.getContent() == CellContent.EMPTY) cells.add(created);
-            }
-        }
-        
-
-
-        return null;
-
-    }*/
 
     /*
     Given a game state and a cell, it determines if Sokoban can reach that cell and returns a list of actions
     containing the best path that Sokoban can use to get there, or a null list in case there's no way to reach the target.
-    It uses a modified version of Dijkstra's algorithm to do so.
+    It uses a BFS to do so.
 */
     public static ArrayList<Action> searchPath (GameBoard state, Cell target) throws CloneNotSupportedException {
 
@@ -231,10 +150,10 @@ public class SokobanToolkit {
                         nextLevel.add(west);
                     }
                 }
-
-                if (nextLevel.size() == 0)
-                    return null;
             }
+
+            if (front.size() == 0)
+                return null;
 
             //"Promoting" the nodes found by expanding the current frontier for the next iteration
             front.clear();
