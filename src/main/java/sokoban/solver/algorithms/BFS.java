@@ -25,7 +25,7 @@ public class BFS {
         //to a second utility structure that will be expanded the same way on the next iteration.
         //The stopping condition is, of course, finding a node that represents a winning state.
         for (int count = 0; true; count++) {
-            log.info("level " + count + "\nfront size " + front.size());
+            log.info("level " + count + "\nfront size " + front.size() + "\nexplored nodes " + Node.getExaminedNodes());
             ArrayList<Node> nextLevel = new ArrayList<>();
             for (Node n : front) {
                 if (n.getGame().checkVictory()) {

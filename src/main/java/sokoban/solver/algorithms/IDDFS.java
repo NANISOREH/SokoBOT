@@ -4,6 +4,7 @@ package sokoban.solver.algorithms;
 import sokoban.game.Action;
 import sokoban.game.GameBoard;
 import sokoban.solver.Node;
+import sokoban.solver.SokobanToolkit;
 import sokoban.solver.Strategy;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.logging.Logger;
 /*
 Implementation of a DFS search with Iterative Deepening and a couple of optimization,
 namely move ordering by inertia and caching of the lower depths of the search to speed up the initial part of the search.
+TODO: test move ordering, right now it seems to have no effect
 */
 public class IDDFS {
     private static Logger log = Logger.getLogger("IDDFS");
@@ -25,8 +27,6 @@ public class IDDFS {
     private static HashMap<Long, Node> cache = new HashMap<>();
     private static HashMap<Long, Node> candidateCache = new HashMap<>();
 
-    //private static ArrayList<Long> transpositionTable = new ArrayList<>();
-
     public static ArrayList<Action> launch(GameBoard game, int lowerBound, Strategy chosenStrategy) throws CloneNotSupportedException {
 
         strategy = chosenStrategy;
@@ -37,7 +37,7 @@ public class IDDFS {
         log.info("The lower bound estimate is: " + limit);
 
         //Iterative deepening cycle
-        for (int count = 0; true; count++) {
+        while (true) {
 
             //Before every iteration, if the memory is not full yet, we make a copy of the transposition table so that,
             //when we finally have no more space, we can can restore its state to effectively start a proper, uncached
@@ -49,6 +49,7 @@ public class IDDFS {
             //If memory is full, we have to restore the transposition table backup and increment the limit of the search:
             //from now on, no more cached nodes and we will start over from the last cached frontier
             else if (memoryFull){
+                Node.resetSearchSpace();
                 Node.setTranspositionTable((ArrayList<Long>) transpositionTableCopy.clone());
                 limit = limit + lowerBound/2;
             }
@@ -60,17 +61,11 @@ public class IDDFS {
             if (!memoryFull) candidateCache = new HashMap<>();
             for (Long key : cache.keySet()) {
                 //Launching the DFS on every element in the cache.
-                //We go all the way down to the depth of the estimated lower bound on the first iteration of the algorithm
-                //but then, with every unsuccessful iteration, we only deepen the search by a third of the initial limit
-                //to increase the likelihood of the solution being the optimal one (or near to the optimal one)
-                if (count == 0)
-                    recursiveComponent(cache.get(key), limit);
-                else
-                    recursiveComponent(cache.get(key), limit/3);
+                recursiveComponent(cache.get(key), limit);
             }
             if (!memoryFull) cache = new HashMap<>(candidateCache);
 
-            log.info("visited nodes at depth " + (lowerBound + (lowerBound/3 * (count-1))) + ": " + Node.getExaminedNodes());
+            log.info("visited nodes at depth " + Node.getDepth() + ": " + Node.getExaminedNodes());
 
             //If we found a solution in this iteration, we put out the garbage and then return it
             if (!solution.isEmpty() && solution.size() > 0) {
@@ -86,7 +81,7 @@ public class IDDFS {
     /*
         Private helper method that actually kickstarts the DFS recursive call stack
     */
-    private static void recursiveComponent (Node root,int limit) throws CloneNotSupportedException {
+    private static void recursiveComponent (Node root, int limit) throws CloneNotSupportedException {
         //solution checking
         if (root.getGame().checkVictory()) {
             solution = new ArrayList<>(root.getActionHistory());
@@ -110,11 +105,10 @@ public class IDDFS {
             return;
         }
         //creating the children of the current root node
-        ArrayList<Node> expanded = new ArrayList<>();
+        ArrayList<Node> expanded = (ArrayList<Node>) root.expand();
+        //ordering by inertia if move ordering was selected by the client
         if (strategy == Strategy.IDDFS_MO)
-            expanded = orderMoves(root, (ArrayList<Node>) root.expand());
-        else
-            expanded = (ArrayList<Node>) root.expand();
+            expanded = new ArrayList<>(SokobanToolkit.orderByInertia(root, expanded));
 
         //recursively calling this method on root's children, lowering by one the depth they are allowed to explore
         for (Node n : expanded) {
@@ -123,32 +117,4 @@ public class IDDFS {
 
     }
 
-    /*
-        A simple move ordering optimization: states that involve pushing a box that was pushed by their parents too
-        are considered before the others. That's useful because a lot of Sokoban proper solutions involve a certain number of consecutive
-        pushes to the same box.
-    */
-    private static ArrayList<Node> orderMoves (Node root, ArrayList < Node > expanded){
-        Integer boxNumber = root.getLastMovedBox();
-        if (boxNumber == null) {
-            return expanded;
-        }
-
-        ArrayList<Node> result = new ArrayList<>();
-        
-        for (Node n : expanded) {
-            if (n.getLastMovedBox() == null)
-                continue;
-            else if (n.getLastMovedBox().equals(boxNumber))
-                result.add(n);
-        }
-
-        for (Node n : expanded) {
-            if (!result.contains(n)) {
-                result.add(n);
-            }
-        }
-
-        return result;
-    }
 }

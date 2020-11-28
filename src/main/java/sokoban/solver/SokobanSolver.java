@@ -18,7 +18,6 @@ import static java.lang.StrictMath.abs;
     Actor class that solves a sokoban puzzle.
     This class's responsibility is to take "orders" from the client, executing the preliminary operations for the algorithm's
     execution, launching the algorithm itself and finally distributing the solution.
-    In fact, it only delegates the inner logic of the implemented algorithms.
 */
 
 public class SokobanSolver {
@@ -30,14 +29,15 @@ public class SokobanSolver {
     It takes a GameBoard configured with the level to solve, and the strategy chosen by the client to solve it,
     and launches the search accordingly. If a solution is found, it acts upon the original GameBoard to show it.
 */
-    public static void solve(GameBoard toSolve, Strategy strategy) throws InterruptedException, CloneNotSupportedException {
+    public static void solve(GameBoard toSolve, Strategy strategy, ExpansionScheme expansionScheme) throws InterruptedException, CloneNotSupportedException {
 
         solution = null;
         Long start;
 
         //Resetting the transposition table stored in the Node class just in case we are launching
         //a search on the same level in the same session of the program
-        Node.resetTranspositionTable();
+        Node.resetSearchSpace();
+        Node.setExpansionScheme(expansionScheme);
 
         start = Instant.now().toEpochMilli();
         switch (strategy) {
@@ -47,7 +47,7 @@ public class SokobanSolver {
             }
             case IDDFS :
             case IDDFS_MO : {
-                solution = IDDFS.launch((GameBoard) toSolve.clone(), estimateLowerBound(toSolve), strategy);
+                solution = IDDFS.launch((GameBoard) toSolve.clone(), SokobanToolkit.estimateLowerBound(toSolve), strategy);
                 break;
             }
 
@@ -71,25 +71,6 @@ public class SokobanSolver {
         }
     }
 
-
-/*
-    This methods roughly estimates a lower bound to get a starting point for iterative deepening algorithms.
-    It sees boxes tiles and goal tiles as two partitions of a bipartite graph and it constructs a complete matching
-    between the two. It obtains the final value by summing the manhattan distances between the members of the matching couples.
-*/
-    private static int estimateLowerBound(GameBoard toSolve) {
-        HashMap<Integer, Cell> boxes = (HashMap<Integer, Cell>) toSolve.getBoxCells().clone();
-        ArrayList<Cell> goals = (ArrayList<Cell>) toSolve.getGoalCells().clone();
-        int result = 0;
-
-        for (int i = 0; i <= boxes.size(); i++) {
-            result = result + boxes.get(i).manhattanDistance(goals.get(0));
-            boxes.remove(i);
-            goals.remove(0);
-        }
-
-        return result;
-    }
 
     public static ArrayList<Action> getSolution() {
         return solution;
