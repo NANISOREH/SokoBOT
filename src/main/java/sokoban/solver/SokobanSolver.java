@@ -22,7 +22,7 @@ import static java.lang.StrictMath.abs;
 
 public class SokobanSolver {
     private static Logger log = Logger.getLogger("SokobanSolver");
-    private static ArrayList<Action> solution = null;
+    private static Node solution = null;
     private static double timeElapsed;
 /*
     Static method that acts as a façade between the client and the actual algorithms.
@@ -54,12 +54,14 @@ public class SokobanSolver {
         }
         timeElapsed = (double) (Instant.now().toEpochMilli() - start) / 1000;
 
+        ArrayList<Action> solutionActions = solution.getActionHistory();
         //Showing the list of actions in the console and executing the corresponding moves on the board
-        if (solution != null && !solution.isEmpty()) {
-            log.info("Solution found in " + solution.size() + " moves!");
+        if (solution != null && !solutionActions.isEmpty()) {
+            log.info("Solution found in " + solutionActions.size() + " moves!");
+            log.info(solution.getPushesNumber() + " pushes were needed");
             log.info("number of examined nodes: " + Node.getExaminedNodes());
-            log.info("" + solution);
-            for (Action a : solution) {
+            log.info("" + solution.getActionHistory());
+            for (Action a : solutionActions) { //TODO: understand why it doesn't play out anymore
                 //we execute every action in the solution: the board will automagically solve the puzzle as a result
                 toSolve.takeAction(a);
                 Thread.sleep(200);
@@ -73,7 +75,11 @@ public class SokobanSolver {
 
 
     public static ArrayList<Action> getSolution() {
-        return solution;
+
+        if (solution != null && solution.getActionHistory().size() > 0)
+            return solution.getActionHistory();
+        else
+            return null;
     }
 
     public static double getTimeElapsed() {

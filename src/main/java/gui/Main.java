@@ -63,18 +63,6 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
 
-        Level one = new Level(6);
-        Node test = new Node(null, new GameBoard(one), new ArrayList<>());
-        try {
-            for (Node a : test.test()) {
-                a.test();
-                log.info("" + Node.getTranspositionTable().size());
-            }
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-        }
-
-
         //Configuring level selection label and choicebox
         VBox levelSide = new VBox();
         Label label1 = new Label("Select a level");
@@ -164,7 +152,9 @@ public class Main extends Application {
         Level toLoad = new Level(level.getValue());
         Label label1 = new Label("Level" + level.getValue() + "   -   Requires " + toLoad.getBestSolution() + " steps");
         label1.setTextFill(Color.LIGHTGRAY);
-        result = new Text("Search in progress...\nThe solution will be demonstrated after the computation");
+        result = new Text("Search in progress. The solution will be demonstrated after the computation.\n" +
+                "\nAlgorithm: " + algorithm.getValue() +
+                "\nExpansion scheme: " + scheme.getValue());
         result.setFill(Color.LIGHTGRAY);
 
         //Creating, configuring and finally setting the scene for the game itself
@@ -252,8 +242,8 @@ public class Main extends Application {
         }
 
         if (SokobanSolver.getSolution() != null) {
-            result.setText(algorithm.getValue() + " found a solution in " + SokobanSolver.getSolution().size() + " steps" +
-                    " after examining " + Node.getExaminedNodes() + " unique game states\n" +
+            result.setText(algorithm.getValue() + " found a solution in " + SokobanSolver.getSolution().size() + " steps.\n\n" +
+                    Node.getExaminedNodes() + " unique game states were examined.\n" +
                     "Time elapsed: " + SokobanSolver.getTimeElapsed() + " seconds");
         }
 

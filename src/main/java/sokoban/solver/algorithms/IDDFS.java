@@ -18,7 +18,7 @@ TODO: test move ordering, right now it seems to have no effect
 */
 public class IDDFS {
     private static Logger log = Logger.getLogger("IDDFS");
-    private static ArrayList<Action> solution = new ArrayList<>();
+    private static Node solution = null;
     private static ArrayList<Long> transpositionTableCopy = new ArrayList<>();
     private static boolean memoryFull = false;
     private static Strategy strategy;
@@ -27,12 +27,12 @@ public class IDDFS {
     private static HashMap<Long, Node> cache = new HashMap<>();
     private static HashMap<Long, Node> candidateCache = new HashMap<>();
 
-    public static ArrayList<Action> launch(GameBoard game, int lowerBound, Strategy chosenStrategy) throws CloneNotSupportedException {
+    public static Node launch(GameBoard game, int lowerBound, Strategy chosenStrategy) throws CloneNotSupportedException {
 
+        solution = null;
         strategy = chosenStrategy;
         Node root = new Node(null, game, new ArrayList<>());
         cache.put(root.hash(), root);
-        solution = new ArrayList<>();
         int limit = lowerBound;
         log.info("The lower bound estimate is: " + limit);
 
@@ -51,7 +51,7 @@ public class IDDFS {
             else if (memoryFull){
                 Node.resetSearchSpace();
                 Node.setTranspositionTable((ArrayList<Long>) transpositionTableCopy.clone());
-                limit = limit + lowerBound/2;
+                limit = limit + lowerBound/3;
             }
 
             //In every iteration, cache will store the nodes in the deepest level reached by the previous iteration.
@@ -68,7 +68,7 @@ public class IDDFS {
             log.info("visited nodes at depth " + Node.getDepth() + ": " + Node.getExaminedNodes());
 
             //If we found a solution in this iteration, we put out the garbage and then return it
-            if (!solution.isEmpty() && solution.size() > 0) {
+            if (solution != null && solution.getActionHistory().size() > 0) {
                 transpositionTableCopy.clear();
                 cache.clear();
                 candidateCache.clear();
@@ -84,7 +84,7 @@ public class IDDFS {
     private static void recursiveComponent (Node root, int limit) throws CloneNotSupportedException {
         //solution checking
         if (root.getGame().checkVictory()) {
-            solution = new ArrayList<>(root.getActionHistory());
+            solution = root;
             return;
         }
         //if we reached the bottom without finding a solution, the search will stop and

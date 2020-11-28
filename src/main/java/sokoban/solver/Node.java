@@ -22,10 +22,11 @@ public class Node {
     private static Logger log = Logger.getLogger("Node");
     private static ArrayList<Long> transpositionTable = new ArrayList<>();
     private static int depth;
-    private static ExpansionScheme expansionScheme = ExpansionScheme.MOVE_BASED;
+    private static ExpansionScheme expansionScheme;
     private Node parent;
     private GameBoard game;
     private int pathCost;
+    private int pushesNumber;
     private Integer lastMovedBox; //Key of the cell currently occupied by the last box moved, needed for move ordering
     private ArrayList<Action> actionHistory = new ArrayList<>();
 
@@ -36,6 +37,7 @@ public class Node {
         this.game = game;
         this.actionHistory = actions;
         this.pathCost = 0;
+        this.pushesNumber = 0;
         lastMovedBox = null;
     }
 
@@ -52,9 +54,6 @@ public class Node {
         if (!transpositionTable.contains(this.hash()))
             transpositionTable.add(this.hash());
 
-        if (this.getActionHistory().size() > depth)
-            depth = this.getActionHistory().size();
-
         if (expansionScheme == ExpansionScheme.MOVE_BASED)
             return this.expandByMoves();
         else
@@ -62,69 +61,79 @@ public class Node {
     }
 
     private Collection<? extends Node> expandByPushes() throws CloneNotSupportedException {
+
+        if (this.getActionHistory().size() > depth)
+            depth = this.pushesNumber;
+
         ArrayList<Node> expanded = new ArrayList<>();
-        HashMap<Integer, Cell> boxes = this.getGame().getBoxCells();
+        GameBoard initialState = (GameBoard) this.game.clone();
+        HashMap<Integer, Cell> boxes = initialState.getBoxCells();
         Cell neighbour;
         Cell oppositeNeighbour;
-        Node newState;
 
         //examining all current positions of the boxes on the board
         for (Integer boxKey : boxes.keySet()) {
 
-            neighbour = this.getGame().getNorth(boxes.get(boxKey));
-            oppositeNeighbour = this.getGame().getSouth(boxes.get(boxKey));
-            //checking if the cell adjacent to the box is empty or contains sokoban: that's the only way we can push the box
+            neighbour = initialState.getNorth(boxes.get(boxKey));
+            oppositeNeighbour = initialState.getSouth(boxes.get(boxKey));
+            Node down = new Node(this, (GameBoard) initialState.clone(), (ArrayList<Action>) this.getActionHistory().clone());
+            //checking if two opposite cells adjacent to the box are empty or contain sokoban: that's the only way we can push the box
             if ((neighbour.getContent() == CellContent.EMPTY || neighbour.getContent() == CellContent.SOKOBAN) &&
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
-
-                newState = new Node(this, (GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
                 //checking if the neighbour of the selected box is reachable by sokoban
                 //if that's true, the actions involved in reaching the box and pushing it can be carried out
-                if (push (newState, neighbour, Action.MOVE_DOWN) && !transpositionTable.contains(newState)) {
-                    expanded.add(newState);
-                    transpositionTable.add(newState.hash());
+                if (push (down, neighbour, Action.MOVE_DOWN)) {
+                    if (!transpositionTable.contains(down.hash())) {
+                        transpositionTable.add(down.hash());
+                        expanded.add(down);
+                    }
                 }
             }
 
-            neighbour = this.getGame().getSouth(boxes.get(boxKey));
-            oppositeNeighbour = this.getGame().getNorth(boxes.get(boxKey));
+            neighbour = initialState.getSouth(boxes.get(boxKey));
+            oppositeNeighbour = initialState.getNorth(boxes.get(boxKey));
+            Node up = new Node(this, (GameBoard) initialState.clone(), (ArrayList<Action>) this.getActionHistory().clone());
             if ((neighbour.getContent() == CellContent.EMPTY || neighbour.getContent() == CellContent.SOKOBAN) &&
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
-                newState = new Node(this, (GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
-                if (push (newState, neighbour, Action.MOVE_UP) && !transpositionTable.contains(newState)) {
-                    expanded.add(newState);
-                    transpositionTable.add(newState.hash());
+                if (push (up, neighbour, Action.MOVE_UP)) {
+                    if (!transpositionTable.contains(up.hash())) {
+                        transpositionTable.add(up.hash());
+                        expanded.add(up);
+                    }
                 }
             }
 
-            neighbour = this.getGame().getEast(boxes.get(boxKey));
-            oppositeNeighbour = this.getGame().getWest(boxes.get(boxKey));
+            neighbour = initialState.getEast(boxes.get(boxKey));
+            oppositeNeighbour = initialState.getWest(boxes.get(boxKey));
+            Node left = new Node(this, (GameBoard) initialState.clone(), (ArrayList<Action>) this.getActionHistory().clone());
             if ((neighbour.getContent() == CellContent.EMPTY || neighbour.getContent() == CellContent.SOKOBAN) &&
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
-                newState = new Node(this, (GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
-                if (push (newState, neighbour, Action.MOVE_LEFT) && !transpositionTable.contains(newState)) {
-                    expanded.add(newState);
-                    transpositionTable.add(newState.hash());
+                if (push (left, neighbour, Action.MOVE_LEFT)) {
+                    if (!transpositionTable.contains(left.hash())) {
+                        transpositionTable.add(left.hash());
+                        expanded.add(left);
+                    }
                 }
 
             }
 
-            neighbour = this.getGame().getWest(boxes.get(boxKey));
-            oppositeNeighbour = this.getGame().getEast(boxes.get(boxKey));
+            neighbour = initialState.getWest(boxes.get(boxKey));
+            oppositeNeighbour = initialState.getEast(boxes.get(boxKey));
+            Node right = new Node(this, (GameBoard) initialState.clone(), (ArrayList<Action>) this.getActionHistory().clone());
             if ((neighbour.getContent() == CellContent.EMPTY || neighbour.getContent() == CellContent.SOKOBAN) &&
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
-                newState = new Node(this, (GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
-                if (push (newState, neighbour, Action.MOVE_RIGHT) && !transpositionTable.contains(newState)) {
-                    expanded.add(newState);
-                    transpositionTable.add(newState.hash());
+                if (push (right, neighbour, Action.MOVE_RIGHT)) {
+                    if (!transpositionTable.contains(right.hash())) {
+                        transpositionTable.add(right.hash());
+                        expanded.add(right);
+                    }
                 }
 
             }
-
         }
 
         return expanded;
@@ -138,14 +147,15 @@ public class Node {
     private boolean push (Node newState, Cell neighbour, Action action) throws CloneNotSupportedException {
         ArrayList<Action> path = null;
 
-        path = SokobanToolkit.searchPath((GameBoard) newState.getGame().clone(), neighbour);
+        path = SokobanToolkit.searchPath(newState.getGame(), (Cell) neighbour.clone());
         if (path != null) {
             //reaching a cell adjacent to the box
             for (Action a : path) {
-                newState.executeMove(a);
+                executeMove(newState, a);
             }
             //moving the box
-            newState.executeMove(action);
+            executeMove(newState, action);
+            newState.pushesNumber = this.pushesNumber + 1;
             return true;
         }
 
@@ -161,30 +171,37 @@ public class Node {
     private Collection<? extends Node> expandByMoves() throws CloneNotSupportedException {
         ArrayList<Node> expanded = new ArrayList<>();
 
+        if (this.getActionHistory().size() > depth)
+            depth = this.getActionHistory().size();
+
         Node first = new Node(this, (GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
+        first.setPushesNumber(this.pushesNumber);
         first.setPathCost(this.pathCost);
-        if (first.executeMove(Action.MOVE_DOWN) && !transpositionTable.contains(first.hash())) {
+        if (executeMove(first, Action.MOVE_DOWN) && !transpositionTable.contains(first.hash())) {
             expanded.add(first);
             transpositionTable.add(first.hash());
         }
 
         Node second = new Node(this, (GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         second.setPathCost(this.pathCost);
-        if (second.executeMove(Action.MOVE_UP) && !transpositionTable.contains(second.hash())) {
+        second.setPushesNumber(this.pushesNumber);
+        if (executeMove(second, Action.MOVE_UP) && !transpositionTable.contains(second.hash())) {
             expanded.add(second);
             transpositionTable.add(second.hash());
         }
 
         Node third = new Node(this, (GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         third.setPathCost(this.pathCost);
-        if (third.executeMove(Action.MOVE_LEFT) && !transpositionTable.contains(third.hash())) {
+        third.setPushesNumber(this.pushesNumber);
+        if (executeMove(third, Action.MOVE_LEFT) && !transpositionTable.contains(third.hash())) {
             expanded.add(third);
             transpositionTable.add(third.hash());
         }
 
         Node fourth = new Node(this, (GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         fourth.setPathCost(this.pathCost);
-        if (fourth.executeMove(Action.MOVE_RIGHT)&& !transpositionTable.contains(fourth.hash())) {
+        fourth.setPushesNumber(this.pushesNumber);
+        if (executeMove(fourth, Action.MOVE_RIGHT)&& !transpositionTable.contains(fourth.hash())) {
             expanded.add(fourth);
             transpositionTable.add(fourth.hash());
         }
@@ -199,24 +216,25 @@ public class Node {
     It also updates the instance variable with the last moved box (if one was moved), to help with
     move ordering optimizations.
 */
-    private boolean executeMove (Action move) throws CloneNotSupportedException {
+    private boolean executeMove (Node node, Action move) throws CloneNotSupportedException {
         HashMap<Integer, Cell> beforeBoxCells = new HashMap<>(game.getBoxCells());
         HashMap<Integer, Cell> afterBoxCells;
 
-        if (game.takeAction(move)) {
-            actionHistory.add(move);
-            pathCost++;
+        if (node.game.takeAction(move)) {
+            node.actionHistory.add(move);
+            node.pathCost++;
 
-            //we check if a box was moved in this turn and update the lastMovedBox variable
-            afterBoxCells = new HashMap<>(game.getBoxCells());
+            //we check if a box was moved in this move and update the lastMovedBox variable
+            afterBoxCells = new HashMap<>(node.game.getBoxCells());
             for (int i = 0; i < beforeBoxCells.size(); i++) {
                 if (beforeBoxCells.get(i).getRow() != afterBoxCells.get(i).getRow() ||
                     beforeBoxCells.get(i).getColumn() != afterBoxCells.get(i).getColumn()) {
-                    lastMovedBox = i;
+                    node.lastMovedBox = i;
+                    node.pushesNumber++;
                     return true;
                 }
             }
-            lastMovedBox = null;
+            node.lastMovedBox = null;
             return true;
         }
 
@@ -226,9 +244,10 @@ public class Node {
     /*
         This method uses MD5 to produce a unique (I hope) representation of the state encapsulated by this node
 */
-    public long hash() {
+    public long hash() throws CloneNotSupportedException {
 
         MessageDigest md = null;
+        GameBoard cloned = (GameBoard) this.getGame().clone();
 
         try {
             md = MessageDigest.getInstance("MD5");
@@ -236,11 +255,15 @@ public class Node {
             e.printStackTrace();
         }
 
+/*        if (expansionScheme == ExpansionScheme.PUSH_BASED) {
+            cloned.getBoard()[cloned.getSokobanCell().getRow()][cloned.getSokobanCell().getColumn()].setContent(CellContent.EMPTY);
+        }*/
+
         ArrayList<byte[]> bytes = new ArrayList<>();
-        for (int i = 0; i<this.game.getRows(); i++){
-            for (int j=0; j<this.game.getColumns(); j++) {
+        for (int i = 0; i<cloned.getRows(); i++){
+            for (int j=0; j<cloned.getColumns(); j++) {
                 try {
-                    bytes.add(this.game.getBoard()[i][j].toBytes());
+                    bytes.add(cloned.getBoard()[i][j].toBytes());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -327,5 +350,13 @@ public class Node {
 
     public static int getDepth() {
         return depth;
+    }
+
+    public int getPushesNumber() {
+        return pushesNumber;
+    }
+
+    public void setPushesNumber(int pushesNumber) {
+        this.pushesNumber = pushesNumber;
     }
 }

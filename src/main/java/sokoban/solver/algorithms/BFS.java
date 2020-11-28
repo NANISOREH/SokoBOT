@@ -12,7 +12,7 @@ Implementation of a simple BFS search
 public class BFS {
     private static Logger log = Logger.getLogger("BFS");
 
-    public static ArrayList<Action> launch(GameBoard game) throws CloneNotSupportedException {
+    public static Node launch(GameBoard game) throws CloneNotSupportedException {
 
         //Utility data structure used to isolate the nodes inside the "frontier" of the search, the ones we will need to
         //expand in the current iteration. It's initialized by adding the first frontier, with only the root node inside
@@ -29,12 +29,14 @@ public class BFS {
             ArrayList<Node> nextLevel = new ArrayList<>();
             for (Node n : front) {
                 if (n.getGame().checkVictory()) {
-                    return n.getActionHistory();
+                    return n;
                 }
                 for (Node v : n.expand()){
                         nextLevel.add(v);
                 }
             }
+
+            if (front.size() == 0) return null;
 
             //"Promoting" the nodes found by expanding the current frontier for the next iteration
             front.clear();
