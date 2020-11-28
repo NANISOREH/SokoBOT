@@ -16,9 +16,11 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import sokoban.game.Action;
 import sokoban.game.Cell;
 import sokoban.game.GameBoard;
 import sokoban.game.Level;
+import sokoban.solver.ExpansionScheme;
 import sokoban.solver.Node;
 import sokoban.solver.SokobanSolver;
 import sokoban.solver.Strategy;
@@ -49,6 +51,7 @@ public class Main extends Application {
     }
     private static ChoiceBox<Integer> level = new ChoiceBox<>();
     private static ChoiceBox<String> algorithm = new ChoiceBox<>();
+    private static ChoiceBox<String> scheme = new ChoiceBox<>();
     private static Scene menu;
     private static Scene gameScene;
     private static GridPane gameBoard;
@@ -59,6 +62,18 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+
+        Level one = new Level(6);
+        Node test = new Node(null, new GameBoard(one), new ArrayList<>());
+        try {
+            for (Node a : test.test()) {
+                a.test();
+                log.info("" + Node.getTranspositionTable().size());
+            }
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
 
         //Configuring level selection label and choicebox
         VBox levelSide = new VBox();
@@ -90,6 +105,22 @@ public class Main extends Application {
         algorithmSide.setAlignment(Pos.CENTER);
         algorithmSide.getChildren().addAll(label2, algorithm);
 
+        //Configuring expansion scheme selection label and choicebox
+        VBox expSide = new VBox();
+        Label label3 = new Label("Select a node expansion scheme");
+        label3.setTextFill(Color.LIGHTGRAY);
+        scheme.setValue(null);
+        ObservableList<String> schemes = scheme.getItems();
+        List<String> schemeNames = new ArrayList<>();
+        for (ExpansionScheme e : Arrays.asList(ExpansionScheme.values())) {
+            schemeNames.add(ExpansionScheme.mapExpansionScheme(e));
+        }
+        schemes.addAll(schemeNames);
+        scheme.setValue(schemeNames.get(0));
+        expSide.setSpacing(15);
+        expSide.setAlignment(Pos.CENTER);
+        expSide.getChildren().addAll(label3, scheme);
+
         //Configuring start button
         Button button = new Button("Start computation");
         button.setBackground(new Background(new BackgroundFill(Color.TOMATO, null, null)));
@@ -100,7 +131,7 @@ public class Main extends Application {
         layout.setAlignment(Pos.CENTER);
         layout.setBackground(background);
         layout.setSpacing(50);
-        layout.getChildren().addAll(levelSide, algorithmSide, button);
+        layout.getChildren().addAll(levelSide, algorithmSide, expSide, button);
         menu = new Scene(layout, 800, 680);
 
         //The button on the first scene triggers the switch to the gameplay scene and starts the sokoban.game
@@ -147,7 +178,7 @@ public class Main extends Application {
         //Starting the thread that will execute the sokoban solver and actually move sokoban on the board
         Thread t1 = new Thread(() -> {
             try {
-                SokobanSolver.solve(game, Strategy.mapString(algorithm.getValue()));
+                SokobanSolver.solve(game, Strategy.mapString(algorithm.getValue()), ExpansionScheme.mapString(scheme.getValue()));
             } catch (InterruptedException | CloneNotSupportedException e1) {
                 e1.printStackTrace();
             }
