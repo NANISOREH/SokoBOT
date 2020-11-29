@@ -1,8 +1,8 @@
 [
-  ["WALL","WALL","WALL","WALL","WALL","WALL","WALL","WALL","WALL"],
-  ["WALL","WALL","WALL","EMPTY","EMPTY","WALL","WALL","WALL","WALL"],
-  ["WALL","EMPTY","EMPTY","EMPTY","EMPTY","EMPTY","BOX","EMPTY","WALL"],
-  ["WALL","EMPTY","WALL","EMPTY","EMPTY","WALL","BOX","EMPTY","WALL"],
-  ["WALL","EMPTY","GOAL","EMPTY","GOAL","WALL","SOKOBAN","EMPTY","WALL"],
-  ["WALL","WALL","WALL","WALL","WALL","WALL","WALL","WALL","WALL"]
+  ["W","W","W","W","W","W","W","W","W"],
+  ["W","W","W","E","E","W","W","W","W"],
+  ["W","E","E","E","E","E","B","E","W"],
+  ["W","E","W","E","E","W","B","E","W"],
+  ["W","E","G","E","G","W","S","E","W"],
+  ["W","W","W","W","W","W","W","W","W"]
 ]

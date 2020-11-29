@@ -7,6 +7,8 @@ IDDFS, a cui sono state applicate alcune ottimizzazioni rispetto alla loro imple
 
 ToDo:
 - iniziare a lavorare sulla deadlock detection
-- implementare un modello di espansione dei nodi ottimizzato per "spinte" alle casse e non per mosse del giocatore
 - implementare un algoritmo di ricerca informata, probabilmente IDA*
 - iniziare a formalizzare la documentazione di progetto
+
+Fix necessari:
+- quando si espande per mosse, il numero di spinte finali non risulta corretto
