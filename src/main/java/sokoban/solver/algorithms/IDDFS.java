@@ -37,7 +37,7 @@ public class IDDFS {
         log.info("The lower bound estimate is: " + limit);
 
         //Iterative deepening cycle
-        while (true) {
+        for (int count = 0; true; count++) {
 
             //Before every iteration, if the memory is not full yet, we make a copy of the transposition table so that,
             //when we finally have no more space, we can can restore its state to effectively start a proper, uncached
@@ -51,7 +51,7 @@ public class IDDFS {
             else if (memoryFull){
                 Node.resetSearchSpace();
                 Node.setTranspositionTable((ArrayList<Long>) transpositionTableCopy.clone());
-                limit = limit + lowerBound/3;
+                limit = limit + lowerBound/2;
             }
 
             //In every iteration, cache will store the nodes in the deepest level reached by the previous iteration.
@@ -61,7 +61,8 @@ public class IDDFS {
             if (!memoryFull) candidateCache = new HashMap<>();
             for (Long key : cache.keySet()) {
                 //Launching the DFS on every element in the cache.
-                recursiveComponent(cache.get(key), limit);
+                if (count == 0) recursiveComponent(cache.get(key), limit);
+                if (count > 0) recursiveComponent(cache.get(key), limit/3);
             }
             if (!memoryFull) cache = new HashMap<>(candidateCache);
 

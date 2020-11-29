@@ -62,7 +62,6 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-
         //Configuring level selection label and choicebox
         VBox levelSide = new VBox();
         Label label1 = new Label("Select a level");
@@ -120,7 +119,7 @@ public class Main extends Application {
         layout.setBackground(background);
         layout.setSpacing(50);
         layout.getChildren().addAll(levelSide, algorithmSide, expSide, button);
-        menu = new Scene(layout, 800, 680);
+        menu = new Scene(layout, 600, 580);
 
         //The button on the first scene triggers the switch to the gameplay scene and starts the sokoban.game
         button.setOnAction(actionEvent -> {configureGame(primaryStage);});
@@ -150,7 +149,7 @@ public class Main extends Application {
         boardLayout.setSpacing(15);
 
         Level toLoad = new Level(level.getValue());
-        Label label1 = new Label("Level" + level.getValue() + "   -   Requires " + toLoad.getBestSolution() + " steps");
+        Label label1 = new Label("Level" + level.getValue() + "   -   Requires " + toLoad.getBestSolution() + " moves");
         label1.setTextFill(Color.LIGHTGRAY);
         result = new Text("Search in progress. The solution will be demonstrated after the computation.\n" +
                 "\nAlgorithm: " + algorithm.getValue() +
@@ -162,7 +161,7 @@ public class Main extends Application {
         gameBoard = createBoard(game);
         gameScene = new Scene(gameBoard);
         boardLayout.getChildren().addAll(label1, gameBoard, result);
-        primaryStage.setScene(new Scene(boardLayout, 800, 680));
+        primaryStage.setScene(new Scene(boardLayout, 1200, 800));
         primaryStage.setResizable(false);
 
         //Starting the thread that will execute the sokoban solver and actually move sokoban on the board
@@ -242,7 +241,8 @@ public class Main extends Application {
         }
 
         if (SokobanSolver.getSolution() != null) {
-            result.setText(algorithm.getValue() + " found a solution in " + SokobanSolver.getSolution().size() + " steps.\n\n" +
+            result.setText(algorithm.getValue() + " found a solution in " +
+                    SokobanSolver.getSolutionMoves() + " moves - " + SokobanSolver.getSolutionPushes() + " pushes.\n\n" +
                     Node.getExaminedNodes() + " unique game states were examined.\n" +
                     "Time elapsed: " + SokobanSolver.getTimeElapsed() + " seconds");
         }

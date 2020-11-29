@@ -61,7 +61,7 @@ public class SokobanSolver {
             log.info(solution.getPushesNumber() + " pushes were needed");
             log.info("number of examined nodes: " + Node.getExaminedNodes());
             log.info("" + solution.getActionHistory());
-            for (Action a : solutionActions) { //TODO: understand why it doesn't play out anymore
+            for (Action a : solutionActions) {
                 //we execute every action in the solution: the board will automagically solve the puzzle as a result
                 toSolve.takeAction(a);
                 Thread.sleep(200);
@@ -75,11 +75,24 @@ public class SokobanSolver {
 
 
     public static ArrayList<Action> getSolution() {
-
         if (solution != null && solution.getActionHistory().size() > 0)
             return solution.getActionHistory();
         else
             return null;
+    }
+
+    public static int getSolutionMoves() {
+        if (solution != null && solution.getActionHistory().size() > 0)
+            return solution.getPathCost();
+        else
+            return -1;
+    }
+
+    public static int getSolutionPushes() {
+        if (solution != null && solution.getActionHistory().size() > 0)
+            return solution.getPushesNumber();
+        else
+            return -1;
     }
 
     public static double getTimeElapsed() {

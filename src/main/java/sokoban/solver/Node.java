@@ -41,10 +41,6 @@ public class Node {
         lastMovedBox = null;
     }
 
-    public Collection<? extends Node> test () throws CloneNotSupportedException {
-        return this.expandByPushes();
-    }
-
 /*
     Public node expansion method.
     It calls the concrete implementation of the expansion schemes, as decided by the client.
@@ -60,10 +56,13 @@ public class Node {
             return this.expandByPushes();
     }
 
+/*
+    Node expansion method, expands a node by box pushes rather than by character moves.
+    It takes a node, representing a certain game state, and it returns the collection of all the neighbour nodes,
+    representing all possible future states that are just a box push away from being discovered.
+    Box configurations that were already explored are excluded thanks to the transposition table.
+*/
     private Collection<? extends Node> expandByPushes() throws CloneNotSupportedException {
-
-        if (this.getActionHistory().size() > depth)
-            depth = this.pushesNumber;
 
         ArrayList<Node> expanded = new ArrayList<>();
         GameBoard initialState = (GameBoard) this.game.clone();
@@ -155,7 +154,10 @@ public class Node {
             }
             //moving the box
             executeMove(newState, action);
-            newState.pushesNumber = this.pushesNumber + 1;
+
+            if (newState.getPushesNumber() > depth)
+                depth = newState.pushesNumber;
+
             return true;
         }
 
@@ -171,14 +173,15 @@ public class Node {
     private Collection<? extends Node> expandByMoves() throws CloneNotSupportedException {
         ArrayList<Node> expanded = new ArrayList<>();
 
-        if (this.getActionHistory().size() > depth)
-            depth = this.getActionHistory().size();
-
         Node first = new Node(this, (GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         first.setPushesNumber(this.pushesNumber);
         first.setPathCost(this.pathCost);
+        //Checkin if the move is legal and we execute it, then we check if the generated state was already discovered
         if (executeMove(first, Action.MOVE_DOWN) && !transpositionTable.contains(first.hash())) {
             expanded.add(first);
+            //If we reached a new maximum depth in the search, we keep note of it in depth. a static variable of Node
+            if (first.getActionHistory().size() > depth)
+                depth = first.getActionHistory().size();
             transpositionTable.add(first.hash());
         }
 
@@ -187,6 +190,8 @@ public class Node {
         second.setPushesNumber(this.pushesNumber);
         if (executeMove(second, Action.MOVE_UP) && !transpositionTable.contains(second.hash())) {
             expanded.add(second);
+            if (second.getActionHistory().size() > depth)
+                depth = second.getActionHistory().size();
             transpositionTable.add(second.hash());
         }
 
@@ -195,6 +200,8 @@ public class Node {
         third.setPushesNumber(this.pushesNumber);
         if (executeMove(third, Action.MOVE_LEFT) && !transpositionTable.contains(third.hash())) {
             expanded.add(third);
+            if (third.getActionHistory().size() > depth)
+                depth = third.getActionHistory().size();
             transpositionTable.add(third.hash());
         }
 
@@ -203,6 +210,8 @@ public class Node {
         fourth.setPushesNumber(this.pushesNumber);
         if (executeMove(fourth, Action.MOVE_RIGHT)&& !transpositionTable.contains(fourth.hash())) {
             expanded.add(fourth);
+            if (fourth.getActionHistory().size() > depth)
+                depth = fourth.getActionHistory().size();
             transpositionTable.add(fourth.hash());
         }
 
@@ -224,13 +233,13 @@ public class Node {
             node.actionHistory.add(move);
             node.pathCost++;
 
-            //we check if a box was moved in this move and update the lastMovedBox variable
+            //we check if a box was moved in this move and update the lastMovedBox variable and the number of pushes
             afterBoxCells = new HashMap<>(node.game.getBoxCells());
             for (int i = 0; i < beforeBoxCells.size(); i++) {
                 if (beforeBoxCells.get(i).getRow() != afterBoxCells.get(i).getRow() ||
                     beforeBoxCells.get(i).getColumn() != afterBoxCells.get(i).getColumn()) {
                     node.lastMovedBox = i;
-                    node.pushesNumber++;
+                    node.pushesNumber = this.pushesNumber + 1;
                     return true;
                 }
             }
@@ -270,7 +279,7 @@ public class Node {
             }
         }
 
-        byte[] toHash = new byte[(bytes.get(0).length) * (bytes.size() + 3)]; //TODO: check why it goes out of bounds if you don't add 3 (?!)
+        byte[] toHash = new byte[(bytes.get(0).length) * (bytes.size() + 10)]; //TODO: check why it goes out of bounds if you don't add stuff (?!)
         int count = 0;
         for (byte[] array : bytes) {
             for (int i = 0; i < array.length; i++) {
@@ -317,7 +326,7 @@ public class Node {
     }
 
     public int getPathCost() {
-        return pathCost;
+        return actionHistory.size();
     }
 
     public void setPathCost(int pathCost) {

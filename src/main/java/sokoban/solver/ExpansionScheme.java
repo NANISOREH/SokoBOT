@@ -1,7 +1,7 @@
 package sokoban.solver;
 
 public enum ExpansionScheme {
-    MOVE_BASED, PUSH_BASED;
+    PUSH_BASED, MOVE_BASED;
 
     public static ExpansionScheme mapString(String toMap) {
         switch (toMap) {

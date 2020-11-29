@@ -6,6 +6,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /*
 This class reads, parses and holds information about the levels
@@ -27,7 +29,7 @@ public class Level {
             String sCurrentLine;
             while ((sCurrentLine = br.readLine()) != null)
             {
-                jsonBuilder.append(sCurrentLine).append("\n");
+                jsonBuilder.append(replacePattern(sCurrentLine)).append("\n");
             }
         }
         catch (IOException e)
@@ -65,6 +67,23 @@ public class Level {
 
         if (number != null)
             bestSolution = Integer.parseInt(number);
+    }
+
+    private String replacePattern (String string) {
+
+        Matcher matcher = Pattern.compile("\"W\"").matcher(string);
+        string = matcher.replaceAll("\"WALL\"");
+        matcher = Pattern.compile("\"E\"").matcher(string);
+        string = matcher.replaceAll("\"EMPTY\"");
+        matcher = Pattern.compile("\"S\"").matcher(string);
+        string = matcher.replaceAll("\"SOKOBAN\"");
+        matcher = Pattern.compile("\"G\"").matcher(string);
+        string = matcher.replaceAll("\"GOAL\"");
+        matcher = Pattern.compile("\"B\"").matcher(string);
+        string = matcher.replaceAll("\"BOX\"");
+
+        return string;
+
     }
 
     public CellContent[][] getContent() {
