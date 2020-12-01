@@ -72,8 +72,7 @@ public class SokobanSolver {
             log.info("number of examined nodes: " + Node.getExaminedNodes());
         }
     }
-
-
+    
     public static ArrayList<Action> getSolution() {
         if (solution != null && solution.getActionHistory().size() > 0)
             return solution.getActionHistory();
