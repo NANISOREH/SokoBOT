@@ -1,7 +1,6 @@
 
 package sokoban.solver.algorithms;
 
-import sokoban.game.Action;
 import sokoban.game.GameBoard;
 import sokoban.solver.Node;
 import sokoban.solver.SokobanToolkit;
@@ -31,7 +30,7 @@ public class IDDFS {
 
         solution = null;
         strategy = chosenStrategy;
-        Node root = new Node(null, game, new ArrayList<>());
+        Node root = new Node(game, new ArrayList<>());
         cache.put(root.hash(), root);
         int limit = lowerBound;
         log.info("The lower bound estimate is: " + limit);
