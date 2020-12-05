@@ -46,9 +46,8 @@ public class SokobanSolver {
                 solution = BFS.launch((GameBoard) toSolve.clone());
                 break;
             }
-            case IDDFS :
-            case IDDFS_MO : {
-                solution = IDDFS.launch((GameBoard) toSolve.clone(), SokobanToolkit.estimateLowerBound(toSolve), strategy);
+            case IDDFS : {
+                solution = IDDFS.launch((GameBoard) toSolve.clone(), SokobanToolkit.estimateLowerBound(toSolve));
                 break;
             }
             case IDASTAR : {

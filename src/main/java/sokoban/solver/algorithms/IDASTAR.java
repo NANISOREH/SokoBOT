@@ -18,10 +18,6 @@ public class IDASTAR {
     private static boolean memoryFull = false;
     private static Strategy strategy;
 
-    //these two hashmaps are used as a cache to avoid re-exploring the lower levels in iterative deepening
-    private static HashMap<Long, Node> cache = new HashMap<>();
-    private static HashMap<Long, Node> candidateCache = new HashMap<>();
-
     public static Node launch(GameBoard game, int lowerBound, Strategy chosenStrategy) throws CloneNotSupportedException {
 
 /*
@@ -30,16 +26,30 @@ public class IDASTAR {
 */
         class ExtendedNode {
             Node node;
+            Node parent;
             int label;
 
-            ExtendedNode (Node n, int label) {
+            ExtendedNode (Node n, Node parent, int label) {
+                this.parent = parent;
                 this.node = n;
                 this.label = label;
             }
 
+/*
+            Compares nodes when inserting them into the priority queue
+            Nodes with the lowest label are favored, meaning that the priority queue will first extract the nodes
+            with the smallest estimated distance from the goal state. In case of a tie, inertial move ordering is applied:
+            we favor nodes in which Sokoban moved the same box as the last turn.
+*/
             int compare (ExtendedNode extendedNode) {
                 int comparison =  Integer.compare(this.label, extendedNode.label);
-                return comparison;
+
+                if (comparison != 0)
+                    return comparison;
+                else if (this.parent != null)
+                    return SokobanToolkit.compareByInertia(this.node, extendedNode.node, this.parent);
+
+                return 0;
             }
 
             boolean isGoal () {
@@ -48,43 +58,76 @@ public class IDASTAR {
         }
 
         int limit = lowerBound;
-        ExtendedNode root = new ExtendedNode(new Node(game, new ArrayList<>()), 0 + SokobanToolkit.estimateLowerBound(game));
+        ExtendedNode root = new ExtendedNode(new Node(game, new ArrayList<>()), null, 0 + SokobanToolkit.estimateLowerBound(game));
         PriorityQueue<ExtendedNode> frontier = new PriorityQueue<>(ExtendedNode::compare);
         frontier.add(root);
 
-/*        solution = null;
-        strategy = chosenStrategy;
-        cache.put(root.hash(), root);*/
+        //these two hashmaps are used as a cache to avoid re-exploring the lower levels in iterative deepening
+        ArrayList<ExtendedNode> cache = new ArrayList<>();
+        ArrayList<ExtendedNode> cacheBackup = new ArrayList<>();
+        solution = null;
+        frontier.add(root);
+        cacheBackup.add(root);
+
 
         //Loop of the iterative deepening
-        while (true) {
-            Node.resetSearchSpace();
-            frontier.clear();
-            frontier.add(root);
+        for (int count = 0; true; count++) {
+            if (!memoryFull) {
+                transpositionTableCopy.clear();
+                transpositionTableCopy = (ArrayList<Long>) Node.getTranspositionTable().clone();
 
-            //Main loop of the algorithm
-            for (int count = 0; !frontier.isEmpty(); count++) {
+                cacheBackup.clear();
+                cacheBackup.addAll(cache);
+                cache.clear();
+                frontier.addAll(cacheBackup);
+            }
+            else if (memoryFull){
+                Node.resetSearchSpace();
+                Node.setTranspositionTable((ArrayList<Long>) transpositionTableCopy.clone());
+
+                frontier.addAll(cacheBackup);
+            }
+
+            //Main loop of the algorithm, we're only going to break it if we found a solution or if frontier is empty,
+            //meaning that we explored all nodes up until a certain depth
+            for (int innerCount = 0; !frontier.isEmpty(); count++) {
+
                 //We pop the node with the best heuristic estimate off the PQueue
                 ExtendedNode examined = frontier.remove();
                 if (examined.isGoal()) //a solution was found
                     return examined.node;
-                else if (examined.node.getPathCost() >= limit) //reached the depth limit, we won't expand this node
+
+                if (examined.node.getPathCost() >= limit) { //reached the depth limit, we won't expand this node
+
+                    if (!memoryFull) {
+                        if ((Runtime.getRuntime().freeMemory() / 1024) / 1024 > 100) { //we have the memory to keep on using the cache
+                            cache.add(examined);
+                        } else { //we ran out of memory
+                            memoryFull = true;
+                            log.info("NO MORE MEMORY");
+                            cache.clear();
+                        }
+                    }
+
                     continue;
+                }
 
                 //expanding the current node and adding the resulting nodes to the frontier Pqueue
                 ArrayList<Node> expanded = (ArrayList<Node>) examined.node.expand();
                 for (Node n : expanded) {
-                    frontier.add(new ExtendedNode(n, 1 + SokobanToolkit.estimateLowerBound(n.getGame())));
+                    frontier.add(new ExtendedNode(n, examined.node, 1 + SokobanToolkit.estimateLowerBound(n.getGame())));
                 }
 
-                //if (count % 1000 == 0) log.info("frontier size " + frontier.size());
+                if (innerCount % 10000 == 0) {
+                    log.info("frontier: " + frontier.size() + "\nvisited nodes: " + Node.getExaminedNodes());
+                }
             }
 
-            log.info(limit + ": frontier size " + frontier.size());
-            log.info("visited nodes: " + Node.getExaminedNodes());
+            //incrementing the max depth for the next iteration
+            limit++;
 
-            //raising the depth limit for the next iteration
-            limit = limit + lowerBound;
+            log.info(limit + ": cache size " + cache.size());
+            log.info("visited nodes: " + Node.getExaminedNodes());
         }
 
     }
