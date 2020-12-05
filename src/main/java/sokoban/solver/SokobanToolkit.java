@@ -466,5 +466,9 @@ public class SokobanToolkit {
 
     }
 
+    public static Cell[][] getReachableCells(GameBoard state) {
+        return null;
+    }
+
 
 }
