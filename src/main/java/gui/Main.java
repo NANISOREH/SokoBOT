@@ -161,8 +161,8 @@ public class Main extends Application {
         gameBoard = createBoard(game);
         gameScene = new Scene(gameBoard);
         boardLayout.getChildren().addAll(label1, gameBoard, result);
+        //primaryStage.setResizable(false);
         primaryStage.setScene(new Scene(boardLayout, 1200, 800));
-        primaryStage.setResizable(false);
 
         //Starting the thread that will execute the sokoban solver and actually move sokoban on the board
         Thread t1 = new Thread(() -> {

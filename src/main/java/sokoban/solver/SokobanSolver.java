@@ -4,6 +4,7 @@ import sokoban.game.Action;
 import sokoban.game.Cell;
 import sokoban.game.GameBoard;
 import sokoban.solver.algorithms.BFS;
+import sokoban.solver.algorithms.IDASTAR;
 import sokoban.solver.algorithms.IDDFS;
 
 import java.time.Instant;
@@ -50,13 +51,17 @@ public class SokobanSolver {
                 solution = IDDFS.launch((GameBoard) toSolve.clone(), SokobanToolkit.estimateLowerBound(toSolve), strategy);
                 break;
             }
-
+            case IDASTAR : {
+                solution = IDASTAR.launch((GameBoard) toSolve.clone(), SokobanToolkit.estimateLowerBound(toSolve), strategy);
+                break;
+            }
         }
         timeElapsed = (double) (Instant.now().toEpochMilli() - start) / 1000;
 
-        ArrayList<Action> solutionActions = solution.getActionHistory();
+        ArrayList<Action> solutionActions = new ArrayList<>();
+        if (solution != null) solutionActions = solution.getActionHistory();
         //Showing the list of actions in the console and executing the corresponding moves on the board
-        if (solution != null && !solutionActions.isEmpty()) {
+        if (!solutionActions.isEmpty()) {
             log.info("Solution found in " + solutionActions.size() + " moves!");
             log.info(solution.getPushesNumber() + " pushes were needed");
             log.info("number of examined nodes: " + Node.getExaminedNodes());
@@ -82,7 +87,7 @@ public class SokobanSolver {
 
     public static int getSolutionMoves() {
         if (solution != null && solution.getActionHistory().size() > 0)
-            return solution.getPathCost();
+            return solution.getActionHistory().size();
         else
             return -1;
     }

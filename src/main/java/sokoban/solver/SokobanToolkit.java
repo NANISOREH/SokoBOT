@@ -22,7 +22,7 @@ public class SokobanToolkit {
     between the two that minimizes the sum of the manhattan distance between the couples in the matching.
     It uses an off-the-shelf implementation of the Hungarian Algorithm to do so.
 */
-    protected static int estimateLowerBound(GameBoard toSolve) {
+    public static int estimateLowerBound(GameBoard toSolve) {
          class HungarianAlgorithm {
 /*             MIT License
 

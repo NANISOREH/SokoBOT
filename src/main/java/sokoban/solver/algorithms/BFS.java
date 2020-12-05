@@ -17,7 +17,7 @@ public class BFS {
         //Utility data structure used to isolate the nodes inside the "frontier" of the search, the ones we will need to
         //expand in the current iteration. It's initialized by adding the first frontier, with only the root node inside
         ArrayList<Node> front = new ArrayList<>();
-        Node root = new Node(null, game, new ArrayList<Action>());
+        Node root = new Node(game, new ArrayList<Action>());
         front.add(root);
 
         //Algorithm loop
