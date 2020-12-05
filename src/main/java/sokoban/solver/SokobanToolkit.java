@@ -366,6 +366,22 @@ public class SokobanToolkit {
         return result;
     }
 
+    public static int compareByInertia (Node first, Node second, Node root) {
+
+        if (root.getLastMovedBox() == null ||
+                (first.getLastMovedBox() == root.getLastMovedBox() && second.getLastMovedBox() == root.getLastMovedBox())) {
+            return 0;
+        }
+        Integer boxNumber = root.getLastMovedBox();
+
+        if (first.getLastMovedBox() == boxNumber && second.getLastMovedBox() != boxNumber)
+            return -1;
+        if (first.getLastMovedBox() != boxNumber && second.getLastMovedBox() == boxNumber)
+            return 1;
+
+        return 0;
+    }
+
 
     /*
     Given a game state and a cell, it determines if Sokoban can reach that cell and returns a list of actions
@@ -456,7 +472,6 @@ public class SokobanToolkit {
             if (front.size() == 0)
                 return null;
 
-            //"Promoting" the nodes found by expanding the current frontier for the next iteration
             front.clear();
             for (int i = nextLevel.size() - 1; i>=0; i--) {
                 front.add(nextLevel.remove(i));
@@ -466,8 +481,87 @@ public class SokobanToolkit {
 
     }
 
-    public static Cell[][] getReachableCells(GameBoard state) {
-        return null;
+/*    This method uses a simple flood fill algorithm to return the list of every cell reachable by sokoban,
+    given a certain game state*/
+    public static ArrayList<Cell> getReachableCells(GameBoard state) throws CloneNotSupportedException {
+
+        //structure initialization
+        //transpositionTable will contain every visited cell and will be given as output
+        //front will receive the cells to expand in every iteration
+        ArrayList<Cell> transpositionTable = new ArrayList<>();
+        ArrayList<Cell> front = new ArrayList<>();
+        Cell root = state.getSokobanCell();
+        front.add(root);
+        transpositionTable.add(root);
+
+        while (true) {
+            ArrayList<Cell> nextLevel = new ArrayList<>();
+            for (Cell c : front) {
+
+                //expanding the current cell by checking for unvisited empty cells in every possible direction
+                if (state.getNorth(c) != null && state.getNorth(c).getContent() == CellContent.EMPTY) {
+                    Cell north = state.getNorth(c);
+                    if (!transpositionTable.contains(north)) {
+                        transpositionTable.add(north);
+                        nextLevel.add(north);
+                    }
+                }
+
+                if (state.getSouth(c) != null && state.getSouth(c).getContent() == CellContent.EMPTY) {
+                    Cell south = state.getSouth(c);
+                    if (!transpositionTable.contains(south)) {
+                        transpositionTable.add(south);
+                        nextLevel.add(south);
+                    }
+                }
+
+                if (state.getEast(c) != null && state.getEast(c).getContent() == CellContent.EMPTY) {
+                    Cell east = state.getNorth(c);
+                    if (!transpositionTable.contains(east)) {
+                        transpositionTable.add(east);
+                        nextLevel.add(east);
+                    }
+                }
+
+                if (state.getWest(c) != null && state.getWest(c).getContent() == CellContent.EMPTY) {
+                    Cell west = state.getNorth(c);
+                    if (!transpositionTable.contains(west)) {
+                        transpositionTable.add(west);
+                        nextLevel.add(west);
+                    }
+                }
+
+            }
+
+            //forming the front to explore for the next iteration
+            front.clear();
+            for (int i = nextLevel.size() - 1; i>=0; i--) {
+                front.add(nextLevel.remove(i));
+            }
+
+            //breaking the cycle if we don't have anything else to explore
+            if (front.size() == 0)
+                break;
+
+        }
+
+        //sorting the resulting structure of cells so that states with the same cells reachable are
+        //hashed the same way regardless of sokoban's position
+        transpositionTable.sort(new Comparator<Cell>() {
+            @Override
+            public int compare(Cell cell, Cell t1) {
+                if (cell.getRow() < t1.getRow())
+                    return -1;
+                else if (cell.getRow() > t1.getRow())
+                    return 1;
+                else if (cell.getRow() == t1.getRow()) {
+                    return Integer.compare(cell.getColumn(), t1.getColumn());
+                }
+                return 0;
+            }
+        });
+
+        return transpositionTable;
     }
 
 

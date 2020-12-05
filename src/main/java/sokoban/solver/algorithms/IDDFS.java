@@ -20,16 +20,14 @@ public class IDDFS {
     private static Node solution = null;
     private static ArrayList<Long> transpositionTableCopy = new ArrayList<>();
     private static boolean memoryFull = false;
-    private static Strategy strategy;
 
     //these two hashmaps are used as a cache to avoid re-exploring the lower levels in iterative deepening
     private static HashMap<Long, Node> cache = new HashMap<>();
     private static HashMap<Long, Node> candidateCache = new HashMap<>();
 
-    public static Node launch(GameBoard game, int lowerBound, Strategy chosenStrategy) throws CloneNotSupportedException {
+    public static Node launch(GameBoard game, int lowerBound) throws CloneNotSupportedException {
 
         solution = null;
-        strategy = chosenStrategy;
         Node root = new Node(game, new ArrayList<>());
         cache.put(root.hash(), root);
         int limit = lowerBound;
@@ -107,8 +105,7 @@ public class IDDFS {
         //creating the children of the current root node
         ArrayList<Node> expanded = (ArrayList<Node>) root.expand();
         //ordering by inertia if move ordering was selected by the client
-        if (strategy == Strategy.IDDFS_MO)
-            expanded = new ArrayList<>(SokobanToolkit.orderByInertia(root, expanded));
+        expanded = new ArrayList<>(SokobanToolkit.orderByInertia(root, expanded));
 
         //recursively calling this method on root's children, lowering by one the depth they are allowed to explore
         for (Node n : expanded) {

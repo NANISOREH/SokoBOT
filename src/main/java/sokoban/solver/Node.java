@@ -255,6 +255,10 @@ public class Node {
             e.printStackTrace();
         }
 
+        if (expansionScheme == ExpansionScheme.PUSH_BASED) {
+            cloned.getBoard()[cloned.getSokobanCell().getRow()][cloned.getSokobanCell().getColumn()].setContent(CellContent.EMPTY);
+        }
+
         //parsing each cell of the game board in a byte array
         ArrayList<byte[]> bytes = new ArrayList<>();
         for (int i = 0; i<cloned.getRows(); i++){
@@ -280,18 +284,16 @@ public class Node {
         //if we're working with push based expansion scheme things are a little more complex
         //we need to save every position reachable by sokoban in the state transposition
         //because two states are equal only if the boxes are in the same places and sokoban can reach the same cells
-/*        Cell[][] reachableCells;
+        ArrayList<Cell> reachableCells;
         if (expansionScheme == ExpansionScheme.PUSH_BASED) {
             bytes.clear();
             reachableCells = SokobanToolkit.getReachableCells(cloned);
 
-            for (int i = 0; i<reachableCells.length; i++){
-                for (int j=0; j<reachableCells[0].length; j++) {
-                    try {
-                        bytes.add(reachableCells[i][j].toBytes());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+            for (int j=0; j<reachableCells.size(); j++) {
+                try {
+                    bytes.add(reachableCells.get(j).toBytes());
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
 
@@ -302,7 +304,7 @@ public class Node {
                 }
             }
 
-        }*/
+        }
 
         byte[] hashed = md.digest(toHash);
         BigInteger no = new BigInteger(1, hashed);
