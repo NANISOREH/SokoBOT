@@ -137,12 +137,21 @@ public class Cell implements Cloneable, Serializable {
     }
 
     public byte[] toBytes() throws IOException {
+        int boxNumberCopy = -1;
+        if (this.boxNumber != null) {
+            boxNumberCopy = this.boxNumber;
+            this.boxNumber = null;
+        }
+
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(bos);
         oos.writeObject(this);
         oos.flush();
         byte [] data = bos.toByteArray();
 
+        if (boxNumberCopy >= 0) {
+            this.boxNumber = boxNumberCopy;
+        }
         return data;
     }
 

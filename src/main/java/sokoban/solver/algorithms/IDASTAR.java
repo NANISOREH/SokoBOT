@@ -38,7 +38,8 @@ public class IDASTAR {
             }
 
             int compare (ExtendedNode extendedNode) {
-                return Integer.compare(this.label, extendedNode.label);
+                int comparison =  Integer.compare(this.label, extendedNode.label);
+                return comparison;
             }
 
             boolean isGoal () {
@@ -47,9 +48,9 @@ public class IDASTAR {
         }
 
         int limit = lowerBound;
-        Node root = new Node(game, new ArrayList<>());
+        ExtendedNode root = new ExtendedNode(new Node(game, new ArrayList<>()), 0 + SokobanToolkit.estimateLowerBound(game));
         PriorityQueue<ExtendedNode> frontier = new PriorityQueue<>(ExtendedNode::compare);
-        frontier.add(new ExtendedNode(root, 0 + SokobanToolkit.estimateLowerBound(game)));
+        frontier.add(root);
 
 /*        solution = null;
         strategy = chosenStrategy;
@@ -59,16 +60,12 @@ public class IDASTAR {
         while (true) {
             Node.resetSearchSpace();
             frontier.clear();
-            frontier.add(new ExtendedNode(root, 0 + SokobanToolkit.estimateLowerBound(game)));
+            frontier.add(root);
 
             //Main loop of the algorithm
             for (int count = 0; !frontier.isEmpty(); count++) {
-                if (count == 5){
-                    for (ExtendedNode e : frontier)
-                        log.info("" + e.label);
-                }
                 //We pop the node with the best heuristic estimate off the PQueue
-                ExtendedNode examined = frontier.poll();
+                ExtendedNode examined = frontier.remove();
                 if (examined.isGoal()) //a solution was found
                     return examined.node;
                 else if (examined.node.getPathCost() >= limit) //reached the depth limit, we won't expand this node
@@ -83,7 +80,8 @@ public class IDASTAR {
                 //if (count % 1000 == 0) log.info("frontier size " + frontier.size());
             }
 
-            log.info("frontier size " + frontier.size());
+            log.info(limit + ": frontier size " + frontier.size());
+            log.info("visited nodes: " + Node.getExaminedNodes());
 
             //raising the depth limit for the next iteration
             limit = limit + lowerBound;

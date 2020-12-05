@@ -255,10 +255,7 @@ public class Node {
             e.printStackTrace();
         }
 
-        if (expansionScheme == ExpansionScheme.PUSH_BASED) {
-            cloned.getBoard()[cloned.getSokobanCell().getRow()][cloned.getSokobanCell().getColumn()].setContent(CellContent.EMPTY);
-        }
-
+        //parsing each cell of the game board in a byte array
         ArrayList<byte[]> bytes = new ArrayList<>();
         for (int i = 0; i<cloned.getRows(); i++){
             for (int j=0; j<cloned.getColumns(); j++) {
@@ -270,7 +267,8 @@ public class Node {
             }
         }
 
-        byte[] toHash = new byte[(bytes.get(0).length) * (bytes.size() + 10)]; //TODO: check why it goes out of bounds if you don't add stuff (?!)
+        //every byte array in the arraylist is merged into just one byte array that will be hashed
+        byte[] toHash = new byte[(bytes.get(0).length) * (bytes.size()) * 2]; //TODO: check why it goes out of bounds if you don't add stuff (?!)
         int count = 0;
         for (byte[] array : bytes) {
             for (int i = 0; i < array.length; i++) {
@@ -278,6 +276,33 @@ public class Node {
                 count++;
             }
         }
+
+        //if we're working with push based expansion scheme things are a little more complex
+        //we need to save every position reachable by sokoban in the state transposition
+        //because two states are equal only if the boxes are in the same places and sokoban can reach the same cells
+/*        Cell[][] reachableCells;
+        if (expansionScheme == ExpansionScheme.PUSH_BASED) {
+            bytes.clear();
+            reachableCells = SokobanToolkit.getReachableCells(cloned);
+
+            for (int i = 0; i<reachableCells.length; i++){
+                for (int j=0; j<reachableCells[0].length; j++) {
+                    try {
+                        bytes.add(reachableCells[i][j].toBytes());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            for (byte[] array : bytes) {
+                for (int i = 0; i < array.length; i++) {
+                    toHash[count] = array[i];
+                    count++;
+                }
+            }
+
+        }*/
 
         byte[] hashed = md.digest(toHash);
         BigInteger no = new BigInteger(1, hashed);
