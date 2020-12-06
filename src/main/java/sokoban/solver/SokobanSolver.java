@@ -2,13 +2,11 @@ package sokoban.solver;
 
 import sokoban.game.Action;
 import sokoban.game.GameBoard;
-import sokoban.solver.algorithms.ASTAR;
+import sokoban.solver.algorithms.SMAStar;
 import sokoban.solver.algorithms.BFS;
-import sokoban.solver.algorithms.IDASTAR;
+import sokoban.solver.algorithms.IDAStar;
 import sokoban.solver.algorithms.IDDFS;
 import sokoban.solver.configuration.Configuration;
-import sokoban.solver.configuration.ExpansionScheme;
-import sokoban.solver.configuration.Strategy;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -52,11 +50,11 @@ public class SokobanSolver {
                 break;
             }
             case IDASTAR : {
-                solution = IDASTAR.launch((GameBoard) toSolve.clone(), SokobanToolkit.estimateLowerBound(toSolve));
+                solution = IDAStar.launch((GameBoard) toSolve.clone(), SokobanToolkit.estimateLowerBound(toSolve));
                 break;
             }
-            case ASTAR : {
-                solution = ASTAR.launch((GameBoard) toSolve.clone());
+            case SMASTAR : {
+                solution = SMAStar.launch((GameBoard) toSolve.clone());
                 break;
             }
         }
