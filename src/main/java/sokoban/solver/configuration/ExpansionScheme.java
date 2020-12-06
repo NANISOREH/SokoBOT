@@ -1,4 +1,4 @@
-package sokoban.solver;
+package sokoban.solver.configuration;
 
 public enum ExpansionScheme {
     PUSH_BASED, MOVE_BASED;

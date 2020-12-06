@@ -16,14 +16,14 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import sokoban.game.Action;
 import sokoban.game.Cell;
 import sokoban.game.GameBoard;
 import sokoban.game.Level;
-import sokoban.solver.ExpansionScheme;
+import sokoban.solver.configuration.Configuration;
+import sokoban.solver.configuration.ExpansionScheme;
 import sokoban.solver.Node;
 import sokoban.solver.SokobanSolver;
-import sokoban.solver.Strategy;
+import sokoban.solver.configuration.Strategy;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -167,7 +167,7 @@ public class Main extends Application {
         //Starting the thread that will execute the sokoban solver and actually move sokoban on the board
         Thread t1 = new Thread(() -> {
             try {
-                SokobanSolver.solve(game, Strategy.mapString(algorithm.getValue()), ExpansionScheme.mapString(scheme.getValue()));
+                SokobanSolver.solve(game, Configuration.getInstance(scheme.getValue(), algorithm.getValue()));
             } catch (InterruptedException | CloneNotSupportedException e1) {
                 e1.printStackTrace();
             }

@@ -1,7 +1,7 @@
-package sokoban.solver;
+package sokoban.solver.configuration;
 
 public enum Strategy {
-    BFS, IDDFS, IDASTAR;
+    BFS, IDDFS, ASTAR, IDASTAR;
 
     public static Strategy mapString(String toMap) {
         switch (toMap) {
@@ -10,6 +10,9 @@ public enum Strategy {
             }
             case "Iterative Deepening DFS" : {
                 return Strategy.IDDFS;
+            }
+            case "A*" : {
+                return Strategy.ASTAR;
             }
             case "Iterative Deepening A*" : {
                 return Strategy.IDASTAR;
@@ -28,6 +31,9 @@ public enum Strategy {
             }
             case IDASTAR : {
                 return ("Iterative Deepening A*");
+            }
+            case ASTAR : {
+                return ("A*");
             }
         }
         return null;
