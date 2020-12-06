@@ -4,7 +4,6 @@ package sokoban.solver.algorithms;
 import sokoban.game.GameBoard;
 import sokoban.solver.Node;
 import sokoban.solver.SokobanToolkit;
-import sokoban.solver.Strategy;
 
 import java.util.ArrayList;
 import java.util.HashMap;

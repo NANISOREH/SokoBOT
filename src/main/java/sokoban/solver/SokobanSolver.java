@@ -1,16 +1,17 @@
 package sokoban.solver;
 
 import sokoban.game.Action;
-import sokoban.game.Cell;
 import sokoban.game.GameBoard;
+import sokoban.solver.algorithms.ASTAR;
 import sokoban.solver.algorithms.BFS;
 import sokoban.solver.algorithms.IDASTAR;
 import sokoban.solver.algorithms.IDDFS;
+import sokoban.solver.configuration.Configuration;
+import sokoban.solver.configuration.ExpansionScheme;
+import sokoban.solver.configuration.Strategy;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 
 import static java.lang.StrictMath.abs;
@@ -30,7 +31,7 @@ public class SokobanSolver {
     It takes a GameBoard configured with the level to solve, and the strategy chosen by the client to solve it,
     and launches the search accordingly. If a solution is found, it acts upon the original GameBoard to show it.
 */
-    public static void solve(GameBoard toSolve, Strategy strategy, ExpansionScheme expansionScheme) throws InterruptedException, CloneNotSupportedException {
+    public static void solve(GameBoard toSolve, Configuration configuration) throws InterruptedException, CloneNotSupportedException {
 
         solution = null;
         Long start;
@@ -38,10 +39,10 @@ public class SokobanSolver {
         //Resetting the transposition table stored in the Node class just in case we are launching
         //a search on the same level in the same session of the program
         Node.resetSearchSpace();
-        Node.setExpansionScheme(expansionScheme);
+        Node.setExpansionScheme(configuration.getExpansionScheme());
 
         start = Instant.now().toEpochMilli();
-        switch (strategy) {
+        switch (configuration.getStrategy()) {
             case BFS : {
                 solution = BFS.launch((GameBoard) toSolve.clone());
                 break;
@@ -51,7 +52,11 @@ public class SokobanSolver {
                 break;
             }
             case IDASTAR : {
-                solution = IDASTAR.launch((GameBoard) toSolve.clone(), SokobanToolkit.estimateLowerBound(toSolve), strategy);
+                solution = IDASTAR.launch((GameBoard) toSolve.clone(), SokobanToolkit.estimateLowerBound(toSolve));
+                break;
+            }
+            case ASTAR : {
+                solution = ASTAR.launch((GameBoard) toSolve.clone());
                 break;
             }
         }

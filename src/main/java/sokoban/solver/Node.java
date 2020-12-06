@@ -4,6 +4,7 @@ import sokoban.game.Action;
 import sokoban.game.Cell;
 import sokoban.game.CellContent;
 import sokoban.game.GameBoard;
+import sokoban.solver.configuration.ExpansionScheme;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -352,6 +353,10 @@ Returns the cost of the path in the search tree up until this node
 
     public Integer getLastMovedBox() {
         return lastMovedBox;
+    }
+
+    public void setLastMovedBox(Integer lastMovedBox) {
+        this.lastMovedBox = lastMovedBox;
     }
 
     public static ArrayList<Long> getTranspositionTable() {
