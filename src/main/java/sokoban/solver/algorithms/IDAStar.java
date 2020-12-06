@@ -9,7 +9,7 @@ import sokoban.solver.SokobanToolkit;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-public class IDASTAR {
+public class IDAStar {
     private static final Logger log = Logger.getLogger("IDASTAR");
     private static Node solution = null;
     private static int newLimit;
