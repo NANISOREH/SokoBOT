@@ -59,7 +59,7 @@ public class Node {
     representing all possible future states that are just a box push away from being discovered.
     Box configurations that were already explored are excluded thanks to the transposition table.
 */
-    private Collection<? extends Node> expandByPushes() throws CloneNotSupportedException {
+    protected Collection<? extends Node> expandByPushes() throws CloneNotSupportedException {
 
         ArrayList<Node> expanded = new ArrayList<>();
         GameBoard initialState = (GameBoard) this.game.clone();
@@ -80,12 +80,14 @@ public class Node {
                 //checking if the neighbour of the selected box is reachable by sokoban
                 //if that's true, the actions involved in reaching the box and pushing it can be carried out
                 if (push (down, neighbour, Action.MOVE_DOWN)) {
-                    if (!transpositionTable.contains(down.hash())) {
+                    if (!transpositionTable.contains(down.hash()) && !DeadlockDetector.isDeadState((Node) down.clone())) {
                         transpositionTable.add(down.hash());
                         expanded.add(down);
                     }
                 }
             }
+
+            //Same as before with other directions. Generalizing this stuff is possible but not worth the time investment.
 
             neighbour = initialState.getSouth(boxes.get(boxKey));
             oppositeNeighbour = initialState.getNorth(boxes.get(boxKey));
@@ -94,7 +96,7 @@ public class Node {
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
                 if (push (up, neighbour, Action.MOVE_UP)) {
-                    if (!transpositionTable.contains(up.hash())) {
+                    if (!transpositionTable.contains(up.hash()) && !DeadlockDetector.isDeadState((Node) up.clone())) {
                         transpositionTable.add(up.hash());
                         expanded.add(up);
                     }
@@ -108,7 +110,7 @@ public class Node {
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
                 if (push (left, neighbour, Action.MOVE_LEFT)) {
-                    if (!transpositionTable.contains(left.hash())) {
+                    if (!transpositionTable.contains(left.hash()) && !DeadlockDetector.isDeadState((Node) left.clone())) {
                         transpositionTable.add(left.hash());
                         expanded.add(left);
                     }
@@ -123,7 +125,7 @@ public class Node {
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
                 if (push (right, neighbour, Action.MOVE_RIGHT)) {
-                    if (!transpositionTable.contains(right.hash())) {
+                    if (!transpositionTable.contains(right.hash()) && !DeadlockDetector.isDeadState((Node) right.clone())) {
                         transpositionTable.add(right.hash());
                         expanded.add(right);
                     }
@@ -173,7 +175,8 @@ public class Node {
         Node first = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         first.setPushesNumber(this.pushesNumber);
         //Checkin if the move is legal and we execute it, then we check if the generated state was already discovered
-        if (executeMove(first, Action.MOVE_DOWN) && !transpositionTable.contains(first.hash())) {
+        if (executeMove(first, Action.MOVE_DOWN) && !transpositionTable.contains(first.hash())
+                && !DeadlockDetector.isDeadState((Node) first.clone())) {
             expanded.add(first);
             //If we reached a new maximum depth in the search, we keep note of it in depth. a static variable of Node
             if (first.getActionHistory().size() > depth)
@@ -181,9 +184,12 @@ public class Node {
             transpositionTable.add(first.hash());
         }
 
+        //Same as before with other directions. Generalizing this stuff is possible but not worth the time investment.
+
         Node second = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         second.setPushesNumber(this.pushesNumber);
-        if (executeMove(second, Action.MOVE_UP) && !transpositionTable.contains(second.hash())) {
+        if (executeMove(second, Action.MOVE_UP) && !transpositionTable.contains(second.hash())
+                && !DeadlockDetector.isDeadState((Node) second.clone())) {
             expanded.add(second);
             if (second.getActionHistory().size() > depth)
                 depth = second.getActionHistory().size();
@@ -192,7 +198,9 @@ public class Node {
 
         Node third = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         third.setPushesNumber(this.pushesNumber);
-        if (executeMove(third, Action.MOVE_LEFT) && !transpositionTable.contains(third.hash())) {
+        if (executeMove(third, Action.MOVE_LEFT) && !transpositionTable.contains(third.hash()) &&
+                !DeadlockDetector.isDeadState((Node) third.clone())) {
+
             expanded.add(third);
             if (third.getActionHistory().size() > depth)
                 depth = third.getActionHistory().size();
@@ -201,7 +209,9 @@ public class Node {
 
         Node fourth = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         fourth.setPushesNumber(this.pushesNumber);
-        if (executeMove(fourth, Action.MOVE_RIGHT)&& !transpositionTable.contains(fourth.hash())) {
+        if (executeMove(fourth, Action.MOVE_RIGHT)&& !transpositionTable.contains(fourth.hash()) &&
+                !DeadlockDetector.isDeadState((Node) fourth.clone())) {
+
             expanded.add(fourth);
             if (fourth.getActionHistory().size() > depth)
                 depth = fourth.getActionHistory().size();
@@ -389,5 +399,18 @@ Returns the cost of the path in the search tree up until this node
 
     public void setPushesNumber(int pushesNumber) {
         this.pushesNumber = pushesNumber;
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        Object obj = super.clone();
+        Node cloned = (Node) obj;
+
+        cloned.game = (GameBoard) this.game.clone();
+        cloned.pushesNumber = this.pushesNumber;
+        cloned.lastMovedBox = this.lastMovedBox;
+        cloned.actionHistory = (ArrayList<Action>) this.actionHistory.clone();
+
+        return cloned;
     }
 }

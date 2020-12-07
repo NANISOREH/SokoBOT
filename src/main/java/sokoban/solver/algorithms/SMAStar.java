@@ -28,6 +28,7 @@ public class SMAStar {
 
         solution = null;
         frontier.add(root);
+        int branchingFactor = game.getBoxCells().size() * 4;
 
         //Main loop of the algorithm, we're only going to break it if we found a solution or if the frontier is empty,
         for (int innerCount = 0; !frontier.isEmpty(); innerCount++) {
@@ -45,27 +46,33 @@ public class SMAStar {
                 //meaning the sum of the path cost until this point plus the value of the heuristic function
                 frontier.add(new ExtendedNode(n, examined,1 + examined.getPathCost() +
                         SokobanToolkit.estimateLowerBound(n.getGame())));
-
-                //running out of memory, we're pruning the worst node from the frontier
-                if ((Runtime.getRuntime().freeMemory() / 1024) / 1024 < 100) {
-                    frontier = prune(frontier);
-                }
             }
 
-            log.info("frontier " + frontier.size());
+            //running out of memory, we're pruning a bunch of nodes from the frontier
+            //specifically, we remove a number of nodes equal to the branching factor of the level, so that we're certain
+            //that the next expansion will be done without problems
+            if ((Runtime.getRuntime().freeMemory() / 1024) / 1024 < 100) {
+                    log.info("pruning " + branchingFactor + " elements" + "\nfrontier " + frontier.size());
+                    frontier = prune(frontier, branchingFactor);
+                    log.info("after pruning" + "\nfrontier " + frontier.size());
+            }
+
+            if (innerCount % 10000 == 0) log.info("frontier " + frontier.size() + "\nvisited nodes: " + Node.getExaminedNodes());
         }
 
         return null;
     }
 
-    private static PriorityQueue prune(PriorityQueue<ExtendedNode> frontier) {
+    private static PriorityQueue prune(PriorityQueue<ExtendedNode> frontier, int branchingFactor) {
         PriorityQueue<ExtendedNode> newFrontier = new PriorityQueue<>(ExtendedNode::compare);
+        ExtendedNode temp;
+        int target = frontier.size() - branchingFactor;
 
-        for (int i=0; i< frontier.size() - 1; i++) {
-            newFrontier.add(frontier.remove());
+        for (int i=0; i < target; i++) {
+            temp = frontier.remove();
+            newFrontier.add(new ExtendedNode(temp, temp.getParent(), temp.getLabel()));
         }
 
-        frontier.clear();
         return newFrontier;
     }
 }
