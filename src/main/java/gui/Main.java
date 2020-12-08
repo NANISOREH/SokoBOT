@@ -184,7 +184,8 @@ public class Main extends Application {
         boardLayout.setSpacing(15);
 
         Level toLoad = new Level(level.getValue());
-        Label label1 = new Label("Level" + level.getValue() + "   -   Requires " + toLoad.getBestSolution() + " moves");
+        Label label1 = new Label("Level" + level.getValue() + "   -   Requires " + toLoad.getBestSolution() + " moves and " +
+                toLoad.getMinPushes() + " pushes");
         label1.setTextFill(Color.LIGHTGRAY);
         String loadingString = "Search in progress. The solution will be demonstrated after the computation.\n" +
                 "\nAlgorithm: " + algorithm.getValue() +

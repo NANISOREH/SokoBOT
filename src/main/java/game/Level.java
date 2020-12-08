@@ -13,12 +13,13 @@ import java.util.regex.Pattern;
 This class reads, parses and holds information about the levels
 */
 public class Level {
-    Logger log = Logger.getLogger("level");
-    CellContent[][] content;
-    int bestSolution;
+    private static Logger log = Logger.getLogger("level");
+    private CellContent[][] content;
+    private int bestSolution;
+    private int minPushes;
 
 /*
-    Level constructor. Reads and parses the starting layout of a level and the number of moves in the best solution.
+    Level constructor. Reads and parses the starting layout of a level and the number of moves and pushes in the best solution.
     The client can select which level to load between the ones available via an integer parameter.
 */
     public Level(int level) {
@@ -39,34 +40,13 @@ public class Level {
         }
         String jsonLevel = jsonBuilder.toString();
 
-        //Parsing the json and mapping it to a matrix of the enum CellContent
+        //Parsing the json and mapping it to the object
         Gson gson = new Gson();
-        content = gson.fromJson(jsonLevel, CellContent[][].class);
+        Level parsed = gson.fromJson(jsonLevel, Level.class);
+        this.content = parsed.content;
+        this.minPushes = parsed.minPushes;
+        this.bestSolution = parsed.bestSolution;
 
-        //Parsing the file with the best solutions for the levels and picking the right one for this level
-        StringBuilder levelData = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new FileReader("leveldata")))
-        {
-            String sCurrentLine;
-            int countLine = 1;
-            while ((sCurrentLine = br.readLine()) != null)
-            {
-                if (countLine == level) {
-                    levelData.append(sCurrentLine);
-                    break;
-                }
-                countLine++;
-            }
-        }
-        catch (IOException e)
-        {
-            log.warning("The selected level was not found");
-            e.printStackTrace();
-        }
-        String number = levelData.toString();
-
-        if (number != null)
-            bestSolution = Integer.parseInt(number);
     }
 
     private String replacePattern (String string) {
@@ -92,5 +72,9 @@ public class Level {
 
     public int getBestSolution() {
         return bestSolution;
+    }
+
+    public int getMinPushes() {
+        return minPushes;
     }
 }

@@ -8,4 +8,8 @@ module sample {
 
     exports gui;
     opens gui;
+    exports game;
+    opens game;
+    exports solver;
+    opens solver;
 }
