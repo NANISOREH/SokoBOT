@@ -61,6 +61,9 @@ public class Node {
 */
     protected Collection<? extends Node> expandByPushes() throws CloneNotSupportedException {
 
+        if (DeadlockDetector.isDeadlock((Node) this.clone()))
+            return new ArrayList<>();
+
         ArrayList<Node> expanded = new ArrayList<>();
         GameBoard initialState = (GameBoard) this.game.clone();
         HashMap<Integer, Cell> boxes = initialState.getBoxCells();
@@ -80,7 +83,7 @@ public class Node {
                 //checking if the neighbour of the selected box is reachable by sokoban
                 //if that's true, the actions involved in reaching the box and pushing it can be carried out
                 if (push (down, neighbour, Action.MOVE_DOWN)) {
-                    if (!transpositionTable.contains(down.hash()) && !DeadlockDetector.isDeadlock((Node) down.clone())) {
+                    if (!transpositionTable.contains(down.hash())) {
                         transpositionTable.add(down.hash());
                         expanded.add(down);
                     }
@@ -96,7 +99,7 @@ public class Node {
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
                 if (push (up, neighbour, Action.MOVE_UP)) {
-                    if (!transpositionTable.contains(up.hash()) && !DeadlockDetector.isDeadlock((Node) up.clone())) {
+                    if (!transpositionTable.contains(up.hash())) {
                         transpositionTable.add(up.hash());
                         expanded.add(up);
                     }
@@ -110,7 +113,7 @@ public class Node {
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
                 if (push (left, neighbour, Action.MOVE_LEFT)) {
-                    if (!transpositionTable.contains(left.hash()) && !DeadlockDetector.isDeadlock((Node) left.clone())) {
+                    if (!transpositionTable.contains(left.hash())) {
                         transpositionTable.add(left.hash());
                         expanded.add(left);
                     }
@@ -125,7 +128,7 @@ public class Node {
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
                 if (push (right, neighbour, Action.MOVE_RIGHT)) {
-                    if (!transpositionTable.contains(right.hash()) && !DeadlockDetector.isDeadlock((Node) right.clone())) {
+                    if (!transpositionTable.contains(right.hash())) {
                         transpositionTable.add(right.hash());
                         expanded.add(right);
                     }
