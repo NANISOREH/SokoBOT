@@ -19,12 +19,9 @@ import javafx.stage.Stage;
 import game.Cell;
 import game.GameBoard;
 import game.Level;
-import solver.configuration.Configuration;
-import solver.configuration.ExpansionScheme;
+import solver.configuration.*;
 import solver.Node;
 import solver.SokobanSolver;
-import solver.configuration.Heuristic;
-import solver.configuration.Strategy;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -35,6 +32,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+/*
+Main class of the JavaFX application. It configures the UI and takes the configuration of the solver from the user.
+Not terribly interesting, lots of boilerplate code and drawing stuff. Plus it's an unholy spaghetti mess.
+*/
 public class Main extends Application {
     Logger log = Logger.getLogger("Main");
     private static Rectangle[][] tiles;
@@ -54,6 +55,7 @@ public class Main extends Application {
     private static ChoiceBox<String> algorithm = new ChoiceBox<>();
     private static ChoiceBox<String> scheme = new ChoiceBox<>();
     private static ChoiceBox<String> heuristic = new ChoiceBox<>();
+    private static ChoiceBox<String> routine = new ChoiceBox<>();
     private static Scene menu;
     private static Scene gameScene;
     private static GridPane gameBoard;
@@ -126,6 +128,22 @@ public class Main extends Application {
         heuristicSide.setAlignment(Pos.CENTER);
         heuristicSide.getChildren().addAll(label4, heuristic);
 
+        //Configuring deadlock detection routine selection label and choicebox
+        VBox ddSide = new VBox();
+        Label label5 = new Label("Select a deadlock detection routine");
+        label5.setTextFill(Color.LIGHTGRAY);
+        routine.setValue(null);
+        ObservableList<String> routines = routine.getItems();
+        List<String> routineNames = new ArrayList<>();
+        for (DDRoutine d : Arrays.asList(DDRoutine.values())) {
+            routineNames.add(DDRoutine.mapDDRoutine(d));
+        }
+        routines.addAll(routineNames);
+        routine.setValue(routineNames.get(0));
+        ddSide.setSpacing(15);
+        ddSide.setAlignment(Pos.CENTER);
+        ddSide.getChildren().addAll(label5, routine);
+
         //Configuring start button
         Button button = new Button("Start computation");
         button.setBackground(new Background(new BackgroundFill(Color.TOMATO, null, null)));
@@ -136,8 +154,8 @@ public class Main extends Application {
         layout.setAlignment(Pos.CENTER);
         layout.setBackground(background);
         layout.setSpacing(50);
-        layout.getChildren().addAll(levelSide, algorithmSide, expSide, heuristicSide, button);
-        menu = new Scene(layout, 600, 650);
+        layout.getChildren().addAll(levelSide, algorithmSide, expSide, heuristicSide, ddSide, button);
+        menu = new Scene(layout, 600, 700);
 
         //The button on the first scene triggers the switch to the gameplay scene and starts the game
         button.setOnAction(actionEvent -> {configureGame(primaryStage);});
@@ -147,7 +165,6 @@ public class Main extends Application {
             Platform.exit();
             System.exit(0);
         });
-
 
         //setting and showing the primary stage for the first start of the application
         primaryStage.setTitle("Sokoban");
@@ -189,13 +206,16 @@ public class Main extends Application {
         //Starting the thread that will execute the sokoban solver and actually move sokoban on the board
         Thread t1 = new Thread(() -> {
             try {
-                SokobanSolver.solve(game, Configuration.getInstance(scheme.getValue(), algorithm.getValue(), heuristic.getValue()));
+                //Launching the solver with the configuration specified by the UI elements
+                SokobanSolver.solve(game, Configuration.getInstance(scheme.getValue(), algorithm.getValue(),
+                        heuristic.getValue(), routine.getValue()));
             } catch (InterruptedException | CloneNotSupportedException e1) {
                 e1.printStackTrace();
             }
         });
         t1.start();
 
+        //Periodic refresh of the board to show selected moves and update the text elements
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(Main::updateBoard, 0, 200, TimeUnit.MILLISECONDS);
 

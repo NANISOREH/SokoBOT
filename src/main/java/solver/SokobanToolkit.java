@@ -30,6 +30,12 @@ public class SokobanToolkit {
         return -1;
     }
 
+/*
+    This methods estimates a lower bound to get a starting point for iterative deepening algorithms and to estimate
+    the cost of the path between the current node and the solution as a heuristic function for A*.
+    It sees box tiles and goal tiles as two partitions of a bipartite graph and it matches every box with the nearest goal,
+    then sums the Manhattan distances between the couples.
+*/
     private static int estimateNaively(GameBoard toSolve) {
         HashMap<Integer, Cell> boxes = (HashMap<Integer, Cell>) toSolve.getBoxCells().clone();
         ArrayList<Cell> goals = (ArrayList<Cell>) toSolve.getGoalCells().clone();
@@ -400,6 +406,12 @@ public class SokobanToolkit {
         return result;
     }
 
+/*
+    Takes two nodes in an expansion batch and their parent, and returns a positive value if the first child moved
+    the same box as the father while the second didn't, a negative value if the opposite happened, 0 if no distinction
+    has to be made. In other words, it allows for Primary Queue structures to order nodes with the same heuristic estimation
+    with a criteria of move ordering by inertia
+*/
     public static int compareByInertia (Node first, Node second, Node root) {
 
         if (root.getLastMovedBox() == null ||
@@ -417,7 +429,7 @@ public class SokobanToolkit {
     }
 
 
-    /*
+/*
     Given a game state and a cell, it determines if Sokoban can reach that cell and returns a list of actions
     containing the best path that Sokoban can use to get there, or a null list in case there's no way to reach the target.
     It uses a BFS to do so.

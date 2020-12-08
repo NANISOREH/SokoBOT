@@ -37,8 +37,14 @@ public class SokobanSolver {
         //Resetting the transposition table stored in the Node class just in case we are launching
         //a search on the same level in the same session of the program
         Node.resetSearchSpace();
-        Node.setExpansionScheme(configuration.getExpansionScheme());
 
+        //Configuring components of the solver as the client asked
+        Node.setExpansionScheme(configuration.getExpansionScheme());
+        SokobanToolkit.setHeuristic(configuration.getHeuristic());
+        DeadlockDetector.setRoutine(configuration.getRoutine());
+
+        //Launching the algorithm the client asked for and getting a solution Node from it,
+        //plus measuring the time required to do so
         start = Instant.now().toEpochMilli();
         switch (configuration.getStrategy()) {
             case BFS : {
