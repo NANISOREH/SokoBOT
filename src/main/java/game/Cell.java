@@ -1,4 +1,4 @@
-package sokoban.game;
+package game;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

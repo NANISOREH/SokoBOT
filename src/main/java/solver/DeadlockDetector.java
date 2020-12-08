@@ -1,10 +1,4 @@
-package sokoban.solver;
-
-import sokoban.game.Action;
-import sokoban.game.Cell;
-
-import java.util.ArrayList;
-import java.util.HashMap;
+package solver;
 
 public class DeadlockDetector {
 

@@ -1,4 +1,4 @@
-package sokoban.game;
+package game;
 
 /*
 Enumerates the possible actions on the board

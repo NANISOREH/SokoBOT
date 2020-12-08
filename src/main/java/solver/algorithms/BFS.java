@@ -1,8 +1,8 @@
-package sokoban.solver.algorithms;
+package solver.algorithms;
 
-import sokoban.game.Action;
-import sokoban.game.GameBoard;
-import sokoban.solver.Node;
+import game.Action;
+import game.GameBoard;
+import solver.Node;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 

@@ -1,10 +1,10 @@
-package sokoban.solver;
+package solver;
 
-import sokoban.game.Action;
-import sokoban.game.Cell;
-import sokoban.game.CellContent;
-import sokoban.game.GameBoard;
-import sokoban.solver.configuration.ExpansionScheme;
+import game.Action;
+import game.Cell;
+import game.CellContent;
+import game.GameBoard;
+import solver.configuration.ExpansionScheme;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -403,8 +403,7 @@ Returns the cost of the path in the search tree up until this node
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        Object obj = super.clone();
-        Node cloned = (Node) obj;
+        Node cloned = new Node();
 
         cloned.game = (GameBoard) this.game.clone();
         cloned.pushesNumber = this.pushesNumber;
