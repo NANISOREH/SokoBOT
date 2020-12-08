@@ -33,6 +33,7 @@ public class IDAStar {
             if (solution != null)
                 return solution;
 
+            log.info("visited nodes on iteration " + count + ": " + Node.getExaminedNodes());
         }
 
     }

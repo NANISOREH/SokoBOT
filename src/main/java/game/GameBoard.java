@@ -162,6 +162,61 @@ public class GameBoard implements Cloneable{
 
     }
 
+/*
+    Magicly moves a box indipendently from Sokoban. Used for debugging and deadlock detection.
+*/
+    public void boxTeleport(int boxNumber, Action side) throws CloneNotSupportedException {
+        Cell boxCell = boxCells.get(boxNumber);
+
+        if (!boxCells.containsKey(boxNumber))
+            return;
+
+            switch (side) {
+
+            case MOVE_DOWN: {
+                if (getNorth(boxCell) == null || getSouth(boxCell) == null)
+                    return;
+                if (getNorth(boxCell).getContent() != CellContent.EMPTY && getNorth(boxCell).getContent() != CellContent.SOKOBAN)
+                    return;
+                else {
+                    swapCells(boxCell, getSouth(boxCell));
+                }
+                break;
+            }
+
+            case MOVE_UP: {
+                if (getNorth(boxCell) == null || getSouth(boxCell) == null)
+                    return;
+                else if (getSouth(boxCell).getContent() != CellContent.EMPTY && getSouth(boxCell).getContent() != CellContent.SOKOBAN)
+                    return;
+                else {
+                    swapCells(boxCell, getNorth(boxCell));
+                }
+            }
+
+            case MOVE_LEFT: {
+                if (getEast(boxCell) == null || getWest(boxCell) == null)
+                    return;
+                else if (getEast(boxCell).getContent() != CellContent.EMPTY && getEast(boxCell).getContent() != CellContent.SOKOBAN)
+                    return;
+                else {
+                    swapCells(boxCell, getWest(boxCell));
+                }
+            }
+
+            case MOVE_RIGHT: {
+                if (getEast(boxCell) == null || getWest(boxCell) == null)
+                    return;
+                if (getWest(boxCell).getContent() != CellContent.EMPTY && getWest(boxCell).getContent() != CellContent.SOKOBAN)
+                    return;
+                else {
+                    swapCells(boxCell, getEast(boxCell));
+                }
+            }
+
+        }
+    }
+
     /*
         Checks for the victory conditions: every goal cell must contain a box
     */

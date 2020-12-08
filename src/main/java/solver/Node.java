@@ -80,7 +80,7 @@ public class Node {
                 //checking if the neighbour of the selected box is reachable by sokoban
                 //if that's true, the actions involved in reaching the box and pushing it can be carried out
                 if (push (down, neighbour, Action.MOVE_DOWN)) {
-                    if (!transpositionTable.contains(down.hash()) && !DeadlockDetector.isDeadState((Node) down.clone())) {
+                    if (!transpositionTable.contains(down.hash()) && !DeadlockDetector.isDeadlock((Node) down.clone())) {
                         transpositionTable.add(down.hash());
                         expanded.add(down);
                     }
@@ -96,7 +96,7 @@ public class Node {
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
                 if (push (up, neighbour, Action.MOVE_UP)) {
-                    if (!transpositionTable.contains(up.hash()) && !DeadlockDetector.isDeadState((Node) up.clone())) {
+                    if (!transpositionTable.contains(up.hash()) && !DeadlockDetector.isDeadlock((Node) up.clone())) {
                         transpositionTable.add(up.hash());
                         expanded.add(up);
                     }
@@ -110,7 +110,7 @@ public class Node {
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
                 if (push (left, neighbour, Action.MOVE_LEFT)) {
-                    if (!transpositionTable.contains(left.hash()) && !DeadlockDetector.isDeadState((Node) left.clone())) {
+                    if (!transpositionTable.contains(left.hash()) && !DeadlockDetector.isDeadlock((Node) left.clone())) {
                         transpositionTable.add(left.hash());
                         expanded.add(left);
                     }
@@ -125,7 +125,7 @@ public class Node {
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
                 if (push (right, neighbour, Action.MOVE_RIGHT)) {
-                    if (!transpositionTable.contains(right.hash()) && !DeadlockDetector.isDeadState((Node) right.clone())) {
+                    if (!transpositionTable.contains(right.hash()) && !DeadlockDetector.isDeadlock((Node) right.clone())) {
                         transpositionTable.add(right.hash());
                         expanded.add(right);
                     }
@@ -176,7 +176,7 @@ public class Node {
         first.setPushesNumber(this.pushesNumber);
         //Checkin if the move is legal and we execute it, then we check if the generated state was already discovered
         if (executeMove(first, Action.MOVE_DOWN) && !transpositionTable.contains(first.hash())
-                && !DeadlockDetector.isDeadState((Node) first.clone())) {
+                && !DeadlockDetector.isDeadlock((Node) first.clone())) {
             expanded.add(first);
             //If we reached a new maximum depth in the search, we keep note of it in depth. a static variable of Node
             if (first.getActionHistory().size() > depth)
@@ -189,7 +189,7 @@ public class Node {
         Node second = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         second.setPushesNumber(this.pushesNumber);
         if (executeMove(second, Action.MOVE_UP) && !transpositionTable.contains(second.hash())
-                && !DeadlockDetector.isDeadState((Node) second.clone())) {
+                && !DeadlockDetector.isDeadlock((Node) second.clone())) {
             expanded.add(second);
             if (second.getActionHistory().size() > depth)
                 depth = second.getActionHistory().size();
@@ -199,7 +199,7 @@ public class Node {
         Node third = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         third.setPushesNumber(this.pushesNumber);
         if (executeMove(third, Action.MOVE_LEFT) && !transpositionTable.contains(third.hash()) &&
-                !DeadlockDetector.isDeadState((Node) third.clone())) {
+                !DeadlockDetector.isDeadlock((Node) third.clone())) {
 
             expanded.add(third);
             if (third.getActionHistory().size() > depth)
@@ -210,7 +210,7 @@ public class Node {
         Node fourth = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         fourth.setPushesNumber(this.pushesNumber);
         if (executeMove(fourth, Action.MOVE_RIGHT)&& !transpositionTable.contains(fourth.hash()) &&
-                !DeadlockDetector.isDeadState((Node) fourth.clone())) {
+                !DeadlockDetector.isDeadlock((Node) fourth.clone())) {
 
             expanded.add(fourth);
             if (fourth.getActionHistory().size() > depth)
