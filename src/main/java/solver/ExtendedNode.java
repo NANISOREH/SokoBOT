@@ -1,7 +1,7 @@
-package sokoban.solver;
+package solver;
 
-import sokoban.game.Action;
-import sokoban.game.GameBoard;
+import game.Action;
+import game.GameBoard;
 
 import java.util.ArrayList;
 

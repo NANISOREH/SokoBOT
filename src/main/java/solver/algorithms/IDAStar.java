@@ -1,10 +1,10 @@
 
-package sokoban.solver.algorithms;
+package solver.algorithms;
 
-import sokoban.game.GameBoard;
-import sokoban.solver.ExtendedNode;
-import sokoban.solver.Node;
-import sokoban.solver.SokobanToolkit;
+import game.GameBoard;
+import solver.ExtendedNode;
+import solver.Node;
+import solver.SokobanToolkit;
 
 import java.util.ArrayList;
 import java.util.logging.Logger;

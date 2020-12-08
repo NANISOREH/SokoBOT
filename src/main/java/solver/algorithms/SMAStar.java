@@ -1,15 +1,12 @@
 
-package sokoban.solver.algorithms;
+package solver.algorithms;
 
-import javafx.collections.transformation.SortedList;
-import sokoban.game.GameBoard;
-import sokoban.solver.ExtendedNode;
-import sokoban.solver.Node;
-import sokoban.solver.SokobanToolkit;
+import game.GameBoard;
+import solver.ExtendedNode;
+import solver.Node;
+import solver.SokobanToolkit;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.PriorityQueue;
 import java.util.logging.Logger;
 

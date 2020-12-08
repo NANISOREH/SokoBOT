@@ -1,9 +1,10 @@
-package sokoban.solver;
+package solver;
 
-import sokoban.game.Action;
-import sokoban.game.Cell;
-import sokoban.game.CellContent;
-import sokoban.game.GameBoard;
+import game.Action;
+import game.Cell;
+import game.CellContent;
+import game.GameBoard;
+import solver.configuration.Heuristic;
 
 import java.util.*;
 import java.util.logging.Logger;
@@ -13,16 +14,49 @@ This class will collect static methods implementing reusable algorithm optimizat
 subproblems encountered in the main flow of the program. Its only purpose is to keep other classes a bit cleaner.
 */
 public class SokobanToolkit {
+    private static Heuristic heuristic = Heuristic.MINIMUM_PERFECT_MATCHING;
     private static Logger log = Logger.getLogger("SokobanToolkit");
+
+    public static int estimateLowerBound(GameBoard toSolve) {
+        switch (heuristic) {
+            case NAIVE_MATCHING : {
+                return estimateNaively(toSolve);
+            }
+            case MINIMUM_PERFECT_MATCHING : {
+                return estimateProperly(toSolve);
+            }
+        }
+
+        return -1;
+    }
+
+    private static int estimateNaively(GameBoard toSolve) {
+        HashMap<Integer, Cell> boxes = (HashMap<Integer, Cell>) toSolve.getBoxCells().clone();
+        ArrayList<Cell> goals = (ArrayList<Cell>) toSolve.getGoalCells().clone();
+
+        int result = 0;
+        int minimum;
+
+        for (Cell c : goals) {
+            minimum = Integer.MAX_VALUE;
+            for (int i = 0; i < boxes.size(); i++) {
+                if (c.manhattanDistance(boxes.get(i)) < minimum)
+                    minimum = c.manhattanDistance(boxes.get(i));
+            }
+            result += minimum;
+        }
+
+        return result;
+    }
 
 /*
     This methods estimates a lower bound to get a starting point for iterative deepening algorithms and to estimate
     the cost of the path between the current node and the solution as a heuristic function for A*.
-    It sees boxes tiles and goal tiles as two partitions of a bipartite graph and it constructs a perfect matching
+    It sees box tiles and goal tiles as two partitions of a bipartite graph and it constructs a perfect matching
     between the two that minimizes the sum of the manhattan distance between the couples in the matching.
     It uses an off-the-shelf implementation of the Hungarian Algorithm to do so.
 */
-    public static int estimateLowerBound(GameBoard toSolve) {
+    private static int estimateProperly(GameBoard toSolve) {
          class HungarianAlgorithm {
 /*             MIT License
 
@@ -565,4 +599,11 @@ public class SokobanToolkit {
     }
 
 
+    public static void setHeuristic(Heuristic heuristic) {
+        SokobanToolkit.heuristic = heuristic;
+    }
+
+    public static Heuristic getHeuristic() {
+        return heuristic;
+    }
 }

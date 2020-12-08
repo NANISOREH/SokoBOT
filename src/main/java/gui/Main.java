@@ -16,14 +16,15 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import sokoban.game.Cell;
-import sokoban.game.GameBoard;
-import sokoban.game.Level;
-import sokoban.solver.configuration.Configuration;
-import sokoban.solver.configuration.ExpansionScheme;
-import sokoban.solver.Node;
-import sokoban.solver.SokobanSolver;
-import sokoban.solver.configuration.Strategy;
+import game.Cell;
+import game.GameBoard;
+import game.Level;
+import solver.configuration.Configuration;
+import solver.configuration.ExpansionScheme;
+import solver.Node;
+import solver.SokobanSolver;
+import solver.configuration.Heuristic;
+import solver.configuration.Strategy;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -52,6 +53,7 @@ public class Main extends Application {
     private static ChoiceBox<Integer> level = new ChoiceBox<>();
     private static ChoiceBox<String> algorithm = new ChoiceBox<>();
     private static ChoiceBox<String> scheme = new ChoiceBox<>();
+    private static ChoiceBox<String> heuristic = new ChoiceBox<>();
     private static Scene menu;
     private static Scene gameScene;
     private static GridPane gameBoard;
@@ -108,6 +110,22 @@ public class Main extends Application {
         expSide.setAlignment(Pos.CENTER);
         expSide.getChildren().addAll(label3, scheme);
 
+        //Configuring heuristics selection label and choicebox
+        VBox heuristicSide = new VBox();
+        Label label4 = new Label("Select an evaluation heuristic");
+        label4.setTextFill(Color.LIGHTGRAY);
+        heuristic.setValue(null);
+        ObservableList<String> heuristics = heuristic.getItems();
+        List<String> heuristicNames = new ArrayList<>();
+        for (Heuristic h : Arrays.asList(Heuristic.values())) {
+            heuristicNames.add(Heuristic.mapHeuristic(h));
+        }
+        heuristics.addAll(heuristicNames);
+        heuristic.setValue(heuristicNames.get(0));
+        heuristicSide.setSpacing(15);
+        heuristicSide.setAlignment(Pos.CENTER);
+        heuristicSide.getChildren().addAll(label4, heuristic);
+
         //Configuring start button
         Button button = new Button("Start computation");
         button.setBackground(new Background(new BackgroundFill(Color.TOMATO, null, null)));
@@ -118,10 +136,10 @@ public class Main extends Application {
         layout.setAlignment(Pos.CENTER);
         layout.setBackground(background);
         layout.setSpacing(50);
-        layout.getChildren().addAll(levelSide, algorithmSide, expSide, button);
-        menu = new Scene(layout, 600, 580);
+        layout.getChildren().addAll(levelSide, algorithmSide, expSide, heuristicSide, button);
+        menu = new Scene(layout, 600, 650);
 
-        //The button on the first scene triggers the switch to the gameplay scene and starts the sokoban.game
+        //The button on the first scene triggers the switch to the gameplay scene and starts the game
         button.setOnAction(actionEvent -> {configureGame(primaryStage);});
 
         //Closing the application when the window gets closed
@@ -151,9 +169,13 @@ public class Main extends Application {
         Level toLoad = new Level(level.getValue());
         Label label1 = new Label("Level" + level.getValue() + "   -   Requires " + toLoad.getBestSolution() + " moves");
         label1.setTextFill(Color.LIGHTGRAY);
-        result = new Text("Search in progress. The solution will be demonstrated after the computation.\n" +
+        String loadingString = "Search in progress. The solution will be demonstrated after the computation.\n" +
                 "\nAlgorithm: " + algorithm.getValue() +
-                "\nExpansion scheme: " + scheme.getValue());
+                "\nExpansion scheme: " + scheme.getValue();
+        if (algorithm.getValue() != Strategy.mapStrategy(Strategy.BFS))
+            loadingString += "\nHeuristic evaluation: " + heuristic.getValue();
+
+        result = new Text(loadingString);
         result.setFill(Color.LIGHTGRAY);
 
         //Creating, configuring and finally setting the scene for the game itself
@@ -167,7 +189,7 @@ public class Main extends Application {
         //Starting the thread that will execute the sokoban solver and actually move sokoban on the board
         Thread t1 = new Thread(() -> {
             try {
-                SokobanSolver.solve(game, Configuration.getInstance(scheme.getValue(), algorithm.getValue()));
+                SokobanSolver.solve(game, Configuration.getInstance(scheme.getValue(), algorithm.getValue(), heuristic.getValue()));
             } catch (InterruptedException | CloneNotSupportedException e1) {
                 e1.printStackTrace();
             }

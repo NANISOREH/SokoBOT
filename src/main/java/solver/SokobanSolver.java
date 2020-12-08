@@ -1,12 +1,12 @@
-package sokoban.solver;
+package solver;
 
-import sokoban.game.Action;
-import sokoban.game.GameBoard;
-import sokoban.solver.algorithms.SMAStar;
-import sokoban.solver.algorithms.BFS;
-import sokoban.solver.algorithms.IDAStar;
-import sokoban.solver.algorithms.IDDFS;
-import sokoban.solver.configuration.Configuration;
+import game.Action;
+import game.GameBoard;
+import solver.algorithms.SMAStar;
+import solver.algorithms.BFS;
+import solver.algorithms.IDAStar;
+import solver.algorithms.IDDFS;
+import solver.configuration.Configuration;
 
 import java.time.Instant;
 import java.util.ArrayList;

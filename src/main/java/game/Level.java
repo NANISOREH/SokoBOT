@@ -1,4 +1,4 @@
-package sokoban.game;
+package game;
 
 import com.google.gson.Gson;
 
