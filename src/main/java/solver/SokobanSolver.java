@@ -2,10 +2,7 @@ package solver;
 
 import game.Action;
 import game.GameBoard;
-import solver.algorithms.SMAStar;
-import solver.algorithms.BFS;
-import solver.algorithms.IDAStar;
-import solver.algorithms.IDDFS;
+import solver.algorithms.*;
 import solver.configuration.Configuration;
 
 import java.time.Instant;
@@ -42,6 +39,7 @@ public class SokobanSolver {
         Node.setExpansionScheme(configuration.getExpansionScheme());
         SokobanToolkit.setHeuristic(configuration.getHeuristic());
         DeadlockDetector.setRoutine(configuration.getRoutine());
+        DeadlockDetector.handleDeadPositions((GameBoard) toSolve.clone());
 
         //Launching the algorithm the client asked for and getting a solution Node from it,
         //plus measuring the time required to do so

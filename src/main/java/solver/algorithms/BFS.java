@@ -18,21 +18,24 @@ public class BFS {
         //expand in the current iteration. It's initialized by adding the first frontier, with only the root node inside
         ArrayList<Node> front = new ArrayList<>();
         Node root = new Node(game, new ArrayList<Action>());
-        front.add(root);
+        if (root.isGoal()) {
+            return root;
+        }
 
         //Algorithm loop
         //I'm using an iterative version: every node in the frontier is expanded and the children (the next frontier) are added
         //to a second utility structure that will be expanded the same way on the next iteration.
         //The stopping condition is, of course, finding a node that represents a winning state.
+        front.add(root);
         for (int count = 0; true; count++) {
             log.info("level " + count + "\nfront size " + front.size() + "\nexplored nodes " + Node.getExaminedNodes());
             ArrayList<Node> nextLevel = new ArrayList<>();
             for (Node n : front) {
-                if (n.getGame().checkVictory()) {
-                    return n;
-                }
                 for (Node v : n.expand()){
-                        nextLevel.add(v);
+                    if (v.isGoal()) {
+                        return v;
+                    }
+                    nextLevel.add(v);
                 }
             }
 

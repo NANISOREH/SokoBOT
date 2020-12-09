@@ -28,6 +28,7 @@ public class IDDFS {
 
         solution = null;
         Node root = new Node(game, new ArrayList<>());
+        if (root.isGoal()) return root;
         cache.put(root.hash(), root);
         int limit = lowerBound;
         log.info("The lower bound estimate is: " + limit);
@@ -79,11 +80,15 @@ public class IDDFS {
         Private helper method that actually kickstarts the DFS recursive call stack
     */
     private static void recursiveComponent (Node root, int limit) throws CloneNotSupportedException {
+
+        if (solution != null) return;
+
         //solution checking
-        if (root.getGame().checkVictory()) {
+        if (root.isGoal()) {
             solution = root;
             return;
         }
+
         //if we reached the bottom without finding a solution, the search will stop and
         //(if the memory allows it) this node will be in the cache for the next iteration
         if (limit == 0 && !memoryFull) {

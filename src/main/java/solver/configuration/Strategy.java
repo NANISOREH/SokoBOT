@@ -5,7 +5,7 @@ public enum Strategy {
 
     public static Strategy mapString(String toMap) {
         switch (toMap) {
-            case ("BFS") : {
+            case ("Breadth First Search") : {
                 return Strategy.BFS;
             }
             case "Iterative Deepening DFS" : {
@@ -24,7 +24,7 @@ public enum Strategy {
     public static String mapStrategy (Strategy strategy) {
         switch (strategy) {
             case BFS : {
-                return ("BFS");
+                return ("Breadth First Search");
             }
             case IDDFS : {
                 return ("Iterative Deepening DFS");
