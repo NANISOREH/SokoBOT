@@ -345,6 +345,16 @@ Returns the cost of the path in the search tree up until this node
         return -1;
     }
 
+    public int compare(Node extendedNode) {
+        int comparison = Integer.compare(this.getPathCost(), extendedNode.getPathCost());
+
+        return comparison;
+    }
+
+    public boolean isGoal() {
+        return this.getGame().checkVictory();
+    }
+
 
     //GETTERS AND SETTERS
 

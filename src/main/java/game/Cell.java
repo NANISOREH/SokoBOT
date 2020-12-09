@@ -15,6 +15,7 @@ public class Cell implements Cloneable, Serializable {
     private int column;
     private CellContent content;
     private boolean goal;
+    private boolean deadPosition;
     private Integer boxNumber;
 
     public Cell() {}
@@ -67,9 +68,17 @@ public class Cell implements Cloneable, Serializable {
         this.boxNumber = boxNumber;
     }
 
+    public boolean isDeadPosition() {
+        return deadPosition;
+    }
+
+    public void setDeadPosition(boolean deadPosition) {
+        this.deadPosition = deadPosition;
+    }
+
     /*    public Cell clone () {
-            return new Cell (this.getRow(), this.getColumn(), this.content, this.goal);
-        }*/
+                return new Cell (this.getRow(), this.getColumn(), this.content, this.goal);
+            }*/
     @Override
     public Object clone() throws CloneNotSupportedException {
         Object obj = super.clone();

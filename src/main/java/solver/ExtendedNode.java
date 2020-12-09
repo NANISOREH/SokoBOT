@@ -60,8 +60,4 @@ public class ExtendedNode extends Node{
     public void setLabel(int label) {
         this.label = label;
     }
-
-    public boolean isGoal() {
-        return this.getGame().checkVictory();
-    }
 }
