@@ -18,6 +18,7 @@ public class GameBoard implements Cloneable{
     private ArrayList<Cell> goalCells = new ArrayList<>();
     //Boxes are identified by an integer to easily track them down in their roaming
     private HashMap<Integer, Cell> boxCells = new HashMap<>();
+    private Integer lastMovedBox;
     private int rows;
     private int columns;
 
@@ -58,6 +59,7 @@ public class GameBoard implements Cloneable{
                 }
             }
         }
+        lastMovedBox = null;
 
     }
 
@@ -139,6 +141,7 @@ public class GameBoard implements Cloneable{
         else if (second.getContent() == CellContent.SOKOBAN) {
             sokobanCell = (Cell) second.clone();
         }
+        lastMovedBox = null;
 
         //if one of the two cells contains a box after the swap, it means that it was in the other one before:
         //we update the boxCells structure by removing the old box cell and adding the new one in its place
@@ -148,6 +151,7 @@ public class GameBoard implements Cloneable{
                 second.setBoxNumber(null);
                 boxCells.remove(first.getBoxNumber());
                 boxCells.put(first.getBoxNumber(), first);
+                lastMovedBox = first.getBoxNumber();
             }
         }
         else if (second.getContent() == CellContent.BOX) {
@@ -156,6 +160,7 @@ public class GameBoard implements Cloneable{
                 first.setBoxNumber(null);
                 boxCells.remove(second.getBoxNumber());
                 boxCells.put(second.getBoxNumber(), second);
+                lastMovedBox = second.getBoxNumber();
             }
         }
 
@@ -313,6 +318,14 @@ public class GameBoard implements Cloneable{
         return columns;
     }
 
+    public Integer getLastMovedBox() {
+        return lastMovedBox;
+    }
+
+    public void setLastMovedBox(Integer lastMovedBox) {
+        this.lastMovedBox = lastMovedBox;
+    }
+
     public ArrayList<Cell> getGoalCells() {
         return goalCells;
     }
@@ -351,6 +364,7 @@ public class GameBoard implements Cloneable{
         cloned.setBoard(copy);
         cloned.rows = this.rows;
         cloned.columns = this.columns;
+        cloned.lastMovedBox = this.lastMovedBox;
 
         return cloned;
     }
