@@ -8,13 +8,14 @@ import solver.SokobanToolkit;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 public class IDAStar {
     private static final Logger log = Logger.getLogger("IDASTAR");
     private static Node solution = null;
     private static int newLimit;
-    private static ArrayList<Long> transpositionTableCopy = new ArrayList<>();
+    private static TreeSet<Long> transpositionTableCopy = new TreeSet<>();
     private static boolean memoryFull = false;
 
     //these two hashmaps are used as a cache to avoid re-exploring the lower levels in iterative deepening
@@ -32,28 +33,30 @@ public class IDAStar {
         for (int count = 0; true; count++) {
             //Before every iteration, if the memory is not full yet, we make a copy of the transposition table so that,
             //when we finally have no more space, we can can restore its state to effectively start a proper, uncached
-            //IDDFS starting from the last cached frontier
+            //iterative deepening starting from the last cached frontier
             if (!memoryFull) {
                 transpositionTableCopy.clear();
-                transpositionTableCopy = (ArrayList<Long>) Node.getTranspositionTable().clone();
+                transpositionTableCopy = (TreeSet<Long>) Node.getTranspositionTable().clone();
             }
             //If memory is full, we have to restore the transposition table backup and increment the limit of the search:
             //from now on, no more cached nodes and we will start over from the last cached frontier
             else if (memoryFull){
                 Node.resetSearchSpace();
-                Node.setTranspositionTable((ArrayList<Long>) transpositionTableCopy.clone());
+                Node.setTranspositionTable((TreeSet<Long>) transpositionTableCopy.clone());
                 limit = limit + lowerBound/2;
             }
 
 
             newLimit = Integer.MAX_VALUE;
             //launching the search on the current limit
+            //the limit will be raised inside the recursive component and stored in newLimit
             if (!memoryFull) candidateCache = new HashMap<>();
             for (Long key : cache.keySet()) {
                 recursiveComponent(cache.get(key), limit);
             }
-            //the limit will be raised inside the recursive component and stored in newLimit
             limit = newLimit;
+
+            //We copy the frontier we formed in the last iteration to be used as a starting point for the next one
             if (!memoryFull) cache = new HashMap<>(candidateCache);
 
             //If we found a solution in this iteration, we put out the garbage and then return it
@@ -82,7 +85,7 @@ public class IDAStar {
         //the new limit will be the lowest f(n) value among those who surpassed the current limit
         //if the memory allows it, this node will be in the cache for the next iteration
         if (root.getLabel() > limit && !memoryFull) {
-            if ((Runtime.getRuntime().freeMemory() / 1024) / 1024 > 100) {
+            if (cache.size() + candidateCache.size() < SokobanToolkit.MAX_NODES) {
                 candidateCache.put(root.hash(), root);
             }
             else {

@@ -19,6 +19,7 @@ import javafx.stage.Stage;
 import game.Cell;
 import game.GameBoard;
 import game.Level;
+import solver.DeadlockDetector;
 import solver.configuration.*;
 import solver.Node;
 import solver.SokobanSolver;
@@ -66,6 +67,9 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        //Starting precomputation of the level-independent deadlocks as early as possible
+        DeadlockDetector.populateDeadlocks();
+
         //Configuring level selection label and choicebox
         VBox levelSide = new VBox();
         Label label1 = new Label("Select a level");
@@ -186,12 +190,14 @@ public class Main extends Application {
         Level toLoad = new Level(level.getValue());
         Label label1 = new Label("Level" + level.getValue() + "   -   Requires " + toLoad.getBestSolution() + " moves and " +
                 toLoad.getMinPushes() + " pushes");
+        label1.setMinHeight(50);
+        label1.setMinWidth(300);
         label1.setTextFill(Color.LIGHTGRAY);
         String loadingString = "Search in progress. The solution will be demonstrated after the computation.\n" +
                 "\nAlgorithm: " + algorithm.getValue() +
                 "\nExpansion scheme: " + scheme.getValue();
         if (algorithm.getValue() != Strategy.mapStrategy(Strategy.BFS))
-            loadingString += "\nHeuristic evaluation: " + heuristic.getValue();
+            loadingString += "\nHeuristic evaluation: " + heuristic.getValue() + "\n\n";
 
         result = new Text(loadingString);
         result.setFill(Color.LIGHTGRAY);
@@ -202,7 +208,7 @@ public class Main extends Application {
         gameScene = new Scene(gameBoard);
         boardLayout.getChildren().addAll(label1, gameBoard, result);
         //primaryStage.setResizable(false);
-        primaryStage.setScene(new Scene(boardLayout, 1200, 800));
+        primaryStage.setScene(new Scene(boardLayout, 1000, 800));
 
         //Starting the thread that will execute the sokoban solver and actually move sokoban on the board
         Thread t1 = new Thread(() -> {
@@ -246,8 +252,9 @@ public class Main extends Application {
                 switch (board[i][j].getContent()) {
                     case WALL : tile.setFill(new ImagePattern(wall));
                                 break;
-                    case EMPTY: if (board[i][j].isGoal()) tile.setFill(new ImagePattern(goal));
-                                break;
+                    case EMPTY: if (!board[i][j].isGoal()) tile.setFill(Color.WHITE);
+                                else tile.setFill(new ImagePattern(goal));
+                                    break;
                     case BOX:   tile.setFill(new ImagePattern(box));
                                 break;
                     case SOKOBAN: tile.setFill(new ImagePattern(sokoban));
@@ -264,30 +271,32 @@ public class Main extends Application {
 
     private static void updateBoard () {
         Cell[][] board = game.getBoard();
-        for (int i = 0; i < game.getRows(); i++) {
-            for (int j = 0; j < game.getColumns(); j++) {
-
-                Rectangle tile = tiles[i][j];
-
-                switch (board[i][j].getContent()) {
-                    case EMPTY: if (!board[i][j].isGoal()) tile.setFill(Color.WHITE);
-                                else tile.setFill(new ImagePattern(goal));
-                                break;
-                    case BOX:   tile.setFill(new ImagePattern(box));
-                                break;
-                    case SOKOBAN: tile.setFill(new ImagePattern(sokoban));
-                                break;
-                }
-
-                tiles[i][j] = tile;
-            }
-        }
-
         if (SokobanSolver.getSolution() != null) {
+
+            for (int i = 0; i < game.getRows(); i++) {
+                for (int j = 0; j < game.getColumns(); j++) {
+
+                    Rectangle tile = tiles[i][j];
+
+                    switch (board[i][j].getContent()) {
+                        case EMPTY: if (!board[i][j].isGoal()) tile.setFill(Color.WHITE);
+                                    else tile.setFill(new ImagePattern(goal));
+                                    break;
+                        case BOX:   tile.setFill(new ImagePattern(box));
+                                    break;
+                        case SOKOBAN: tile.setFill(new ImagePattern(sokoban));
+                                    break;
+                    }
+
+                    tiles[i][j] = tile;
+                }
+            }
+
+
             result.setText(algorithm.getValue() + " found a solution in " +
                     SokobanSolver.getSolutionMoves() + " moves - " + SokobanSolver.getSolutionPushes() + " pushes.\n\n" +
                     Node.getExaminedNodes() + " unique game states were examined.\n" +
-                    "Time elapsed: " + SokobanSolver.getTimeElapsed() + " seconds");
+                    "Time elapsed: " + SokobanSolver.getTimeElapsed() + " seconds\n\n");
         }
 
     }

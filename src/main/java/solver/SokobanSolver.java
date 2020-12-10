@@ -4,6 +4,7 @@ import game.Action;
 import game.GameBoard;
 import solver.algorithms.*;
 import solver.configuration.Configuration;
+import solver.configuration.DDRoutine;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -39,11 +40,15 @@ public class SokobanSolver {
         Node.setExpansionScheme(configuration.getExpansionScheme());
         SokobanToolkit.setHeuristic(configuration.getHeuristic());
         DeadlockDetector.setRoutine(configuration.getRoutine());
-        DeadlockDetector.handleDeadPositions((GameBoard) toSolve.clone());
 
-        //Launching the algorithm the client asked for and getting a solution Node from it,
-        //plus measuring the time required to do so
+        //Starting the clock to measure elapsed time
         start = Instant.now().toEpochMilli();
+
+        //Precomputes dead positions before starting the search, if required
+        if (configuration.getRoutine() == DDRoutine.ALL_ROUTINES || configuration.getRoutine() == DDRoutine.DEAD_POSITIONS)
+            DeadlockDetector.handleDeadPositions((GameBoard) toSolve.clone());
+
+        //Starting the search with the required algorithm
         switch (configuration.getStrategy()) {
             case BFS : {
                 solution = BFS.launch((GameBoard) toSolve.clone());
@@ -66,6 +71,7 @@ public class SokobanSolver {
 
         ArrayList<Action> solutionActions = new ArrayList<>();
         if (solution != null) solutionActions = solution.getActionHistory();
+
         //Showing the list of actions in the console and executing the corresponding moves on the board
         if (!solutionActions.isEmpty()) {
             log.info("Solution found in " + solutionActions.size() + " moves!");
