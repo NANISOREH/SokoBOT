@@ -1,7 +1,7 @@
 package solver.configuration;
 
 public enum DDRoutine {
-    DEAD_POSITIONS, LOOKUP_TABLES, NO_DEADLOCK_DETECTION, ALL_ROUTINES;
+    LOOKUP_TABLES, DEAD_POSITIONS, NO_DEADLOCK_DETECTION, ALL_ROUTINES;
 
     public static DDRoutine mapString(String toMap) {
         switch (toMap) {

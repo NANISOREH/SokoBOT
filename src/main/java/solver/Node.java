@@ -80,7 +80,8 @@ public class Node {
 
                 //checking if the neighbour of the selected box is reachable by sokoban
                 //if that's true, the actions involved in reaching the box and pushing it can be carried out
-                if (push (down, neighbour, Action.MOVE_DOWN)) {
+                //after that, we let the deadlock detector do its job
+                if (push (down, neighbour, Action.MOVE_DOWN) && !DeadlockDetector.isDeadlock((Node) down.clone())) {
                     if (!transpositionTable.contains(down.hash())) {
                         transpositionTable.add(down.hash());
                         expanded.add(down);
@@ -97,7 +98,7 @@ public class Node {
             if ((neighbour.getContent() == CellContent.EMPTY || neighbour.getContent() == CellContent.SOKOBAN) &&
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
-                if (push (up, neighbour, Action.MOVE_UP)) {
+                if (push (up, neighbour, Action.MOVE_UP) && !DeadlockDetector.isDeadlock((Node) up.clone())) {
                     if (!transpositionTable.contains(up.hash())) {
                         transpositionTable.add(up.hash());
                         expanded.add(up);
@@ -111,7 +112,7 @@ public class Node {
             if ((neighbour.getContent() == CellContent.EMPTY || neighbour.getContent() == CellContent.SOKOBAN) &&
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
-                if (push (left, neighbour, Action.MOVE_LEFT)) {
+                if (push (left, neighbour, Action.MOVE_LEFT) && !DeadlockDetector.isDeadlock((Node) left.clone())) {
                     if (!transpositionTable.contains(left.hash())) {
                         transpositionTable.add(left.hash());
                         expanded.add(left);
@@ -126,7 +127,7 @@ public class Node {
             if ((neighbour.getContent() == CellContent.EMPTY || neighbour.getContent() == CellContent.SOKOBAN) &&
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
-                if (push (right, neighbour, Action.MOVE_RIGHT)) {
+                if (push (right, neighbour, Action.MOVE_RIGHT) && !DeadlockDetector.isDeadlock((Node) right.clone())) {
                     if (!transpositionTable.contains(right.hash())) {
                         transpositionTable.add(right.hash());
                         expanded.add(right);
@@ -156,12 +157,13 @@ public class Node {
             //moving the box
             executeMove(newState, action);
 
+            log.info("sokoban cell\n" + game.getSokobanCell());
+            log.info("moved box\n" + game.getBoxCells().get(lastMovedBox));
+
             if (newState.getPushesNumber() > depth)
                 depth = newState.pushesNumber;
 
-            if (DeadlockDetector.isDeadlock((Node) newState.clone()))
-                return false;
-            else
+            if (newState.getLastMovedBox() != null)
                 return true;
         }
 
@@ -245,7 +247,7 @@ public class Node {
             afterBoxCells = new HashMap<>(node.game.getBoxCells());
             for (int i = 0; i < beforeBoxCells.size(); i++) {
                 if (beforeBoxCells.get(i).getRow() != afterBoxCells.get(i).getRow() ||
-                    beforeBoxCells.get(i).getColumn() != afterBoxCells.get(i).getColumn()) {
+                        beforeBoxCells.get(i).getColumn() != afterBoxCells.get(i).getColumn()) {
                     node.lastMovedBox = i;
                     node.pushesNumber = this.pushesNumber + 1;
                     return true;

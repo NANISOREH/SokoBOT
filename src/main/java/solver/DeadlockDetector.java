@@ -40,8 +40,110 @@ public class DeadlockDetector {
     }
 
     private static boolean isInDeadlockTable(Node node) {
+        if (node.getLastMovedBox() == null)
+            return false;
         
+        GameBoard board = node.getGame();
+        Cell box = node.getGame().getBoxCells().get(node.getLastMovedBox());
 
+        if (box.isGoal())
+            return false;
+
+/*        log.info(board.getSokobanCell() + "");
+        log.info(box + "");*/
+
+        Action push = null;
+        if (board.getNorth(box).getContent() == CellContent.SOKOBAN)
+            push = Action.MOVE_DOWN;
+        else if (board.getSouth(box).getContent() == CellContent.SOKOBAN)
+            push = Action.MOVE_UP;
+        else if (board.getEast(box).getContent() == CellContent.SOKOBAN)
+            push = Action.MOVE_LEFT;
+        else if (board.getWest(box).getContent() == CellContent.SOKOBAN)
+            push = Action.MOVE_RIGHT;
+        
+        CellContent[][] first = new CellContent[2][2];
+        CellContent[][] second = new CellContent[2][2];
+
+        switch (push) {
+            case MOVE_LEFT : {
+                first[1][0] = CellContent.BOX;
+                first[1][1] = board.getNorth(box).getContent();
+                Cell temp = board.getEast(box);
+                first[0][0] = temp.getContent();
+                first[0][1] = board.getNorth(temp).getContent();
+
+                second[1][1] = CellContent.BOX;
+                second[1][0] = board.getSouth(box).getContent();
+                temp = board.getEast(box);
+                second[0][1] = temp.getContent();
+                second[0][0] = board.getSouth(temp).getContent();
+
+/*                log.info("\n" + first[0][0] + " " + first[0][1] + "\n" + first[1][0] + " " + first[1][1]);
+                log.info("\n" + second[0][0] + " " + second[0][1] + "\n" + second[1][0] + " " + second[1][1]);*/
+
+                break;
+            }
+            case MOVE_RIGHT : {
+                first[1][0] = CellContent.BOX;
+                first[1][1] = board.getSouth(box).getContent();
+                Cell temp = board.getEast(box);
+                first[0][0] = temp.getContent();
+                first[0][1] = board.getSouth(temp).getContent();
+
+                second[1][1] = CellContent.BOX;
+                second[1][0] = board.getNorth(box).getContent();
+                temp = board.getEast(box);
+                second[0][1] = temp.getContent();
+                second[0][0] = board.getNorth(temp).getContent();
+
+                break;
+            }
+            case MOVE_UP : {
+                first[1][0] = box.getContent();
+                first[0][0] = board.getNorth(box).getContent();
+                Cell temp = board.getEast(box);
+                first[1][1] = temp.getContent();
+                first[0][1] = board.getNorth(temp).getContent();
+
+                second[1][1] = box.getContent();
+                second[0][1] = board.getNorth(box).getContent();
+                temp = board.getWest(box);
+                second[0][0] = temp.getContent();
+                second[1][0] = board.getSouth(temp).getContent();
+                break;
+            }
+            case MOVE_DOWN : {
+                first[0][0] = CellContent.BOX;
+                first[1][0] = board.getSouth(box).getContent();
+                Cell temp = board.getEast(box);
+                first[0][1] = temp.getContent();
+                first[1][1] = board.getSouth(temp).getContent();
+
+                second[0][1] = CellContent.BOX;
+                second[1][1] = board.getSouth(box).getContent();
+                temp = board.getEast(box);
+                second[0][0] = temp.getContent();
+                second[1][0] = board.getSouth(temp).getContent();
+                break;
+            }
+        }
+
+
+        if (tableCheck(first) || tableCheck(second)) {
+            //log.info("found");
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private static boolean tableCheck(CellContent[][] submatrix) {
+
+        for (CellContent[][] c : TwoTwoDeadlocks) {
+            if (c[0][0] == submatrix[0][0] && c[0][1] == submatrix[0][1] && c[1][0] == submatrix[1][0] && c[1][1] == submatrix[1][1])
+                return true;
+        }
         return false;
     }
 
