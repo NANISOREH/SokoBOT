@@ -48,7 +48,7 @@ public class SMAStar {
             //running out of memory, we're pruning a bunch of nodes from the frontier
             //specifically, we remove a number of nodes equal to the branching factor of the level, so that we're certain
             //that the next expansion will be done without problems
-            if ((Runtime.getRuntime().freeMemory() / 1024) / 1024 < 100) {
+            if (frontier.size() > SokobanToolkit.MAX_NODES) {
                     log.info("pruning " + branchingFactor + " elements" + "\nfrontier " + frontier.size());
                     frontier = prune(frontier, branchingFactor);
                     log.info("after pruning" + "\nfrontier " + frontier.size());

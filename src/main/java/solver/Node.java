@@ -13,6 +13,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 /*This class represents a node in the search graph.
@@ -21,7 +22,7 @@ The class also stores a transposition table of the visited nodes as a static var
 */
 public class Node {
     private static Logger log = Logger.getLogger("Node");
-    private static ArrayList<Long> transpositionTable = new ArrayList<>();
+    private static TreeSet<Long> transpositionTable = new TreeSet<>();
     private static int depth;
     private static ExpansionScheme expansionScheme;
     private GameBoard game;
@@ -61,9 +62,6 @@ public class Node {
 */
     protected Collection<? extends Node> expandByPushes() throws CloneNotSupportedException {
 
-        if (DeadlockDetector.isDeadlock((Node) this.clone()))
-            return new ArrayList<>();
-
         ArrayList<Node> expanded = new ArrayList<>();
         GameBoard initialState = (GameBoard) this.game.clone();
         HashMap<Integer, Cell> boxes = initialState.getBoxCells();
@@ -76,7 +74,7 @@ public class Node {
             neighbour = initialState.getNorth(boxes.get(boxKey));
             oppositeNeighbour = initialState.getSouth(boxes.get(boxKey));
             Node down = new Node((GameBoard) initialState.clone(), (ArrayList<Action>) this.getActionHistory().clone());
-            //checking if two opposite cells adjacent to the box are empty or contain sokoban: that's the only way we can push the box
+            //checking if two opposite cells adjacent to the box are either empty or contain sokoban: that's the only way we can push the box
             if ((neighbour.getContent() == CellContent.EMPTY || neighbour.getContent() == CellContent.SOKOBAN) &&
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
@@ -90,7 +88,8 @@ public class Node {
                 }
             }
 
-            //Same as before with other directions. Generalizing this stuff is possible but not worth the time investment.
+            //Same as before with other directions.
+            //Generalizing this stuff to avoid repeated code is possible but not worth the time investment.
 
             neighbour = initialState.getSouth(boxes.get(boxKey));
             oppositeNeighbour = initialState.getNorth(boxes.get(boxKey));
@@ -160,7 +159,10 @@ public class Node {
             if (newState.getPushesNumber() > depth)
                 depth = newState.pushesNumber;
 
-            return true;
+            if (DeadlockDetector.isDeadlock((Node) newState.clone()))
+                return false;
+            else
+                return true;
         }
 
         return false;
@@ -187,7 +189,8 @@ public class Node {
             transpositionTable.add(first.hash());
         }
 
-        //Same as before with other directions. Generalizing this stuff is possible but not worth the time investment.
+        //Same as before with other directions.
+        //Generalizing this stuff to avoid repeated code is possible but not worth the time investment.
 
         Node second = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         second.setPushesNumber(this.pushesNumber);
@@ -382,11 +385,11 @@ Returns the cost of the path in the search tree up until this node
         this.lastMovedBox = lastMovedBox;
     }
 
-    public static ArrayList<Long> getTranspositionTable() {
+    public static TreeSet<Long> getTranspositionTable() {
         return transpositionTable;
     }
 
-    public static void setTranspositionTable(ArrayList<Long> transpositionTable) {
+    public static void setTranspositionTable(TreeSet<Long> transpositionTable) {
         Node.transpositionTable = transpositionTable;
     }
 

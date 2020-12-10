@@ -16,6 +16,8 @@ public class DeadlockDetector {
     private static Logger log = Logger.getLogger("DeadlockDetector");
     private static DDRoutine routine = DDRoutine.ALL_ROUTINES;
     private static ArrayList<Cell> deadCells = new ArrayList<>();
+    private static ArrayList<CellContent[][]> TwoTwoDeadlocks = new ArrayList<>();
+    private static ArrayList<CellContent[][]> ThreeThreeDeadlocks = new ArrayList<>();
 
     public static boolean isDeadlock (Node node) throws CloneNotSupportedException {
         switch (routine) {
@@ -38,12 +40,15 @@ public class DeadlockDetector {
     }
 
     private static boolean isInDeadlockTable(Node node) {
+        
+
         return false;
     }
 
 /*
-    Confronts the cell containing the last moved box (if there's one) with the list of the dead cells.
-    In other words, checks if we just pushed a box into a dead position.
+    Confronts the cell containing the last moved box (if there's one) with the list of the dead cells and returns true
+    if said cell is in the list.
+    In other words, we're checking if we just pushed a box into a dead position.
 */
     public static boolean isDeadPosition(Node node) {
 
@@ -61,14 +66,14 @@ public class DeadlockDetector {
 
 
     /*
-        This method launches the search for dead positions before the search for solution starts.
-        It empties the level and tries to put a box in any position, then checks if said position is dead
-        and adds dead positions to a list that will be consulted whenever we push a box during the solution searching.
+        This method launches the search for dead positions before the search for solutions starts.
+        It empties the level and tries to put a box in every position, one at a time, to check if said position is dead
+        adding dead positions to a list that will be consulted whenever we push a box during the solution searching,
     */
     public static void handleDeadPositions(GameBoard toSolve) throws CloneNotSupportedException {
         Node node = new Node(toSolve, new ArrayList<>());
 
-        //Clearing the node's game board 
+        //Clearing the node's game board
         HashMap<Integer, Cell> boxCells = node.getGame().getBoxCells();
         int target = boxCells.size();
         for (int i = 0; i<target; i++) {
@@ -187,12 +192,183 @@ public class DeadlockDetector {
         return minimumFirst;
     }
 
-    public static DDRoutine getRoutine() {
-        return routine;
-    }
-
     public static void setRoutine(DDRoutine routine) {
         DeadlockDetector.routine = routine;
         deadCells.clear();
     }
+
+/*
+    Inserting some deadlocks into the lookup table
+*/
+    public static void populateDeadlocks () {
+        CellContent[][] deadlock = parseDeadlock(CellContent.WALL, CellContent.WALL,
+                CellContent.WALL, CellContent.BOX);
+        TwoTwoDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.WALL, CellContent.BOX,
+                CellContent.WALL, CellContent.BOX);
+        TwoTwoDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.BOX, CellContent.BOX,
+                CellContent.WALL, CellContent.BOX);
+        TwoTwoDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.BOX, CellContent.BOX,
+                CellContent.BOX, CellContent.BOX);
+        TwoTwoDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.WALL, CellContent.WALL, CellContent.EMPTY,
+                CellContent.WALL, CellContent.EMPTY, CellContent.WALL,
+                CellContent.EMPTY, CellContent.BOX, CellContent.WALL);
+        ThreeThreeDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.WALL, CellContent.WALL, CellContent.EMPTY,
+                CellContent.WALL, CellContent.EMPTY, CellContent.WALL,
+                CellContent.EMPTY, CellContent.BOX, CellContent.BOX);
+        ThreeThreeDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.WALL, CellContent.WALL, CellContent.EMPTY,
+                CellContent.WALL, CellContent.EMPTY, CellContent.BOX,
+                CellContent.EMPTY, CellContent.BOX, CellContent.WALL);
+        ThreeThreeDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.WALL, CellContent.WALL, CellContent.EMPTY,
+                CellContent.WALL, CellContent.EMPTY, CellContent.BOX,
+                CellContent.EMPTY, CellContent.BOX, CellContent.BOX);
+        ThreeThreeDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.WALL, CellContent.BOX, CellContent.EMPTY,
+                CellContent.WALL, CellContent.EMPTY, CellContent.BOX,
+                CellContent.EMPTY, CellContent.BOX, CellContent.BOX);
+        ThreeThreeDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.BOX, CellContent.WALL, CellContent.EMPTY,
+                CellContent.WALL, CellContent.EMPTY, CellContent.BOX,
+                CellContent.EMPTY, CellContent.BOX, CellContent.BOX);
+        ThreeThreeDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.BOX, CellContent.BOX, CellContent.EMPTY,
+                CellContent.WALL, CellContent.EMPTY, CellContent.BOX,
+                CellContent.EMPTY, CellContent.BOX, CellContent.BOX);
+        ThreeThreeDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.WALL, CellContent.BOX, CellContent.EMPTY,
+                CellContent.BOX, CellContent.EMPTY, CellContent.BOX,
+                CellContent.EMPTY, CellContent.BOX, CellContent.BOX);
+        ThreeThreeDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.BOX, CellContent.BOX, CellContent.EMPTY,
+                CellContent.BOX, CellContent.EMPTY, CellContent.BOX,
+                CellContent.EMPTY, CellContent.BOX, CellContent.BOX);
+        ThreeThreeDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.EMPTY, CellContent.WALL, CellContent.EMPTY,
+                CellContent.WALL, CellContent.EMPTY, CellContent.WALL,
+                CellContent.WALL, CellContent.BOX, CellContent.WALL);
+        ThreeThreeDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.EMPTY, CellContent.WALL, CellContent.EMPTY,
+                CellContent.WALL, CellContent.EMPTY, CellContent.WALL,
+                CellContent.WALL, CellContent.BOX, CellContent.BOX);
+        ThreeThreeDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.EMPTY, CellContent.WALL, CellContent.EMPTY,
+                CellContent.WALL, CellContent.EMPTY, CellContent.BOX,
+                CellContent.WALL, CellContent.BOX, CellContent.WALL);
+        ThreeThreeDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.EMPTY, CellContent.WALL, CellContent.EMPTY,
+                CellContent.WALL, CellContent.EMPTY, CellContent.WALL,
+                CellContent.BOX, CellContent.BOX, CellContent.BOX);
+        ThreeThreeDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.EMPTY, CellContent.WALL, CellContent.EMPTY,
+                CellContent.WALL, CellContent.EMPTY, CellContent.BOX,
+                CellContent.BOX, CellContent.BOX, CellContent.BOX);
+        ThreeThreeDeadlocks.add(deadlock);
+
+        deadlock = parseDeadlock(CellContent.EMPTY, CellContent.BOX, CellContent.WALL,
+                CellContent.WALL, CellContent.BOX, CellContent.EMPTY,
+                CellContent.EMPTY, CellContent.EMPTY, CellContent.EMPTY);
+        ThreeThreeDeadlocks.add(deadlock);
+
+        //rotating each deadlock 3 times to obtain the deadlocks in every possible orientation
+        ArrayList<CellContent[][]> rotated = new ArrayList<>();
+        for (CellContent[][] c : TwoTwoDeadlocks) {
+            CellContent[][] temp;
+            temp = rotateDeadlock(c);
+            rotated.add(temp);
+            temp = rotateDeadlock(temp);
+            rotated.add(temp);
+            temp = rotateDeadlock(temp);
+            rotated.add(temp);
+        }
+        TwoTwoDeadlocks.addAll(rotated);
+
+        rotated = new ArrayList<>();
+        for (CellContent[][] c : ThreeThreeDeadlocks) {
+            CellContent[][] temp;
+            temp = rotateDeadlock(c);
+            rotated.add(temp);
+            temp = rotateDeadlock(temp);
+            rotated.add(temp);
+            temp = rotateDeadlock(temp);
+            rotated.add(temp);
+        }
+        ThreeThreeDeadlocks.addAll(rotated);
+
+    }
+
+/*
+    Parses a varargs of cell contents into a matrix that's usable for lookups
+*/
+    private static CellContent[][] parseDeadlock(CellContent... content) {
+        CellContent[][] deadlock;
+        int mod;
+        if (content.length == 4) {
+            deadlock = new CellContent[2][2];
+            mod = 2;
+        }
+        else if (content.length == 9) {
+            deadlock = new CellContent[3][3];
+            mod = 3;
+        }
+        else return null;
+
+        int row=0, column=0;
+        for (int i = 0; i < content.length; i++) {
+            deadlock[row][column] = content[i];
+            column++;
+            if (column > 0 && column % mod == 0) {
+                column = 0;
+                row++;
+            }
+        }
+
+        return deadlock;
+    }
+
+/*
+    Rotates a deadlock matrix clockwise.
+    The first row will become the last column, the second row will become the column n-1 and so on
+*/
+    private static CellContent[][] rotateDeadlock(CellContent[][] deadlock) {
+        ArrayList<CellContent[]> rows = new ArrayList<>();
+
+        for (int i = 0; i < deadlock.length; i++) {
+            CellContent[] row = deadlock[i];
+            rows.add(row);
+        }
+
+        CellContent[][] result = new CellContent[deadlock.length][deadlock[0].length];
+        for (int i = deadlock[0].length - 1; i >= 0; i--) {
+            CellContent[] row = rows.get(deadlock.length - 1 - i);
+            for (int j = 0; j<row.length; j++) {
+                result[j][i] = row[j];
+            }
+        }
+
+        return result;
+    }
+
 }

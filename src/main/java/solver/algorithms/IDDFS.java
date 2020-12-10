@@ -7,6 +7,7 @@ import solver.SokobanToolkit;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 /*
@@ -17,7 +18,7 @@ TODO: test move ordering, right now it seems to have no effect
 public class IDDFS {
     private static Logger log = Logger.getLogger("IDDFS");
     private static Node solution = null;
-    private static ArrayList<Long> transpositionTableCopy = new ArrayList<>();
+    private static TreeSet<Long> transpositionTableCopy = new TreeSet<>();
     private static boolean memoryFull = false;
 
     //these two hashmaps are used as a cache to avoid re-exploring the lower levels in iterative deepening
@@ -41,13 +42,13 @@ public class IDDFS {
             //IDDFS starting from the last cached frontier
             if (!memoryFull) {
                 transpositionTableCopy.clear();
-                transpositionTableCopy = (ArrayList<Long>) Node.getTranspositionTable().clone();
+                transpositionTableCopy = (TreeSet<Long>) Node.getTranspositionTable().clone();
             }
             //If memory is full, we have to restore the transposition table backup and increment the limit of the search:
             //from now on, no more cached nodes and we will start over from the last cached frontier
             else if (memoryFull){
                 Node.resetSearchSpace();
-                Node.setTranspositionTable((ArrayList<Long>) transpositionTableCopy.clone());
+                Node.setTranspositionTable((TreeSet<Long>) transpositionTableCopy.clone());
                 limit = limit + lowerBound/2;
             }
 
@@ -92,7 +93,7 @@ public class IDDFS {
         //if we reached the bottom without finding a solution, the search will stop and
         //(if the memory allows it) this node will be in the cache for the next iteration
         if (limit == 0 && !memoryFull) {
-            if ((Runtime.getRuntime().freeMemory() / 1024) / 1024 > 100) {
+            if (cache.size() + candidateCache.size() < SokobanToolkit.MAX_NODES) {
                 candidateCache.put(root.hash(), root);
             }
             else {
