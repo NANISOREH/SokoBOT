@@ -1,5 +1,7 @@
 package game;
 
+import solver.DeadlockDetector;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Logger;
@@ -104,6 +106,7 @@ public class GameBoard implements Cloneable{
         //if we were told to move on a free cell, we just swap Sokoban's cell content with that free cell
         if (neighbour.getContent() == CellContent.EMPTY) {
             swapCells(neighbour, sokobanCell);
+            lastMovedBox = null;
             return true;
         }
         else if (neighbour.getContent() == CellContent.WALL) { //there's a wall, we can't move
@@ -115,7 +118,12 @@ public class GameBoard implements Cloneable{
                 //the box's neighbour is a free cell, so the box moves there and Sokoban moves to the cell where the box was
                 swapCells(neighbour, boxNeighbour);
                 swapCells(neighbour, sokobanCell);
-                return true;
+
+                if (DeadlockDetector.isDeadlock(this)) {
+                    return false;
+                }
+                else
+                    return true;
             }
             else //the box's neighbour is a wall or another box, we can't move it
                 return false;
@@ -141,7 +149,6 @@ public class GameBoard implements Cloneable{
         else if (second.getContent() == CellContent.SOKOBAN) {
             sokobanCell = (Cell) second.clone();
         }
-        lastMovedBox = null;
 
         //if one of the two cells contains a box after the swap, it means that it was in the other one before:
         //we update the boxCells structure by removing the old box cell and adding the new one in its place
@@ -163,7 +170,6 @@ public class GameBoard implements Cloneable{
                 lastMovedBox = second.getBoxNumber();
             }
         }
-
 
     }
 

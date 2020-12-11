@@ -1,18 +1,21 @@
 package solver.configuration;
 
 public enum DDRoutine {
-    LOOKUP_TABLES, DEAD_POSITIONS, NO_DEADLOCK_DETECTION, ALL_ROUTINES;
+    ALL_ROUTINES,
+    LOOKUP_TABLES,
+    DEAD_POSITIONS,
+    NO_DEADLOCK_DETECTION;
 
     public static DDRoutine mapString(String toMap) {
         switch (toMap) {
+            case "All available routines" : {
+                return DDRoutine.ALL_ROUTINES;
+            }
             case "Check for dead positions" : {
                 return DDRoutine.DEAD_POSITIONS;
             }
             case "Check in precomputed deadlock table" : {
                 return DDRoutine.LOOKUP_TABLES;
-            }
-            case "All available routines" : {
-                return DDRoutine.ALL_ROUTINES;
             }
             case "No deadlock detection" : {
                 return DDRoutine.NO_DEADLOCK_DETECTION;
@@ -30,10 +33,10 @@ public enum DDRoutine {
                 return "Check in precomputed deadlock table";
             }
             case NO_DEADLOCK_DETECTION : {
-                return "All available routines";
+                return "No deadlock detection";
             }
             case ALL_ROUTINES : {
-                return "No deadlock detection";
+                return "All available routines";
             }
         }
         return null;

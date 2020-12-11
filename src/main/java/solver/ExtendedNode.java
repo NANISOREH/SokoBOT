@@ -23,7 +23,6 @@ public class ExtendedNode extends Node{
     public ExtendedNode (Node node, Node parent, int label) {
         super(node.getGame(), node.getActionHistory());
         this.setPushesNumber(node.getPushesNumber());
-        this.setLastMovedBox(node.getLastMovedBox());
         this.parent = parent;
         this.label = label;
     }

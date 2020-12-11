@@ -40,6 +40,7 @@ public class SokobanSolver {
         Node.setExpansionScheme(configuration.getExpansionScheme());
         SokobanToolkit.setHeuristic(configuration.getHeuristic());
         DeadlockDetector.setRoutine(configuration.getRoutine());
+        DeadlockDetector.setPrunedNodes(0);
 
         //Starting the clock to measure elapsed time
         start = Instant.now().toEpochMilli();
@@ -66,6 +67,9 @@ public class SokobanSolver {
                 solution = SMAStar.launch((GameBoard) toSolve.clone());
                 break;
             }
+            case GBFS : {
+                solution = GreedyBFS.launch((GameBoard) toSolve.clone());
+            }
         }
         timeElapsed = (double) (Instant.now().toEpochMilli() - start) / 1000;
 
@@ -77,6 +81,7 @@ public class SokobanSolver {
             log.info("Solution found in " + solutionActions.size() + " moves!");
             log.info(solution.getPushesNumber() + " pushes were needed");
             log.info("number of examined nodes: " + Node.getExaminedNodes());
+            log.info("number of nodes pruned by DeadlockDetector: " + DeadlockDetector.getPrunedNodes());
             log.info("" + solution.getActionHistory());
             for (Action a : solutionActions) {
                 //we execute every action in the solution: the board will automagically solve the puzzle as a result
@@ -95,6 +100,10 @@ public class SokobanSolver {
             return solution.getActionHistory();
         else
             return null;
+    }
+
+    public static void setSolution(Node solution) {
+        SokobanSolver.solution = solution;
     }
 
     public static int getSolutionMoves() {

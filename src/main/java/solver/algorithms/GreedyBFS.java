@@ -1,4 +1,3 @@
-
 package solver.algorithms;
 
 import game.GameBoard;
@@ -10,16 +9,13 @@ import java.util.ArrayList;
 import java.util.PriorityQueue;
 import java.util.logging.Logger;
 
-/*
-Implementation of a simple memory-bounded A* search
-*/
-public class SMAStar {
-    private static final Logger log = Logger.getLogger("IDASTAR");
+public class GreedyBFS {
+    private static final Logger log = Logger.getLogger("BestFirst");
     private static Node solution = null;
 
     public static Node launch(GameBoard game) throws CloneNotSupportedException {
 
-        ExtendedNode root = new ExtendedNode(game, new ArrayList<>(), null, 0 + SokobanToolkit.estimateLowerBound(game));
+        ExtendedNode root = new ExtendedNode(game, new ArrayList<>(), null, SokobanToolkit.estimateLowerBound(game));
         PriorityQueue<ExtendedNode> frontier = new PriorityQueue<ExtendedNode>(ExtendedNode::compare);
         frontier.add(root);
 
@@ -39,19 +35,17 @@ public class SMAStar {
             ArrayList<ExtendedNode> expanded = (ArrayList<ExtendedNode>) examined.expand();
             for (Node n : expanded) {
 
-                //we assign the value f(n) = h(n) + g(n) to the label of the new nodes,
-                //meaning the sum of the path cost until this point plus the value of the heuristic function
-                frontier.add(new ExtendedNode(n, examined,1 + examined.getPathCost() +
-                        SokobanToolkit.estimateLowerBound(n.getGame())));
+                //we assign the value of the heuristic h(n) to the label of the new nodes,
+                frontier.add(new ExtendedNode(n, examined, SokobanToolkit.estimateLowerBound(n.getGame())));
             }
 
             //running out of memory, we're pruning a bunch of nodes from the frontier
             //specifically, we remove a number of nodes equal to the branching factor of the level, so that we're certain
             //that the next expansion will be done without problems
             if (frontier.size() > SokobanToolkit.MAX_NODES) {
-                    log.info("pruning " + branchingFactor + " elements" + "\nfrontier " + frontier.size());
-                    frontier = SokobanToolkit.pruneWorst(frontier, branchingFactor);
-                    log.info("after pruning" + "\nfrontier " + frontier.size());
+                log.info("pruning " + branchingFactor + " elements" + "\nfrontier " + frontier.size());
+                frontier = SokobanToolkit.pruneWorst(frontier, branchingFactor);
+                log.info("after pruning" + "\nfrontier " + frontier.size());
             }
 
             if (innerCount % 100 == 0) log.info("frontier " + frontier.size() + "\nvisited nodes: " + Node.getExaminedNodes());
@@ -61,6 +55,3 @@ public class SMAStar {
     }
 
 }
-
-
-
