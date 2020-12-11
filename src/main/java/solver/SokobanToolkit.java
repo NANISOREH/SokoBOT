@@ -384,7 +384,7 @@ public class SokobanToolkit {
     pushes to the same box.
 */
     public static ArrayList<Node> orderByInertia (Node root, ArrayList <Node> expanded){
-        Integer boxNumber = root.getLastMovedBox();
+        Integer boxNumber = root.getGame().getLastMovedBox();
         if (boxNumber == null) {
             return expanded;
         }
@@ -392,9 +392,9 @@ public class SokobanToolkit {
         ArrayList<Node> result = new ArrayList<>();
 
         for (Node n : expanded) {
-            if (n.getLastMovedBox() == null)
+            if (n.getGame().getLastMovedBox() == null)
                 continue;
-            else if (n.getLastMovedBox() == boxNumber)
+            else if (n.getGame().getLastMovedBox() == boxNumber)
                 result.add(n);
         }
 
@@ -415,15 +415,15 @@ public class SokobanToolkit {
 */
     public static int compareByInertia (Node first, Node second, Node root) {
 
-        if (root.getLastMovedBox() == null ||
-                (first.getLastMovedBox() == root.getLastMovedBox() && second.getLastMovedBox() == root.getLastMovedBox())) {
+        if (root.getGame().getLastMovedBox() == null ||
+                (first.getGame().getLastMovedBox() == root.getGame().getLastMovedBox() && second.getGame().getLastMovedBox() == root.getGame().getLastMovedBox())) {
             return 0;
         }
-        Integer boxNumber = root.getLastMovedBox();
+        Integer boxNumber = root.getGame().getLastMovedBox();
 
-        if (first.getLastMovedBox() == boxNumber && second.getLastMovedBox() != boxNumber)
+        if (first.getGame().getLastMovedBox() == boxNumber && second.getGame().getLastMovedBox() != boxNumber)
             return -1;
-        if (first.getLastMovedBox() != boxNumber && second.getLastMovedBox() == boxNumber)
+        if (first.getGame().getLastMovedBox() != boxNumber && second.getGame().getLastMovedBox() == boxNumber)
             return 1;
 
         return 0;
@@ -609,6 +609,19 @@ public class SokobanToolkit {
         });
 
         return transpositionTable;
+    }
+
+    public static PriorityQueue pruneWorst(PriorityQueue<ExtendedNode> frontier, int branchingFactor) {
+        PriorityQueue<ExtendedNode> newFrontier = new PriorityQueue<>(ExtendedNode::compare);
+        ExtendedNode temp;
+        int target = frontier.size() - branchingFactor;
+
+        for (int i=0; i < target; i++) {
+            temp = frontier.remove();
+            newFrontier.add(new ExtendedNode(temp, temp.getParent(), temp.getLabel()));
+        }
+
+        return newFrontier;
     }
 
 

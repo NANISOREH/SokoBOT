@@ -1,5 +1,6 @@
 package gui;
 
+import game.Action;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
@@ -7,10 +8,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
@@ -38,9 +37,11 @@ Main class of the JavaFX application. It configures the UI and takes the configu
 Not terribly interesting, lots of boilerplate code and drawing stuff. Plus it's an unholy spaghetti mess.
 */
 public class Main extends Application {
-    Logger log = Logger.getLogger("Main");
-    private static Rectangle[][] tiles;
+    private static Logger log = Logger.getLogger("Main");
+    private static boolean manualGameplay = false;
     private static GameBoard game;
+
+    private static Rectangle[][] tiles;
     private static Image sokoban;
     private static Image box;
     private static Image wall;
@@ -70,7 +71,20 @@ public class Main extends Application {
         //Starting precomputation of the level-independent deadlocks as early as possible
         DeadlockDetector.populateDeadlocks();
 
-        //Configuring level selection label and choicebox
+        //Configuring level selection label and choicebox, and play manually button
+        HBox levelContainer = new HBox();
+        levelContainer.setAlignment(Pos.CENTER);
+        levelContainer.setSpacing(30);
+        Button button2 = new Button("Play manually");
+        button2.setAlignment(Pos.BOTTOM_CENTER);
+        button2.setOnAction(actionEvent -> {
+            try {
+                playManually();
+            } catch (CloneNotSupportedException e) {
+                e.printStackTrace();
+            }
+        });
+
         VBox levelSide = new VBox();
         Label label1 = new Label("Select a level");
         label1.setTextFill(Color.LIGHTGRAY);
@@ -83,6 +97,7 @@ public class Main extends Application {
         levelSide.setSpacing(15);
         levelSide.setAlignment(Pos.CENTER);
         levelSide.getChildren().addAll(label1, level);
+        levelContainer.getChildren().addAll(levelSide, button2);
 
         //Configuring algorithm selection label and choicebox
         VBox algorithmSide = new VBox();
@@ -153,13 +168,15 @@ public class Main extends Application {
         button.setBackground(new Background(new BackgroundFill(Color.TOMATO, null, null)));
         button.setPrefSize(150, 30);
 
+
+
         //Configuring main layout and adding it to the menu scene
         VBox layout = new VBox();
         layout.setAlignment(Pos.CENTER);
         layout.setBackground(background);
         layout.setSpacing(50);
-        layout.getChildren().addAll(levelSide, algorithmSide, expSide, heuristicSide, ddSide, button);
-        menu = new Scene(layout, 600, 700);
+        layout.getChildren().addAll(levelContainer, algorithmSide, expSide, heuristicSide, ddSide, button);
+        menu = new Scene(layout, 600, 750);
 
         //The button on the first scene triggers the switch to the gameplay scene and starts the game
         button.setOnAction(actionEvent -> {configureGame(primaryStage);});
@@ -182,6 +199,7 @@ public class Main extends Application {
 
     private void configureGame(Stage primaryStage) {
 
+        manualGameplay = false;
         boardLayout = new VBox();
         boardLayout.setBackground(background);
         boardLayout.setAlignment(Pos.CENTER);
@@ -208,7 +226,7 @@ public class Main extends Application {
         gameScene = new Scene(gameBoard);
         boardLayout.getChildren().addAll(label1, gameBoard, result);
         //primaryStage.setResizable(false);
-        primaryStage.setScene(new Scene(boardLayout, 1000, 800));
+        primaryStage.setScene(new Scene(boardLayout, 1100, 850));
 
         //Starting the thread that will execute the sokoban solver and actually move sokoban on the board
         Thread t1 = new Thread(() -> {
@@ -271,8 +289,8 @@ public class Main extends Application {
 
     private static void updateBoard () {
         Cell[][] board = game.getBoard();
-        if (SokobanSolver.getSolution() != null) {
 
+        if (SokobanSolver.getSolution() != null || manualGameplay) {
             for (int i = 0; i < game.getRows(); i++) {
                 for (int j = 0; j < game.getColumns(); j++) {
 
@@ -293,36 +311,90 @@ public class Main extends Application {
             }
 
 
-            result.setText(algorithm.getValue() + " found a solution in " +
-                    SokobanSolver.getSolutionMoves() + " moves - " + SokobanSolver.getSolutionPushes() + " pushes.\n\n" +
-                    Node.getExaminedNodes() + " unique game states were examined.\n" +
-                    "Time elapsed: " + SokobanSolver.getTimeElapsed() + " seconds\n\n");
+            if (!manualGameplay) {
+                result.setText(algorithm.getValue() + " found a solution in " +
+                        SokobanSolver.getSolutionMoves() + " moves - " + SokobanSolver.getSolutionPushes() + " pushes.\n\n" +
+                        Node.getExaminedNodes() + " unique game states were examined.\n" +
+                        "Time elapsed: " + SokobanSolver.getTimeElapsed() + " seconds\n\n");
+            }
         }
 
     }
 
-    /*private void playManually(Scene gameplay) {
-        gameplay.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
+    private static void playManually() throws CloneNotSupportedException {
+        manualGameplay = true;
+        boardLayout = new VBox();
+        boardLayout.setBackground(background);
+        boardLayout.setAlignment(Pos.CENTER);
+        boardLayout.setSpacing(15);
+
+        Level toLoad = new Level(level.getValue());
+
+        //Creating, configuring and finally setting the scene for the game itself
+        game = new GameBoard(toLoad);
+        gameBoard = createBoard(game);
+        boardLayout.getChildren().addAll(gameBoard);
+        gameScene = new Scene(boardLayout);
+        //primaryStage.setResizable(false);
+        Stage gameStage = new Stage();
+        gameStage.setScene(gameScene);
+        gameStage.show();
+
+        DeadlockDetector.setRoutine(DDRoutine.ALL_ROUTINES);
+        DeadlockDetector.handleDeadPositions((GameBoard) game.clone());
+
+        gameStage.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
             switch (keyEvent.getCode()) {
                 case UP : {
-                    game.takeAction(Action.MOVE_UP);
+                    try {
+                        if (!game.takeAction(Action.MOVE_UP))
+                            log.info("MOSSA NON CONSENTITA");
+                    } catch (CloneNotSupportedException e) {
+                        e.printStackTrace();
+                    }
                     updateBoard();
                     break;
                 }
                 case DOWN : {
-                    game.takeAction(Action.MOVE_DOWN);
+                    try {
+                        if (!game.takeAction(Action.MOVE_DOWN))
+                            log.info("MOSSA NON CONSENTITA");
+                    } catch (CloneNotSupportedException e) {
+                        e.printStackTrace();
+                    }
                     updateBoard();
                     break;
                 }
                 case RIGHT : {
-                    game.takeAction(Action.MOVE_RIGHT);
+                    try {
+                        if (!game.takeAction(Action.MOVE_RIGHT))
+                            log.info("MOSSA NON CONSENTITA");
+                    } catch (CloneNotSupportedException e) {
+                        e.printStackTrace();
+                    }
                     updateBoard();
                     break;
                 }
                 case LEFT : {
-                    game.takeAction(Action.MOVE_LEFT);
+                    try {
+                        if (!game.takeAction(Action.MOVE_LEFT));
+                            log.info("MOSSA NON CONSENTITA");
+                    } catch (CloneNotSupportedException e) {
+                        e.printStackTrace();
+                    }
                     updateBoard();
                     break;
+                }
+                case Q : {
+                    gameStage.close();
+                }
+                case R : {
+                    gameStage.close();
+                    try {
+                        playManually();
+                    } catch (CloneNotSupportedException e) {
+                        e.printStackTrace();
+                    }
                 }
                 default : break;
             }
@@ -330,12 +402,8 @@ public class Main extends Application {
             //checking for victory after every action taken
             if (game.checkVictory()) {
                 System.out.println("VICTORY!");
-                try {
-                    stop();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                SokobanSolver.setSolution(null);
             }
         });
-    }*/
+    }
 }
