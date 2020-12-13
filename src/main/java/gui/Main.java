@@ -41,6 +41,7 @@ public class Main extends Application {
     private static boolean manualGameplay = false;
     private static GameBoard game;
 
+    //Elements of the UI
     private static Rectangle[][] tiles;
     private static Image sokoban;
     private static Image box;
@@ -59,17 +60,21 @@ public class Main extends Application {
     private static ChoiceBox<String> heuristic = new ChoiceBox<>();
     private static ChoiceBox<String> routine = new ChoiceBox<>();
     private static int levelValue;
-    private static String algorithmValue;
-    private static String schemeValue;
-    private static String heuristicValue;
-    private static String routineValue;
     private static Scene menu;
     private static Scene gameScene;
     private static GridPane gameBoard;
     private static VBox boardLayout;
     private static Text result;
 
-
+    //Variables for logging
+    private static String algorithmValue;
+    private static String schemeValue;
+    private static String heuristicValue;
+    private static String routineValue;
+    private static boolean isSearching = false;
+    private static boolean isShowing = false;
+    private static int moves = 0;
+    private static int pushes = 0;
 
     @Override
     public void start(Stage primaryStage) {
@@ -181,7 +186,7 @@ public class Main extends Application {
         layout.setBackground(background);
         layout.setSpacing(50);
         layout.getChildren().addAll(levelContainer, algorithmSide, expSide, heuristicSide, ddSide, button);
-        menu = new Scene(layout, 600, 750);
+        menu = new Scene(layout, 600, 700);
 
         //The button on the first scene triggers the switch to the gameplay scene and starts the game
         button.setOnAction(actionEvent -> {configureGame(primaryStage);});
@@ -213,30 +218,26 @@ public class Main extends Application {
         manualGameplay = false;
         boardLayout = new VBox();
         boardLayout.setBackground(background);
-        boardLayout.setAlignment(Pos.CENTER);
+        boardLayout.setAlignment(Pos.TOP_CENTER);
         boardLayout.setSpacing(15);
 
         Level toLoad = new Level(level.getValue());
         Label label1 = new Label("Requires " + toLoad.getBestSolution() + " moves and " +
                 toLoad.getMinPushes() + " pushes");
-        label1.setMinHeight(50);
-        label1.setMinWidth(300);
+        label1.setMaxHeight(60);
+        label1.setMinHeight(60);
         label1.setTextFill(Color.LIGHTGRAY);
-        String loadingString = "Search in progress. The solution will be demonstrated after the computation.\n" +
-                "\nAlgorithm: " + algorithm.getValue() +
-                "\nExpansion scheme: " + scheme.getValue();
-        if (algorithm.getValue() != Strategy.mapStrategy(Strategy.BFS))
-            loadingString += "\nHeuristic evaluation: " + heuristic.getValue() + "\n\n";
-
-        result = new Text(loadingString);
+        label1.setAlignment(Pos.CENTER);
+        result = new Text("");
         result.setFill(Color.LIGHTGRAY);
 
         //Creating, configuring and finally setting the scene for the game itself
         game = new GameBoard(toLoad);
         gameBoard = createBoard(game);
+
         boardLayout.getChildren().addAll(label1, gameBoard, result);
 
-        gameScene = new Scene(boardLayout, 1100, 880);
+        gameScene = new Scene(boardLayout, 1100, 700);
         Stage gameStage = new Stage();
         gameStage.setScene(gameScene);
         gameStage.setTitle("SokoBOT - Level " + level.getValue());
@@ -274,7 +275,7 @@ public class Main extends Application {
         for (int i = 0; i < game.getRows(); i++) {
             for (int j = 0; j < game.getColumns(); j++) {
 
-                Rectangle tile = new Rectangle(60, 60);
+                Rectangle tile = new Rectangle(50, 50);
 
                 switch (board[i][j].getContent()) {
                     case WALL : tile.setFill(new ImagePattern(wall));
@@ -293,46 +294,69 @@ public class Main extends Application {
             }
         }
 
+        isSearching = true;
         return gameBoard;
     }
 
     private static void updateBoard () {
+        if (!isSearching && !isShowing) {
+            return;
+        }
+
         Cell[][] board = game.getBoard();
-        String text = "Algorithm: " + algorithmValue +
-                "\nExpansion scheme: " + schemeValue + "\n\n";
+        String text;
 
-        if (SokobanSolver.getLogLine() != null)
-            text = text + SokobanSolver.getLogLine();
+        if (SokobanSolver.getSolution() != null) {
+            moves = SokobanSolver.getSolutionMoves();
+            pushes = SokobanSolver.getSolutionPushes();
+            isSearching = false;
+            isShowing = true;
+        }
 
-        result.setText(text);
-
-        if (SokobanSolver.getSolution() != null || manualGameplay) {
+        if (isShowing) {
             for (int i = 0; i < game.getRows(); i++) {
                 for (int j = 0; j < game.getColumns(); j++) {
 
                     Rectangle tile = tiles[i][j];
 
                     switch (board[i][j].getContent()) {
-                        case EMPTY: if (!board[i][j].isGoal()) tile.setFill(Color.WHITE);
-                                    else tile.setFill(new ImagePattern(goal));
-                                    break;
-                        case BOX:   tile.setFill(new ImagePattern(box));
-                                    break;
-                        case SOKOBAN: tile.setFill(new ImagePattern(sokoban));
-                                    break;
+                        case EMPTY:
+                            if (!board[i][j].isGoal()) tile.setFill(Color.WHITE);
+                            else tile.setFill(new ImagePattern(goal));
+                            break;
+                        case BOX:
+                            tile.setFill(new ImagePattern(box));
+                            break;
+                        case SOKOBAN:
+                            tile.setFill(new ImagePattern(sokoban));
+                            break;
                     }
 
                     tiles[i][j] = tile;
                 }
             }
+        }
 
-            if (!manualGameplay) {
-                result.setText(algorithmValue + " found a solution in " +
-                        SokobanSolver.getSolutionMoves() + " moves - " + SokobanSolver.getSolutionPushes() + " pushes.\n\n" +
-                        Node.getExaminedNodes() + " unique game states were examined.\n" +
-                        "Time elapsed: " + SokobanSolver.getTimeElapsed() + " seconds\n" +
-                        "Nodes pruned by the Deadlock Detector: " + DeadlockDetector.getPrunedNodes() + "\n\n");
-            }
+        if (!manualGameplay && isShowing) {
+            result.setText(algorithmValue + " found a solution in " + moves + " moves - " + pushes + " pushes.\n\n" +
+                    Node.getExaminedNodes() + " unique game states were examined.\n" +
+                    "Time elapsed: " + SokobanSolver.getTimeElapsed() + " seconds\n" +
+                    "Branches pruned by the Deadlock Detector: " + DeadlockDetector.getPrunedNodes() +
+                    "\nVisited nodes: " + Node.getExaminedNodes() + "\n\n");
+            if (SokobanSolver.getSolution() == null) isShowing = false;
+        }
+        else if (isSearching) {
+            text = "Search in progress. The solution will be demonstrated after the computation.\n" +
+                    "\nAlgorithm: " + algorithmValue +
+                    "\nExpansion scheme: " + schemeValue;
+            if (algorithm.getValue() != Strategy.mapStrategy(Strategy.BFS))
+                text += "\nHeuristic evaluation: " + heuristicValue + "\n\n";
+            else
+                text += "\n\n";
+
+            if (SokobanSolver.getLogLine() != null)
+                text = text + SokobanSolver.getLogLine();
+            result.setText(text);
         }
 
     }
