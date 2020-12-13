@@ -3,6 +3,7 @@ package solver.algorithms;
 
 import game.GameBoard;
 import solver.Node;
+import solver.SokobanSolver;
 import solver.SokobanToolkit;
 
 import java.util.ArrayList;
@@ -19,18 +20,23 @@ public class IDDFS {
     private static Logger log = Logger.getLogger("IDDFS");
     private static Node solution = null;
     private static TreeSet<Long> transpositionTableCopy = new TreeSet<>();
+    private static int depthCopy;
     private static boolean memoryFull = false;
 
     //these two hashmaps are used as a cache to avoid re-exploring the lower levels in iterative deepening
-    private static HashMap<Long, Node> cache = new HashMap<>();
-    private static HashMap<Long, Node> candidateCache = new HashMap<>();
+    private static ArrayList<Node> cache = new ArrayList<>();
+    private static ArrayList<Node> candidateCache = new ArrayList<>();
 
-    public static Node launch(GameBoard game, int lowerBound) throws CloneNotSupportedException {
+    public static Node launch(GameBoard game) throws CloneNotSupportedException {
+
+        SokobanSolver.setLogLine("Depth cutoff point: " + Node.getDepth() + "\nVisited nodes: " + Node.getExaminedNodes() +
+                "\nCached nodes: " + (cache.size() + candidateCache.size()));
 
         solution = null;
         Node root = new Node(game, new ArrayList<>());
         if (root.isGoal()) return root;
-        cache.put(root.hash(), root);
+        cache.add(root);
+        int lowerBound = SokobanToolkit.estimateLowerBound(game);
         int limit = lowerBound;
         log.info("The lower bound estimate is: " + limit);
 
@@ -43,28 +49,46 @@ public class IDDFS {
             if (!memoryFull) {
                 transpositionTableCopy.clear();
                 transpositionTableCopy = (TreeSet<Long>) Node.getTranspositionTable().clone();
+                depthCopy = Node.getDepth();
             }
             //If memory is full, we have to restore the transposition table backup and increment the limit of the search:
             //from now on, no more cached nodes and we will start over from the last cached frontier
             else if (memoryFull){
                 Node.resetSearchSpace();
                 Node.setTranspositionTable((TreeSet<Long>) transpositionTableCopy.clone());
-                limit = limit + lowerBound/2;
+                Node.setDepth(depthCopy);
+                limit = limit + 1;
             }
 
             //In every iteration, cache will store the nodes in the deepest level reached by the previous iteration.
             //This way, we can keep expanding from there and avoid the burden of having to store the whole path.
             //candidateCache, instead, will store the nodes found in the deepest allowed level of the current iteration,
             //in other words, if the memory doesn't run out during recursiveComponent calls, it will be the next cache.
-            if (!memoryFull) candidateCache = new HashMap<>();
-            for (Long key : cache.keySet()) {
-                //Launching the DFS on every element in the cache.
-                if (count == 0) recursiveComponent(cache.get(key), limit);
-                if (count > 0) recursiveComponent(cache.get(key), limit/3);
+            if (!memoryFull) {
+                candidateCache = new ArrayList<>();
             }
-            if (!memoryFull) cache = new HashMap<>(candidateCache);
 
-            log.info("visited nodes at depth " + Node.getDepth() + ": " + Node.getExaminedNodes());
+            //Launching the DFS on every element in the cache.
+            for (Node n : cache) {
+                //In case memory is full we will start with a cached frontier as a starting point
+                //so we'll set the depth of the recursion to the depth limit minus the current depth.
+                //Also, if it's the first iteration we will go as deep as the lower bound of the solution
+                //because it makes no sense to stop before that, since we won't find any shallower solution.
+                if (count == 0 || memoryFull) recursiveComponent(n, limit - Node.getDepth());
+
+                //In case memory is not full we just go one level deeper
+                //This way we're getting all the advantages of BFS but we switch to proper IDDFS once memory starts
+                //to fail us.
+                else recursiveComponent(n, 1);
+            }
+
+            //We copy the frontier we formed in the last iteration to be used as a starting point for the next one
+            if (!memoryFull) {
+                cache = new ArrayList<>();
+                for (int i = candidateCache.size() - 1; i >= 0; i--) {
+                    cache.add(candidateCache.remove(i));
+                }
+            }
 
             //If we found a solution in this iteration, we put out the garbage and then return it
             if (solution != null && solution.getActionHistory().size() > 0) {
@@ -82,11 +106,21 @@ public class IDDFS {
     */
     private static void recursiveComponent (Node root, int limit) throws CloneNotSupportedException {
 
-        if (solution != null) return;
+        SokobanSolver.setLogLine("Depth cutoff point: " + Node.getDepth() + "\nVisited nodes: " + Node.getExaminedNodes() +
+                "\nCached nodes: " + (cache.size() + candidateCache.size()));
 
         //solution checking
         if (root.isGoal()) {
-            solution = root;
+            if (solution == null) {
+                solution = root;
+            }
+            else if (solution != null && root.getPathCost() < solution.getPathCost()) {
+                solution = root;
+            }
+            else if (solution != null && root.getPathCost() == solution.getPathCost()) {
+                if (root.getActionHistory().size() < solution.getActionHistory().size())
+                    solution = root;
+            }
             return;
         }
 
@@ -94,7 +128,7 @@ public class IDDFS {
         //(if the memory allows it) this node will be in the cache for the next iteration
         if (limit == 0 && !memoryFull) {
             if (cache.size() + candidateCache.size() < SokobanToolkit.MAX_NODES) {
-                candidateCache.put(root.hash(), root);
+                candidateCache.add(root);
             }
             else {
                 memoryFull = true;

@@ -11,12 +11,14 @@ This class extends a node by adding fields that are needed for informed search a
 public class ExtendedNode extends Node{
     private Node parent;
     private int label;
+    private int bestChild;
 
     //constructs a new extended node from scratch
     public ExtendedNode(GameBoard game, ArrayList<Action> actions, Node parent, int label) {
         super(game, actions);
         this.parent = parent;
         this.label = label;
+        this.bestChild = Integer.MAX_VALUE;
     }
 
     //constructs an extended node starting from a Node
@@ -25,23 +27,7 @@ public class ExtendedNode extends Node{
         this.setPushesNumber(node.getPushesNumber());
         this.parent = parent;
         this.label = label;
-    }
-
-    /*
-    Compares nodes when inserting them into the priority queue for A*
-    Nodes with the lowest label are favored, meaning that the priority queue will first extract the nodes
-    with the smallest estimated distance from the goal state. In case of a tie, inertial move ordering is applied:
-    we favor nodes in which Sokoban moved the same box as the last turn.
-    */
-    public int compare(ExtendedNode extendedNode) {
-        int comparison = Integer.compare(this.label, extendedNode.label);
-
-        if (comparison != 0)
-            return comparison;
-        else if (this.parent != null)
-            return SokobanToolkit.compareByInertia(this, extendedNode, this.parent);
-
-        return 0;
+        this.bestChild = Integer.MAX_VALUE;
     }
 
     public Node getParent() {
@@ -59,4 +45,13 @@ public class ExtendedNode extends Node{
     public void setLabel(int label) {
         this.label = label;
     }
+
+    public int getBestChild() {
+        return bestChild;
+    }
+
+    public void setBestChild(int bestChild) {
+        this.bestChild = bestChild;
+    }
+
 }

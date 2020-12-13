@@ -14,7 +14,7 @@ This class will collect static methods implementing reusable algorithm optimizat
 subproblems encountered in the main flow of the program. Its only purpose is to keep other classes a bit cleaner.
 */
 public class SokobanToolkit {
-    public static final int MAX_NODES = 500000;
+    public static final int MAX_NODES = 280000;
     private static Heuristic heuristic = Heuristic.MINIMUM_PERFECT_MATCHING;
     private static Logger log = Logger.getLogger("SokobanToolkit");
 
@@ -413,18 +413,30 @@ public class SokobanToolkit {
     has to be made. In other words, it allows for Primary Queue structures to order nodes with the same heuristic estimation
     with a criteria of move ordering by inertia
 */
-    public static int compareByInertia (Node first, Node second, Node root) {
+    public static int compareByInertia (Node first, Node second, Node firstRoot, Node secondRoot) {
 
-        if (root.getGame().getLastMovedBox() == null ||
-                (first.getGame().getLastMovedBox() == root.getGame().getLastMovedBox() && second.getGame().getLastMovedBox() == root.getGame().getLastMovedBox())) {
-            return 0;
+        boolean firstMoved = false, secondMoved = false;
+
+        if (firstRoot.getGame().getLastMovedBox() != null) {
+            if (first.getGame().getLastMovedBox() == firstRoot.getGame().getLastMovedBox())
+                firstMoved = true;
+            else
+                firstMoved = false;
         }
-        Integer boxNumber = root.getGame().getLastMovedBox();
 
-        if (first.getGame().getLastMovedBox() == boxNumber && second.getGame().getLastMovedBox() != boxNumber)
-            return -1;
-        if (first.getGame().getLastMovedBox() != boxNumber && second.getGame().getLastMovedBox() == boxNumber)
+        if (secondRoot.getGame().getLastMovedBox() != null) {
+            if (second.getGame().getLastMovedBox() == secondRoot.getGame().getLastMovedBox())
+                secondMoved = true;
+            else
+                secondMoved = false;
+        }
+
+        if ((firstMoved && secondMoved) || (!firstMoved && !secondMoved))
+            return 0;
+        else if (firstMoved && !secondMoved)
             return 1;
+        else if (secondMoved && !firstMoved)
+            return -1;
 
         return 0;
     }
@@ -609,19 +621,6 @@ public class SokobanToolkit {
         });
 
         return transpositionTable;
-    }
-
-    public static PriorityQueue pruneWorst(PriorityQueue<ExtendedNode> frontier, int branchingFactor) {
-        PriorityQueue<ExtendedNode> newFrontier = new PriorityQueue<>(ExtendedNode::compare);
-        ExtendedNode temp;
-        int target = frontier.size() - branchingFactor;
-
-        for (int i=0; i < target; i++) {
-            temp = frontier.remove();
-            newFrontier.add(new ExtendedNode(temp, temp.getParent(), temp.getLabel()));
-        }
-
-        return newFrontier;
     }
 
 

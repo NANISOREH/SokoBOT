@@ -3,6 +3,8 @@ package solver.algorithms;
 import game.Action;
 import game.GameBoard;
 import solver.Node;
+import solver.SokobanSolver;
+
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -13,6 +15,8 @@ public class BFS {
     private static Logger log = Logger.getLogger("BFS");
 
     public static Node launch(GameBoard game) throws CloneNotSupportedException {
+
+        SokobanSolver.setLogLine("Depth level 0" + "\nFront size: 0" +"\nExplored nodes: 0");
 
         //Utility data structure used to isolate the nodes inside the "frontier" of the search, the ones we will need to
         //expand in the current iteration. It's initialized by adding the first frontier, with only the root node inside
@@ -28,9 +32,9 @@ public class BFS {
         //The stopping condition is, of course, finding a node that represents a winning state.
         front.add(root);
         for (int count = 0; true; count++) {
-            log.info("level " + count + "\nfront size " + front.size() + "\nexplored nodes " + Node.getExaminedNodes());
             ArrayList<Node> nextLevel = new ArrayList<>();
             for (Node n : front) {
+                SokobanSolver.setLogLine("Depth level " + count + "\nFront size: " + front.size() + "\nExplored nodes: " + Node.getExaminedNodes());
                 for (Node v : n.expand()){
                     if (v.isGoal()) {
                         return v;
