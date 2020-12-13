@@ -4,6 +4,7 @@ package solver.algorithms;
 import game.GameBoard;
 import solver.ExtendedNode;
 import solver.Node;
+import solver.SokobanSolver;
 import solver.SokobanToolkit;
 
 import java.util.ArrayList;
@@ -19,15 +20,19 @@ public class IDAStar {
     private static boolean memoryFull = false;
 
     //these two hashmaps are used as a cache to avoid re-exploring the lower levels in iterative deepening
-    private static HashMap<Long, ExtendedNode> cache = new HashMap<>();
-    private static HashMap<Long, ExtendedNode> candidateCache = new HashMap<>();
+    private static ArrayList<ExtendedNode> cache = new ArrayList<>();
+    private static ArrayList<ExtendedNode> candidateCache = new ArrayList<>();
 
-    public static Node launch(GameBoard game, int lowerBound) throws CloneNotSupportedException {
+    public static Node launch(GameBoard game) throws CloneNotSupportedException {
 
-        int limit = lowerBound;
+        SokobanSolver.setLogLine("f(n) cutoff point: 0" + "\nVisited nodes: " + Node.getExaminedNodes() +
+                "\nCached nodes: " + (cache.size() + candidateCache.size()));
+
         solution = null;
         ExtendedNode root = new ExtendedNode(new Node(game, new ArrayList<>()), null, 0 + SokobanToolkit.estimateLowerBound(game));
-        cache.put(root.hash(), root);
+        int lowerBound = root.getLabel();
+        int limit = lowerBound;
+        cache.add(root);
 
         //Loop of the iterative deepening
         for (int count = 0; true; count++) {
@@ -50,14 +55,22 @@ public class IDAStar {
             newLimit = Integer.MAX_VALUE;
             //launching the search on the current limit
             //the limit will be raised inside the recursive component and stored in newLimit
-            if (!memoryFull) candidateCache = new HashMap<>();
-            for (Long key : cache.keySet()) {
-                recursiveComponent(cache.get(key), limit);
+            if (!memoryFull) candidateCache = new ArrayList<>();
+            for (ExtendedNode n : cache) {
+                recursiveComponent(n, limit);
             }
             limit = newLimit;
 
             //We copy the frontier we formed in the last iteration to be used as a starting point for the next one
-            if (!memoryFull) cache = new HashMap<>(candidateCache);
+            if (!memoryFull) {
+                cache = new ArrayList<>();
+                for (int i = candidateCache.size() - 1; i >= 0; i--) {
+                    cache.add(candidateCache.get(i));
+                    candidateCache.remove(i);
+                }
+
+            }
+
 
             //If we found a solution in this iteration, we put out the garbage and then return it
             if (solution != null && solution.getActionHistory().size() > 0) {
@@ -67,17 +80,25 @@ public class IDAStar {
                 return solution;
             }
 
-            log.info("visited nodes on iteration " + count + ": " + Node.getExaminedNodes());
         }
 
     }
 
     private static void recursiveComponent (ExtendedNode root, int limit) throws CloneNotSupportedException {
-
-        if (solution != null) return;
+        SokobanSolver.setLogLine("f(n) cutoff point: " + limit + "\nVisited nodes: " + Node.getExaminedNodes() +
+                "\nCached nodes: " + (cache.size() + candidateCache.size()));
 
         if (root.isGoal()) {
-            solution = root;
+            if (solution == null) {
+                solution = (Node) root.clone();
+            }
+            else if (root.getPathCost() < solution.getPathCost()) {
+                solution = (Node) root.clone();
+            }
+            else if (root.getPathCost() == solution.getPathCost()) {
+                if (root.getActionHistory().size() < solution.getActionHistory().size())
+                    solution = (Node) root.clone();
+            }
             return;
         }
 
@@ -86,7 +107,7 @@ public class IDAStar {
         //if the memory allows it, this node will be in the cache for the next iteration
         if (root.getLabel() > limit && !memoryFull) {
             if (cache.size() + candidateCache.size() < SokobanToolkit.MAX_NODES) {
-                candidateCache.put(root.hash(), root);
+                candidateCache.add(root);
             }
             else {
                 memoryFull = true;

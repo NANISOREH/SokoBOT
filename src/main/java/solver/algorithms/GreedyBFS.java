@@ -3,33 +3,60 @@ package solver.algorithms;
 import game.GameBoard;
 import solver.ExtendedNode;
 import solver.Node;
+import solver.SokobanSolver;
 import solver.SokobanToolkit;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.logging.Logger;
 
 public class GreedyBFS {
     private static final Logger log = Logger.getLogger("BestFirst");
-    private static Node solution = null;
 
     public static Node launch(GameBoard game) throws CloneNotSupportedException {
 
+        SokobanSolver.setLogLine("Top h(n) value: " + "\nFrontier size: 0" + "\nNumber of visited nodes: " + Node.getExaminedNodes());
+        int topH = Integer.MAX_VALUE;
+
+        Node solution = null;
         ExtendedNode root = new ExtendedNode(game, new ArrayList<>(), null, SokobanToolkit.estimateLowerBound(game));
-        PriorityQueue<ExtendedNode> frontier = new PriorityQueue<ExtendedNode>(ExtendedNode::compare);
-        frontier.add(root);
+        PriorityQueue<ExtendedNode> frontier = new PriorityQueue<ExtendedNode>(new Comparator<ExtendedNode>() {
+            @Override
+            public int compare(ExtendedNode extendedNode, ExtendedNode t1) {
+                int comparison = Integer.compare(extendedNode.getLabel(), t1.getLabel());
 
-        solution = null;
-        frontier.add(root);
-        int branchingFactor = game.getBoxCells().size() * 4;
+                //tie breaker: inertia
+                if (comparison == 0 && extendedNode.getParent() != null && t1.getParent() != null)
+                    comparison = SokobanToolkit.compareByInertia(extendedNode, t1, extendedNode.getParent(), t1.getParent());
 
+                return comparison;
+            }
+        });
+
+
+        frontier.add(root);
         //Main loop of the algorithm, we're only going to break it if we found a solution or if the frontier is empty,
         for (int innerCount = 0; !frontier.isEmpty(); innerCount++) {
 
             //We pop the node with the best heuristic estimate off the PQueue
             ExtendedNode examined = frontier.remove();
-            if (examined.isGoal()) //a solution was found
-                return examined;
+
+            if (examined.getLabel() < topH) topH = examined.getLabel();
+            if (examined.isGoal()) { //a solution was found
+                if (solution == null) {
+                    solution = examined;
+                }
+                else if (solution != null && examined.getPathCost() < solution.getPathCost()) {
+                    solution = examined;
+                }
+                else if (solution != null && examined.getPathCost() == solution.getPathCost()) {
+                    if (examined.getActionHistory().size() < solution.getActionHistory().size())
+                        solution = examined;
+                }
+
+                continue;
+            }
 
             //expanding the current node and adding the resulting nodes to the frontier Pqueue
             ArrayList<ExtendedNode> expanded = (ArrayList<ExtendedNode>) examined.expand();
@@ -39,19 +66,12 @@ public class GreedyBFS {
                 frontier.add(new ExtendedNode(n, examined, SokobanToolkit.estimateLowerBound(n.getGame())));
             }
 
-            //running out of memory, we're pruning a bunch of nodes from the frontier
-            //specifically, we remove a number of nodes equal to the branching factor of the level, so that we're certain
-            //that the next expansion will be done without problems
-            if (frontier.size() > SokobanToolkit.MAX_NODES) {
-                log.info("pruning " + branchingFactor + " elements" + "\nfrontier " + frontier.size());
-                frontier = SokobanToolkit.pruneWorst(frontier, branchingFactor);
-                log.info("after pruning" + "\nfrontier " + frontier.size());
+            if (innerCount % 100 == 0) {
+                SokobanSolver.setLogLine("Top h(n) value: " + topH + "\nFrontier size: " + frontier.size() + "\nNumber of visited nodes: " + Node.getExaminedNodes());
             }
-
-            if (innerCount % 100 == 0) log.info("frontier " + frontier.size() + "\nvisited nodes: " + Node.getExaminedNodes());
         }
 
-        return null;
+        return solution;
     }
 
 }

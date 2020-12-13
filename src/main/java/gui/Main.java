@@ -58,6 +58,11 @@ public class Main extends Application {
     private static ChoiceBox<String> scheme = new ChoiceBox<>();
     private static ChoiceBox<String> heuristic = new ChoiceBox<>();
     private static ChoiceBox<String> routine = new ChoiceBox<>();
+    private static int levelValue;
+    private static String algorithmValue;
+    private static String schemeValue;
+    private static String heuristicValue;
+    private static String routineValue;
     private static Scene menu;
     private static Scene gameScene;
     private static GridPane gameBoard;
@@ -188,7 +193,7 @@ public class Main extends Application {
         });
 
         //setting and showing the primary stage for the first start of the application
-        primaryStage.setTitle("Sokoban");
+        primaryStage.setTitle("SokoBOT");
         primaryStage.setScene(menu);
         primaryStage.show();
     }
@@ -199,6 +204,12 @@ public class Main extends Application {
 
     private void configureGame(Stage primaryStage) {
 
+        algorithmValue = algorithm.getValue();
+        heuristicValue = heuristic.getValue();
+        schemeValue = scheme.getValue();
+        levelValue = level.getValue();
+        routineValue = routine.getValue();
+
         manualGameplay = false;
         boardLayout = new VBox();
         boardLayout.setBackground(background);
@@ -206,7 +217,7 @@ public class Main extends Application {
         boardLayout.setSpacing(15);
 
         Level toLoad = new Level(level.getValue());
-        Label label1 = new Label("Level" + level.getValue() + "   -   Requires " + toLoad.getBestSolution() + " moves and " +
+        Label label1 = new Label("Requires " + toLoad.getBestSolution() + " moves and " +
                 toLoad.getMinPushes() + " pushes");
         label1.setMinHeight(50);
         label1.setMinWidth(300);
@@ -223,17 +234,19 @@ public class Main extends Application {
         //Creating, configuring and finally setting the scene for the game itself
         game = new GameBoard(toLoad);
         gameBoard = createBoard(game);
-        gameScene = new Scene(gameBoard);
         boardLayout.getChildren().addAll(label1, gameBoard, result);
-        //primaryStage.setResizable(false);
-        primaryStage.setScene(new Scene(boardLayout, 1100, 850));
+
+        gameScene = new Scene(boardLayout, 1100, 880);
+        Stage gameStage = new Stage();
+        gameStage.setScene(gameScene);
+        gameStage.setTitle("SokoBOT - Level " + level.getValue());
+        gameStage.show();
 
         //Starting the thread that will execute the sokoban solver and actually move sokoban on the board
         Thread t1 = new Thread(() -> {
             try {
                 //Launching the solver with the configuration specified by the UI elements
-                SokobanSolver.solve(game, Configuration.getInstance(scheme.getValue(), algorithm.getValue(),
-                        heuristic.getValue(), routine.getValue()));
+                SokobanSolver.solve(game, Configuration.getInstance(schemeValue, algorithmValue, heuristicValue, routineValue));
             } catch (InterruptedException | CloneNotSupportedException e1) {
                 e1.printStackTrace();
             }
@@ -246,12 +259,8 @@ public class Main extends Application {
 
         //You can click on the board to get back to the menu
         gameBoard.setOnMouseClicked(keyEvent -> {
-            try {
-                t1.join(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            primaryStage.setScene(menu);
+            SokobanSolver.setSolution(null);
+            gameStage.close();
         });
     }
 
@@ -289,6 +298,13 @@ public class Main extends Application {
 
     private static void updateBoard () {
         Cell[][] board = game.getBoard();
+        String text = "Algorithm: " + algorithmValue +
+                "\nExpansion scheme: " + schemeValue + "\n\n";
+
+        if (SokobanSolver.getLogLine() != null)
+            text = text + SokobanSolver.getLogLine();
+
+        result.setText(text);
 
         if (SokobanSolver.getSolution() != null || manualGameplay) {
             for (int i = 0; i < game.getRows(); i++) {
@@ -310,12 +326,12 @@ public class Main extends Application {
                 }
             }
 
-
             if (!manualGameplay) {
-                result.setText(algorithm.getValue() + " found a solution in " +
+                result.setText(algorithmValue + " found a solution in " +
                         SokobanSolver.getSolutionMoves() + " moves - " + SokobanSolver.getSolutionPushes() + " pushes.\n\n" +
                         Node.getExaminedNodes() + " unique game states were examined.\n" +
-                        "Time elapsed: " + SokobanSolver.getTimeElapsed() + " seconds\n\n");
+                        "Time elapsed: " + SokobanSolver.getTimeElapsed() + " seconds\n" +
+                        "Nodes pruned by the Deadlock Detector: " + DeadlockDetector.getPrunedNodes() + "\n\n");
             }
         }
 

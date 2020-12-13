@@ -22,12 +22,12 @@ The class also stores a transposition table of the visited nodes as a static var
 */
 public class Node {
     private static Logger log = Logger.getLogger("Node");
-    private static TreeSet<Long> transpositionTable = new TreeSet<>();
-    private static int depth;
-    private static ExpansionScheme expansionScheme;
-    private GameBoard game;
-    private int pushesNumber;
-    private ArrayList<Action> actionHistory = new ArrayList<>();
+    protected static TreeSet<Long> transpositionTable = new TreeSet<>();
+    protected static int depth;
+    protected static ExpansionScheme expansionScheme;
+    protected GameBoard game;
+    protected int pushesNumber;
+    protected ArrayList<Action> actionHistory = new ArrayList<>();
 
     public Node(){};
 
@@ -43,8 +43,8 @@ public class Node {
     This way, it doesn't have to be hardcoded into the algorithms and it can be switched at runtime.
 */
     public Collection<? extends Node> expand() throws CloneNotSupportedException {
-        if (!transpositionTable.contains(this.hash()))
-            transpositionTable.add(this.hash());
+        if (actionHistory.isEmpty() && !Node.transpositionTable.contains(this.hash()))
+            Node.transpositionTable.add(this.hash());
 
         if (expansionScheme == ExpansionScheme.MOVE_BASED)
             return this.expandByMoves();
@@ -402,6 +402,10 @@ Returns the cost of the path in the search tree up until this node
 
     public static int getDepth() {
         return depth;
+    }
+
+    public static void setDepth(int depth) {
+        Node.depth = depth;
     }
 
     public int getPushesNumber() {

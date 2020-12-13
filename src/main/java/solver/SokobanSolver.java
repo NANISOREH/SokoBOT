@@ -22,6 +22,7 @@ public class SokobanSolver {
     private static Logger log = Logger.getLogger("SokobanSolver");
     private static Node solution = null;
     private static double timeElapsed;
+    private static String logLine = "";
 /*
     Static method that acts as a façade between the client and the actual algorithms.
     It takes a GameBoard configured with the level to solve, and the strategy chosen by the client to solve it,
@@ -56,11 +57,11 @@ public class SokobanSolver {
                 break;
             }
             case IDDFS : {
-                solution = IDDFS.launch((GameBoard) toSolve.clone(), SokobanToolkit.estimateLowerBound(toSolve));
+                solution = IDDFS.launch((GameBoard) toSolve.clone());
                 break;
             }
             case IDASTAR : {
-                solution = IDAStar.launch((GameBoard) toSolve.clone(), SokobanToolkit.estimateLowerBound(toSolve));
+                solution = IDAStar.launch((GameBoard) toSolve.clone());
                 break;
             }
             case SMASTAR : {
@@ -78,11 +79,13 @@ public class SokobanSolver {
 
         //Showing the list of actions in the console and executing the corresponding moves on the board
         if (!solutionActions.isEmpty()) {
+            logLine = "";
             log.info("Solution found in " + solutionActions.size() + " moves!");
             log.info(solution.getPushesNumber() + " pushes were needed");
             log.info("number of examined nodes: " + Node.getExaminedNodes());
             log.info("number of nodes pruned by DeadlockDetector: " + DeadlockDetector.getPrunedNodes());
             log.info("" + solution.getActionHistory());
+            DeadlockDetector.setRoutine(DDRoutine.NO_DEADLOCK_DETECTION);
             for (Action a : solutionActions) {
                 //we execute every action in the solution: the board will automagically solve the puzzle as a result
                 toSolve.takeAction(a);
@@ -122,5 +125,13 @@ public class SokobanSolver {
 
     public static double getTimeElapsed() {
         return timeElapsed;
+    }
+
+    public static String getLogLine() {
+        return logLine;
+    }
+
+    public static void setLogLine(String logLine) {
+        SokobanSolver.logLine = logLine;
     }
 }
