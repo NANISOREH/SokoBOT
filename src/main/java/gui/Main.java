@@ -34,7 +34,8 @@ import java.util.logging.Logger;
 
 /*
 Main class of the JavaFX application. It configures the UI and takes the configuration of the solver from the user.
-Not terribly interesting, lots of boilerplate code and drawing stuff. Plus it's an unholy spaghetti mess.
+Not terribly interesting, lots of boilerplate code and drawing stuff. Plus it's an unholy spaghetti mess. Please
+don't look at it. I don't really know JavaFX, I just improvised to get a gui out as fast as possible.
 */
 public class Main extends Application {
     private static Logger log = Logger.getLogger("Main");
@@ -75,9 +76,10 @@ public class Main extends Application {
     private static boolean isShowing = false;
     private static int moves = 0;
     private static int pushes = 0;
+    private static Text inGame;
 
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage primaryStage) throws IOException {
         //Starting precomputation of the level-independent deadlocks as early as possible
         DeadlockDetector.populateDeadlocks();
 
@@ -100,7 +102,7 @@ public class Main extends Application {
         label1.setTextFill(Color.LIGHTGRAY);
         level.setValue(null);
         ObservableList<Integer> levels = level.getItems();
-        for (int i = 1; i <= new File("levels").listFiles().length; i++) {
+        for (int i = 1; i <= Level.NUM_LEVELS; i++) {
             levels.add(i);
         }
         level.setValue(levels.get(0));
@@ -221,7 +223,7 @@ public class Main extends Application {
         boardLayout.setAlignment(Pos.TOP_CENTER);
         boardLayout.setSpacing(15);
 
-        Level toLoad = new Level(level.getValue());
+        Level toLoad = new Level(levelValue);
         Label label1 = new Label("Requires " + toLoad.getBestSolution() + " moves and " +
                 toLoad.getMinPushes() + " pushes");
         label1.setMaxHeight(60);
@@ -345,7 +347,7 @@ public class Main extends Application {
                     "\nVisited nodes: " + Node.getExaminedNodes() + "\n\n");
             if (SokobanSolver.getSolution() == null) isShowing = false;
         }
-        else if (isSearching) {
+        else if (!manualGameplay && isSearching) {
             text = "Search in progress. The solution will be demonstrated after the computation.\n" +
                     "\nAlgorithm: " + algorithmValue +
                     "\nExpansion scheme: " + schemeValue;
@@ -367,15 +369,19 @@ public class Main extends Application {
         boardLayout.setBackground(background);
         boardLayout.setAlignment(Pos.CENTER);
         boardLayout.setSpacing(15);
+        isShowing = true;
+        moves = 0;
 
         Level toLoad = new Level(level.getValue());
 
-        //Creating, configuring and finally setting the scene for the game itself
         game = new GameBoard(toLoad);
         gameBoard = createBoard(game);
-        boardLayout.getChildren().addAll(gameBoard);
+        inGame = new Text();
+        inGame.setText("Moves: " + moves + "\n\n\n");
+        inGame.setFill(Color.LIGHTGRAY);
+        boardLayout.getChildren().addAll(gameBoard, inGame);
         gameScene = new Scene(boardLayout);
-        //primaryStage.setResizable(false);
+
         Stage gameStage = new Stage();
         gameStage.setScene(gameScene);
         gameStage.show();
@@ -387,8 +393,10 @@ public class Main extends Application {
             switch (keyEvent.getCode()) {
                 case UP : {
                     try {
-                        if (!game.takeAction(Action.MOVE_UP))
-                            log.info("MOSSA NON CONSENTITA");
+                        if (DeadlockDetector.getPrunedNodes()==0 && !game.checkVictory()) {
+                            if (game.takeAction(Action.MOVE_UP));
+                                moves++;
+                        }
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
@@ -397,8 +405,10 @@ public class Main extends Application {
                 }
                 case DOWN : {
                     try {
-                        if (!game.takeAction(Action.MOVE_DOWN))
-                            log.info("MOSSA NON CONSENTITA");
+                        if (DeadlockDetector.getPrunedNodes()==0 && !game.checkVictory()) {
+                            if (game.takeAction(Action.MOVE_DOWN));
+                            moves++;
+                        }
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
@@ -407,8 +417,10 @@ public class Main extends Application {
                 }
                 case RIGHT : {
                     try {
-                        if (!game.takeAction(Action.MOVE_RIGHT))
-                            log.info("MOSSA NON CONSENTITA");
+                        if (DeadlockDetector.getPrunedNodes()==0 && !game.checkVictory()) {
+                            if (game.takeAction(Action.MOVE_RIGHT));
+                            moves++;
+                        }
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
@@ -417,18 +429,18 @@ public class Main extends Application {
                 }
                 case LEFT : {
                     try {
-                        if (!game.takeAction(Action.MOVE_LEFT));
-                            log.info("MOSSA NON CONSENTITA");
+                        if (DeadlockDetector.getPrunedNodes()==0 && !game.checkVictory()) {
+                            if (game.takeAction(Action.MOVE_LEFT));
+                            moves++;
+                        }
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
                     updateBoard();
                     break;
                 }
-                case Q : {
-                    gameStage.close();
-                }
                 case R : {
+                    DeadlockDetector.setPrunedNodes(0);
                     gameStage.close();
                     try {
                         playManually();
@@ -439,9 +451,14 @@ public class Main extends Application {
                 default : break;
             }
 
+            if (DeadlockDetector.getPrunedNodes()>0)
+                inGame.setText("\nYou reached a DEADLOCK!\nPress R to restart the game\n");
+            else
+                inGame.setText("Moves: " + moves + "\n\n\n");
+
             //checking for victory after every action taken
             if (game.checkVictory()) {
-                System.out.println("VICTORY!");
+                inGame.setText("Moves: " + moves + "\n\nVICTORY! Press R to restart the game\n");
                 SokobanSolver.setSolution(null);
             }
         });

@@ -1,10 +1,9 @@
 package game;
 
 import com.google.gson.Gson;
+import gui.Main;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,6 +12,9 @@ import java.util.regex.Pattern;
 This class reads, parses and holds information about the levels
 */
 public class Level {
+    //note that i'm hardcoding the number opf levels because of a problem in reading the number of files from a runtime image
+    //i might find a way to fix this later
+    public static final int NUM_LEVELS = 16;
     private static Logger log = Logger.getLogger("level");
     private CellContent[][] content;
     private int bestSolution;
@@ -25,7 +27,8 @@ public class Level {
     public Level(int level) {
         //Reading the json file into a string
         StringBuilder jsonBuilder = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new FileReader("levels/level" + level + ".json")))
+        InputStream is = Level.class.getResourceAsStream("/level" + level + ".json");
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(is)))
         {
             String sCurrentLine;
             while ((sCurrentLine = br.readLine()) != null)

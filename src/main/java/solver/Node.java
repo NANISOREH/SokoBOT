@@ -156,9 +156,6 @@ public class Node {
             if (!executeMove(newState, action))
                 return false;
 
-/*            log.info("sokoban cell\n" + game.getSokobanCell());
-            log.info("moved box\n" + game.getBoxCells().get(lastMovedBox));*/
-
             if (newState.getPushesNumber() > depth)
                 depth = newState.pushesNumber;
 
@@ -371,14 +368,6 @@ Returns the cost of the path in the search tree up until this node
     public void setActionHistory(ArrayList<Action> actions) {
         this.actionHistory = actions;
     }
-
-/*    public Integer getLastMovedBox() {
-        return lastMovedBox;
-    }
-
-    public void setLastMovedBox(Integer lastMovedBox) {
-        this.lastMovedBox = lastMovedBox;
-    }*/
 
     public static TreeSet<Long> getTranspositionTable() {
         return transpositionTable;
