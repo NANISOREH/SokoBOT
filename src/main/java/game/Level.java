@@ -14,7 +14,7 @@ This class reads, parses and holds information about the levels
 public class Level {
     //note that i'm hardcoding the number opf levels because of a problem in reading the number of files from a runtime image
     //i might find a way to fix this later
-    public static final int NUM_LEVELS = 16;
+    public static final int NUM_LEVELS = 17;
     private static Logger log = Logger.getLogger("level");
     private CellContent[][] content;
     private int bestSolution;

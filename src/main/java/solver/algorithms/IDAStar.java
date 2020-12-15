@@ -154,7 +154,7 @@ public class IDAStar {
         //ordered by their labels
         ArrayList<Node> expanded = (ArrayList<Node>) root.expand();
         for (Node n : expanded) {
-            queue.add(new ExtendedNode(n, root, 1 + n.getPathCost() +
+            queue.add(new ExtendedNode(n, root, n.getPathCost() +
                     SokobanToolkit.estimateLowerBound(n.getGame())));
         }
         int size = queue.size();
