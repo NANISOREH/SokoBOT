@@ -91,7 +91,6 @@ public class SokobanSolver {
                 toSolve.takeAction(a);
                 Thread.sleep(200);
             }
-            solution = null;
         }
         else {
             log.info("Sorry, no solution was found!");

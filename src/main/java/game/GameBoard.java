@@ -119,7 +119,8 @@ public class GameBoard implements Cloneable{
                 swapCells(neighbour, boxNeighbour);
                 swapCells(neighbour, sokobanCell);
 
-                if (DeadlockDetector.isDeadlock(this)) {
+                //checking for the deadlock before telling the caller that the move was successful
+                if (!checkVictory() && DeadlockDetector.isDeadlock(this)) {
                     return false;
                 }
                 else
@@ -178,6 +179,14 @@ public class GameBoard implements Cloneable{
 */
     public void boxTeleport(int boxNumber, Action side) throws CloneNotSupportedException {
         Cell boxCell = boxCells.get(boxNumber);
+
+        //checking if the box is blocked in a position that's not a goal
+        if (getSouth(boxCell) != null && getNorth(boxCell) != null && getEast(boxCell) != null && getWest(boxCell) != null) {
+            if ((getNorth(boxCell).getContent() == CellContent.WALL || getSouth(boxCell).getContent() == CellContent.WALL) &&
+                    (getEast(boxCell).getContent() == CellContent.WALL || getWest(boxCell).getContent() == CellContent.WALL) &&
+                        !boxCell.isGoal())
+                return;
+        }
 
         if (!boxCells.containsKey(boxNumber))
             return;

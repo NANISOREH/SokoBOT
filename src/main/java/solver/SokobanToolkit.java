@@ -14,7 +14,7 @@ This class will collect static methods implementing reusable algorithm optimizat
 subproblems encountered in the main flow of the program. Its only purpose is to keep other classes a bit cleaner.
 */
 public class SokobanToolkit {
-    public static final int MAX_NODES = 280000;
+    public static final int MAX_NODES = 100000;
     private static Heuristic heuristic = Heuristic.MINIMUM_PERFECT_MATCHING;
     private static Logger log = Logger.getLogger("SokobanToolkit");
 

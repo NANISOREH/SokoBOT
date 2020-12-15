@@ -239,7 +239,7 @@ public class Main extends Application {
 
         boardLayout.getChildren().addAll(label1, gameBoard, result);
 
-        gameScene = new Scene(boardLayout, 1100, 700);
+        gameScene = new Scene(boardLayout, 1100, 800);
         Stage gameStage = new Stage();
         gameStage.setScene(gameScene);
         gameStage.setTitle("SokoBOT - Level " + level.getValue());
@@ -249,6 +249,7 @@ public class Main extends Application {
         Thread t1 = new Thread(() -> {
             try {
                 //Launching the solver with the configuration specified by the UI elements
+                game = new GameBoard(toLoad);
                 SokobanSolver.solve(game, Configuration.getInstance(schemeValue, algorithmValue, heuristicValue, routineValue));
             } catch (InterruptedException | CloneNotSupportedException e1) {
                 e1.printStackTrace();
@@ -343,15 +344,14 @@ public class Main extends Application {
             result.setText(algorithmValue + " found a solution in " + moves + " moves - " + pushes + " pushes.\n\n" +
                     Node.getExaminedNodes() + " unique game states were examined.\n" +
                     "Time elapsed: " + SokobanSolver.getTimeElapsed() + " seconds\n" +
-                    "Branches pruned by the Deadlock Detector: " + DeadlockDetector.getPrunedNodes() +
-                    "\nVisited nodes: " + Node.getExaminedNodes() + "\n\n");
+                    "Branches pruned by the Deadlock Detector: " + DeadlockDetector.getPrunedNodes() + "\n\n");
             if (SokobanSolver.getSolution() == null) isShowing = false;
         }
         else if (!manualGameplay && isSearching) {
             text = "Search in progress. The solution will be demonstrated after the computation.\n" +
                     "\nAlgorithm: " + algorithmValue +
                     "\nExpansion scheme: " + schemeValue;
-            if (algorithm.getValue() != Strategy.mapStrategy(Strategy.BFS))
+            if (algorithmValue != Strategy.mapStrategy(Strategy.BFS))
                 text += "\nHeuristic evaluation: " + heuristicValue + "\n\n";
             else
                 text += "\n\n";
@@ -394,7 +394,7 @@ public class Main extends Application {
                 case UP : {
                     try {
                         if (DeadlockDetector.getPrunedNodes()==0 && !game.checkVictory()) {
-                            if (game.takeAction(Action.MOVE_UP));
+                            if (game.takeAction(Action.MOVE_UP))
                                 moves++;
                         }
                     } catch (CloneNotSupportedException e) {
@@ -406,8 +406,8 @@ public class Main extends Application {
                 case DOWN : {
                     try {
                         if (DeadlockDetector.getPrunedNodes()==0 && !game.checkVictory()) {
-                            if (game.takeAction(Action.MOVE_DOWN));
-                            moves++;
+                            if (game.takeAction(Action.MOVE_DOWN))
+                                moves++;
                         }
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
@@ -418,8 +418,8 @@ public class Main extends Application {
                 case RIGHT : {
                     try {
                         if (DeadlockDetector.getPrunedNodes()==0 && !game.checkVictory()) {
-                            if (game.takeAction(Action.MOVE_RIGHT));
-                            moves++;
+                            if (game.takeAction(Action.MOVE_RIGHT))
+                                moves++;
                         }
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
@@ -430,8 +430,8 @@ public class Main extends Application {
                 case LEFT : {
                     try {
                         if (DeadlockDetector.getPrunedNodes()==0 && !game.checkVictory()) {
-                            if (game.takeAction(Action.MOVE_LEFT));
-                            moves++;
+                            if (game.takeAction(Action.MOVE_LEFT))
+                                moves++;
                         }
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();

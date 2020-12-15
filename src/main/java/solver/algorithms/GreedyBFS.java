@@ -42,15 +42,20 @@ public class GreedyBFS {
             //We pop the node with the best heuristic estimate off the PQueue
             ExtendedNode examined = frontier.remove();
 
+            //storing the top h(n) value for logging purposes
             if (examined.getLabel() < topH) topH = examined.getLabel();
+
             if (examined.isGoal()) { //a solution was found
-                if (solution == null) {
+                if (solution == null) { //first solution node reached
                     solution = examined;
                 }
                 else if (solution != null && examined.getPathCost() < solution.getPathCost()) {
+                    //found a better solution than the one previously stored
                     solution = examined;
                 }
                 else if (solution != null && examined.getPathCost() == solution.getPathCost()) {
+                    //this check gives a tie breaker: in case we're searching by pushes and we found two solutions
+                    //with the same number of pushes, we use the number of moves to discriminate
                     if (examined.getActionHistory().size() < solution.getActionHistory().size())
                         solution = examined;
                 }
@@ -66,9 +71,16 @@ public class GreedyBFS {
                 frontier.add(new ExtendedNode(n, examined, SokobanToolkit.estimateLowerBound(n.getGame())));
             }
 
-            if (innerCount % 100 == 0) {
-                SokobanSolver.setLogLine("Top h(n) value: " + topH + "\nFrontier size: " + frontier.size() + "\nNumber of visited nodes: " + Node.getExaminedNodes());
+            if (topH == 0 && solution != null) {
+                SokobanSolver.setLogLine("A suboptimal solution was already found, involving " +
+                        solution.getPushesNumber() + " pushes and " + solution.getActionHistory().size() + " moves" +
+                        "\nFrontier size: " + frontier.size() + "\nNumber of visited nodes: " + Node.getExaminedNodes());
             }
+            else {
+                SokobanSolver.setLogLine("Best h(n) value encountered: " + topH + "\nFrontier size: "
+                        + frontier.size() + "\nNumber of visited nodes: " + Node.getExaminedNodes());
+            }
+
         }
 
         return solution;

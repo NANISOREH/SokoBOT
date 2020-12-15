@@ -405,6 +405,12 @@ Returns the cost of the path in the search tree up until this node
         this.pushesNumber = pushesNumber;
     }
 
+    public static void forgetNode (Node n) throws CloneNotSupportedException {
+        if (transpositionTable.contains(n.hash())) {
+            transpositionTable.remove(n.hash());
+        }
+    }
+
     @Override
     public Object clone() throws CloneNotSupportedException {
         Node cloned = new Node();

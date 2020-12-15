@@ -48,7 +48,6 @@ public class IDAStar {
             else if (memoryFull){
                 Node.resetSearchSpace();
                 Node.setTranspositionTable((TreeSet<Long>) transpositionTableCopy.clone());
-                limit = limit + lowerBound/2;
             }
 
 
@@ -113,6 +112,8 @@ public class IDAStar {
                 memoryFull = true;
                 log.info("NO MORE MEMORY");
                 candidateCache.clear();
+                newLimit = limit;
+                return;
             }
 
             if (root.getLabel() < newLimit)
@@ -121,7 +122,6 @@ public class IDAStar {
             return;
         }
         else if (root.getLabel() > limit && memoryFull) {
-            candidateCache.clear();
             if (root.getLabel() < newLimit)
                 newLimit = root.getLabel();
             return;
