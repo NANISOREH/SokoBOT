@@ -15,16 +15,28 @@ public class DeadlockDetector {
     private static int prunedNodes = 0;
     private static ArrayList<Cell> deadCells = new ArrayList<>();
     private static ArrayList<CellContent[][]> TwoTwoDeadlocks = new ArrayList<>();
-    private static ArrayList<CellContent[][]> ThreeThreeDeadlocks = new ArrayList<>();
 
-    public static boolean isDeadlock (GameBoard board){
+/*
+    Facade method that the client launches to get the deadlock detection routines asked by configuring the routine variable.
+    Intuitively, it returns true if a deadlock was found
+*/
+    public static boolean isDeadlock (GameBoard board) throws CloneNotSupportedException {
+        if (board.getLastMovedBox() == null)
+            return false;
+        if (board.checkVictory())
+            return false;
+
         switch (routine) {
             case ALL_ROUTINES : {
                 if (isDeadPosition(board)) return true;
-                else return isInDeadlockTable(board);
+                else if (isInDeadlockTable(board)) return true;
+                else return isFrozenBox(board.getBoxCells().get(board.getLastMovedBox()), (GameBoard) board.clone());
             }
             case LOOKUP_TABLES: {
                 return isInDeadlockTable(board);
+            }
+            case FROZEN_BOXES : {
+                return isFrozenBox(board.getBoxCells().get(board.getLastMovedBox()), (GameBoard) board.clone());
             }
             case NO_DEADLOCK_DETECTION: {
                 return false;
@@ -37,14 +49,69 @@ public class DeadlockDetector {
         return false;
     }
 
+
+    //ONLINE OPERATIONS
+
+    private static boolean isFrozenBox(Cell box, GameBoard board) throws CloneNotSupportedException {
+        boolean frozen = false;
+
+        if (box.isGoal()) return false;
+
+        //Horizontal checks
+        frozen = isHorizontallyFrozen(box, board);
+        if (!frozen) {
+            box.setContent(CellContent.WALL);
+            if (board.getEast(box).getContent() == CellContent.BOX)
+                frozen = isFrozenBox(board.getEast(box), board);
+            if (board.getWest(box).getContent() == CellContent.BOX)
+                frozen = isFrozenBox(board.getWest(box), board);
+            box.setContent(CellContent.BOX);
+        }
+
+        //the box is not frozen horizontally, can't be a deadlock
+        if (!frozen) return false;
+
+        //Vertical checks
+        frozen = isVerticallyFrozen(box, board);
+        if (!frozen) {
+            box.setContent(CellContent.WALL);
+            if (board.getNorth(box).getContent() == CellContent.BOX)
+                frozen = isFrozenBox(board.getNorth(box), board);
+            if (board.getSouth(box).getContent() == CellContent.BOX)
+                frozen = isFrozenBox(board.getSouth(box), board);
+            box.setContent(CellContent.BOX);
+        }
+
+        if (frozen) {
+            prunedNodes++;
+            return true;
+        }
+        else return false;
+    }
+
+    private static boolean isHorizontallyFrozen(Cell box, GameBoard board) {
+        if (board.getWest(box).getContent() == CellContent.WALL || board.getEast(box).getContent() == CellContent.WALL) {
+            return true;
+        }
+        else if (board.getWest(box).isDeadPosition() && board.getEast(box).isDeadPosition()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static boolean isVerticallyFrozen(Cell box, GameBoard board) {
+        if (board.getNorth(box).getContent() == CellContent.WALL || board.getSouth(box).getContent() == CellContent.WALL)
+            return true;
+        else if (board.getNorth(box).isDeadPosition() && board.getSouth(box).isDeadPosition())
+            return true;
+
+        return false;
+    }
+
     private static boolean isInDeadlockTable(GameBoard board) {
-        if (board.getLastMovedBox() == null)
-            return false;
         
         Cell box = board.getBoxCells().get(board.getLastMovedBox());
-
-        if (box.isGoal())
-            return false;
 
 /*        log.info(board.getSokobanCell() + "");
         log.info(box + "");*/
@@ -63,22 +130,22 @@ public class DeadlockDetector {
         log.info(push + "\n");
 */
 
-        CellContent[][] first = new CellContent[2][2];
-        CellContent[][] second = new CellContent[2][2];
+        Cell[][] first = new Cell[2][2];
+        Cell[][] second = new Cell[2][2];
 
         switch (push) {
             case MOVE_LEFT : {
-                first[1][0] = CellContent.BOX;
-                first[1][1] = board.getNorth(box).getContent();
+                first[1][0] = box;
+                first[1][1] = board.getNorth(box);
                 Cell temp = board.getWest(box);
-                first[0][0] = temp.getContent();
-                first[0][1] = board.getNorth(temp).getContent();
+                first[0][0] = temp;
+                first[0][1] = board.getNorth(temp);
 
-                second[1][1] = CellContent.BOX;
-                second[1][0] = board.getSouth(box).getContent();
+                second[1][1] = box;
+                second[1][0] = board.getSouth(box);
                 temp = board.getWest(box);
-                second[0][1] = temp.getContent();
-                second[0][0] = board.getSouth(temp).getContent();
+                second[0][1] = temp;
+                second[0][0] = board.getSouth(temp);
 
 /*                log.info("\n" + first[0][0] + " " + first[0][1] + "\n" + first[1][0] + " " + first[1][1]);
                 log.info("\n" + second[0][0] + " " + second[0][1] + "\n" + second[1][0] + " " + second[1][1]);*/
@@ -86,17 +153,17 @@ public class DeadlockDetector {
                 break;
             }
             case MOVE_RIGHT : {
-                first[1][0] = CellContent.BOX;
-                first[1][1] = board.getSouth(box).getContent();
+                first[1][0] = box;
+                first[1][1] = board.getSouth(box);
                 Cell temp = board.getEast(box);
-                first[0][0] = temp.getContent();
-                first[0][1] = board.getSouth(temp).getContent();
+                first[0][0] = temp;
+                first[0][1] = board.getSouth(temp);
 
-                second[1][1] = CellContent.BOX;
-                second[1][0] = board.getNorth(box).getContent();
+                second[1][1] = box;
+                second[1][0] = board.getNorth(box);
                 temp = board.getEast(box);
-                second[0][1] = temp.getContent();
-                second[0][0] = board.getNorth(temp).getContent();
+                second[0][1] = temp;
+                second[0][0] = board.getNorth(temp);
 
 /*                log.info("\n" + first[0][0] + " " + first[0][1] + "\n" + first[1][0] + " " + first[1][1]);
                 log.info("\n" + second[0][0] + " " + second[0][1] + "\n" + second[1][0] + " " + second[1][1]);*/
@@ -104,34 +171,34 @@ public class DeadlockDetector {
                 break;
             }
             case MOVE_UP : {
-                first[1][0] = box.getContent();
-                first[0][0] = board.getNorth(box).getContent();
+                first[1][0] = box;
+                first[0][0] = board.getNorth(box);
                 Cell temp = board.getEast(box);
-                first[1][1] = temp.getContent();
-                first[0][1] = board.getNorth(temp).getContent();
+                first[1][1] = temp;
+                first[0][1] = board.getNorth(temp);
 
-                second[1][1] = box.getContent();
-                second[0][1] = board.getNorth(box).getContent();
+                second[1][1] = box;
+                second[0][1] = board.getNorth(box);
                 temp = board.getWest(box);
-                second[0][0] = temp.getContent();
-                second[1][0] = board.getNorth(temp).getContent();
+                second[0][0] = temp;
+                second[1][0] = board.getNorth(temp);
 
 /*                log.info("\n" + first[0][0] + " " + first[0][1] + "\n" + first[1][0] + " " + first[1][1]);
                 log.info("\n" + second[0][0] + " " + second[0][1] + "\n" + second[1][0] + " " + second[1][1]);*/
                 break;
             }
             case MOVE_DOWN : {
-                first[0][0] = CellContent.BOX;
-                first[1][0] = board.getSouth(box).getContent();
+                first[0][0] = box;
+                first[1][0] = board.getSouth(box);
                 Cell temp = board.getEast(box);
-                first[0][1] = temp.getContent();
-                first[1][1] = board.getSouth(temp).getContent();
+                first[0][1] = temp;
+                first[1][1] = board.getSouth(temp);
 
-                second[0][1] = CellContent.BOX;
-                second[1][1] = board.getSouth(box).getContent();
+                second[0][1] = box;
+                second[1][1] = board.getSouth(box);
                 temp = board.getEast(box);
-                second[0][0] = temp.getContent();
-                second[1][0] = board.getSouth(temp).getContent();
+                second[0][0] = temp;
+                second[1][0] = board.getSouth(temp);
 
 /*                log.info("\n" + first[0][0] + " " + first[0][1] + "\n" + first[1][0] + " " + first[1][1]);
                 log.info("\n" + second[0][0] + " " + second[0][1] + "\n" + second[1][0] + " " + second[1][1]);*/
@@ -139,81 +206,22 @@ public class DeadlockDetector {
             }
         }
 
-        Cell[][] third = new Cell[3][3];
-        switch (push) {
-            case MOVE_LEFT : {
-                third[0][0] = board.getNorth(box);
-                third[0][1] = board.getEast(third[0][0]);
-                third[0][2] = board.getEast(third[0][1]);
-
-                third[1][0] = box;
-                third[1][1] = board.getEast(box);
-                third[1][2] = board.getEast(third[1][1]);
-
-                third[2][0] = board.getSouth(box);
-                third[2][1] = board.getEast(third[2][0]);
-                third[2][2] = board.getEast(third[2][1]);
-
-                break;
-            }
-            case MOVE_RIGHT : {
-                third[0][2] = board.getNorth(box);
-                third[0][1] = board.getWest(third[0][2]);
-                third[0][0] = board.getWest(third[0][1]);
-
-                third[1][2] = box;
-                third[1][1] = board.getWest(box);
-                third[1][0] = board.getWest(third[1][1]);
-
-                third[2][2] = board.getSouth(box);
-                third[2][1] = board.getWest(third[2][2]);
-                third[2][0] = board.getWest(third[2][1]);
-
-                break;
-            }
-            case MOVE_UP : {
-                third[2][0] = board.getWest(box);
-                third[1][0] = board.getNorth(third[2][0]);
-                third[0][0] = board.getNorth(third[1][0]);
-
-                third[2][1] = box;
-                third[1][1] = board.getNorth(box);
-                third[0][1] = board.getNorth(third[1][1]);
-
-                third[2][2] = board.getEast(box);
-                third[1][2] = board.getNorth(third[2][2]);
-                third[0][2] = board.getNorth(third[1][2]);
-
-                break;
-            }
-            case MOVE_DOWN : {
-                third[0][0] = board.getWest(box);
-                third[1][0] = board.getSouth(third[0][0]);
-                third[2][0] = board.getSouth(third[1][0]);
-
-                third[0][1] = box;
-                third[1][1] = board.getSouth(box);
-                third[2][1] = board.getSouth(third[1][1]);
-
-                third[0][2] = board.getEast(box);
-                third[1][2] = board.getSouth(third[0][2]);
-                third[2][2] = board.getSouth(third[1][2]);
-
-                break;
+        //checking if all the box cells in the patterns are on a goal
+        //in these cases we can't prune anything because we might be pruning a solution
+        boolean allBoxesFirst = true;
+        boolean allBoxesSecond = true;
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j<2; j++) {
+                if (first[i][j].getContent() == CellContent.BOX && !first[i][j].isGoal())
+                    allBoxesFirst = false;
+                if (second[i][j].getContent() == CellContent.BOX && !second[i][j].isGoal())
+                    allBoxesSecond = false;
             }
         }
-        CellContent[][] newThird = new CellContent[3][3];
-        for (int i = 0; i<3; i++) {
-            for (int j = 0; j<3; j++) {
-                if (third[i][j] == null)
-                    return false;
+        if (allBoxesFirst) return false;
+        if (allBoxesSecond) return false;
 
-                newThird[i][j] = third[i][j].getContent();
-            }
-        }
-
-
-        if (tableCheck(first) || tableCheck(second) || tableCheck(newThird)) {
+        if (tableCheck(first) || tableCheck(second)) {
             prunedNodes++;
             return true;
         }
@@ -221,28 +229,15 @@ public class DeadlockDetector {
             return false;
     }
 
-    private static boolean tableCheck(CellContent[][] submatrix) {
+    private static boolean tableCheck(Cell[][] submatrix) {
 
         if (submatrix.length == 2) {
             for (CellContent[][] c : TwoTwoDeadlocks) {
-                if (c[0][0] == submatrix[0][0] && c[0][1] == submatrix[0][1] && c[1][0] == submatrix[1][0] && c[1][1] == submatrix[1][1])
+                if (c[0][0] == submatrix[0][0].getContent() && c[0][1] == submatrix[0][1].getContent() &&
+                        c[1][0] == submatrix[1][0].getContent() && c[1][1] == submatrix[1][1].getContent())
                     return true;
             }
             return false;
-        }
-        else if (submatrix.length == 3) {
-            for (CellContent[][] c : ThreeThreeDeadlocks) {
-
-                for (int i = 0; i<3; i++) {
-                    for (int j = 0; j<3; j++) {
-                        if (c[i][j] != submatrix[i][j])
-                            return false;
-                    }
-                }
-
-                log.info("3x3 pruning");
-                return true;
-            }
         }
 
         return false;
@@ -255,9 +250,6 @@ public class DeadlockDetector {
 */
     public static boolean isDeadPosition(GameBoard board) {
 
-        if (board.getLastMovedBox() == null)
-            return false;
-
         int boxNumber =  board.getLastMovedBox();
         Cell lastMoved = board.getBoxCells().get(boxNumber);
 
@@ -269,6 +261,8 @@ public class DeadlockDetector {
             return false;
     }
 
+
+    //OFFLINE OPERATIONS
 
     /*
         This method launches the search for dead positions before the search for solutions starts.
@@ -296,7 +290,8 @@ public class DeadlockDetector {
             for (j = 0; j < toSolve.getColumns(); j++) {
 
                 //we navigate every cell where a box could end up
-                if (board[i][j].getContent() == CellContent.EMPTY || board[i][j].getContent() == CellContent.SOKOBAN ) {
+                if ((board[i][j].getContent() == CellContent.EMPTY || board[i][j].getContent() == CellContent.SOKOBAN ) &&
+                    !board[i][j].isGoal()) {
 
                     //we put a box here (the rest of the board will be empty)
                     board[i][j].setContent(CellContent.BOX);
@@ -397,11 +392,6 @@ public class DeadlockDetector {
         return minimumFirst;
     }
 
-    public static void setRoutine(DDRoutine routine) {
-        DeadlockDetector.routine = routine;
-        deadCells.clear();
-    }
-
 /*
     Inserting some deadlocks into the lookup table
 */
@@ -422,81 +412,6 @@ public class DeadlockDetector {
                 CellContent.BOX, CellContent.BOX);
         TwoTwoDeadlocks.add(deadlock);
 
-        deadlock = parseDeadlock(CellContent.WALL, CellContent.WALL, CellContent.EMPTY,
-                CellContent.WALL, CellContent.EMPTY, CellContent.WALL,
-                CellContent.EMPTY, CellContent.BOX, CellContent.WALL);
-        ThreeThreeDeadlocks.add(deadlock);
-
-        deadlock = parseDeadlock(CellContent.WALL, CellContent.WALL, CellContent.EMPTY,
-                CellContent.WALL, CellContent.EMPTY, CellContent.WALL,
-                CellContent.EMPTY, CellContent.BOX, CellContent.BOX);
-        ThreeThreeDeadlocks.add(deadlock);
-
-        deadlock = parseDeadlock(CellContent.WALL, CellContent.WALL, CellContent.EMPTY,
-                CellContent.WALL, CellContent.EMPTY, CellContent.BOX,
-                CellContent.EMPTY, CellContent.BOX, CellContent.WALL);
-        ThreeThreeDeadlocks.add(deadlock);
-
-        deadlock = parseDeadlock(CellContent.WALL, CellContent.WALL, CellContent.EMPTY,
-                CellContent.WALL, CellContent.EMPTY, CellContent.BOX,
-                CellContent.EMPTY, CellContent.BOX, CellContent.BOX);
-        ThreeThreeDeadlocks.add(deadlock);
-
-        deadlock = parseDeadlock(CellContent.WALL, CellContent.BOX, CellContent.EMPTY,
-                CellContent.WALL, CellContent.EMPTY, CellContent.BOX,
-                CellContent.EMPTY, CellContent.BOX, CellContent.BOX);
-        ThreeThreeDeadlocks.add(deadlock);
-
-        deadlock = parseDeadlock(CellContent.BOX, CellContent.WALL, CellContent.EMPTY,
-                CellContent.WALL, CellContent.EMPTY, CellContent.BOX,
-                CellContent.EMPTY, CellContent.BOX, CellContent.BOX);
-        ThreeThreeDeadlocks.add(deadlock);
-
-        deadlock = parseDeadlock(CellContent.BOX, CellContent.BOX, CellContent.EMPTY,
-                CellContent.WALL, CellContent.EMPTY, CellContent.BOX,
-                CellContent.EMPTY, CellContent.BOX, CellContent.BOX);
-        ThreeThreeDeadlocks.add(deadlock);
-
-        deadlock = parseDeadlock(CellContent.WALL, CellContent.BOX, CellContent.EMPTY,
-                CellContent.BOX, CellContent.EMPTY, CellContent.BOX,
-                CellContent.EMPTY, CellContent.BOX, CellContent.BOX);
-        ThreeThreeDeadlocks.add(deadlock);
-
-        deadlock = parseDeadlock(CellContent.BOX, CellContent.BOX, CellContent.EMPTY,
-                CellContent.BOX, CellContent.EMPTY, CellContent.BOX,
-                CellContent.EMPTY, CellContent.BOX, CellContent.BOX);
-        ThreeThreeDeadlocks.add(deadlock);
-
-        deadlock = parseDeadlock(CellContent.EMPTY, CellContent.WALL, CellContent.EMPTY,
-                CellContent.WALL, CellContent.EMPTY, CellContent.WALL,
-                CellContent.WALL, CellContent.BOX, CellContent.WALL);
-        ThreeThreeDeadlocks.add(deadlock);
-
-        deadlock = parseDeadlock(CellContent.EMPTY, CellContent.WALL, CellContent.EMPTY,
-                CellContent.WALL, CellContent.EMPTY, CellContent.WALL,
-                CellContent.WALL, CellContent.BOX, CellContent.BOX);
-        ThreeThreeDeadlocks.add(deadlock);
-
-        deadlock = parseDeadlock(CellContent.EMPTY, CellContent.WALL, CellContent.EMPTY,
-                CellContent.WALL, CellContent.EMPTY, CellContent.BOX,
-                CellContent.WALL, CellContent.BOX, CellContent.WALL);
-        ThreeThreeDeadlocks.add(deadlock);
-
-        deadlock = parseDeadlock(CellContent.EMPTY, CellContent.WALL, CellContent.EMPTY,
-                CellContent.WALL, CellContent.EMPTY, CellContent.WALL,
-                CellContent.BOX, CellContent.BOX, CellContent.BOX);
-        ThreeThreeDeadlocks.add(deadlock);
-
-        deadlock = parseDeadlock(CellContent.EMPTY, CellContent.WALL, CellContent.EMPTY,
-                CellContent.WALL, CellContent.EMPTY, CellContent.BOX,
-                CellContent.BOX, CellContent.BOX, CellContent.BOX);
-        ThreeThreeDeadlocks.add(deadlock);
-
-        deadlock = parseDeadlock(CellContent.EMPTY, CellContent.BOX, CellContent.WALL,
-                CellContent.WALL, CellContent.BOX, CellContent.EMPTY,
-                CellContent.EMPTY, CellContent.EMPTY, CellContent.EMPTY);
-        ThreeThreeDeadlocks.add(deadlock);
-
         //rotating each deadlock 3 times to obtain the deadlocks in every possible orientation
         ArrayList<CellContent[][]> rotated = new ArrayList<>();
         for (CellContent[][] c : TwoTwoDeadlocks) {
@@ -510,35 +425,14 @@ public class DeadlockDetector {
         }
         TwoTwoDeadlocks.addAll(rotated);
 
-        rotated = new ArrayList<>();
-        for (CellContent[][] c : ThreeThreeDeadlocks) {
-            CellContent[][] temp;
-            temp = rotateDeadlock(c);
-            rotated.add(temp);
-            temp = rotateDeadlock(temp);
-            rotated.add(temp);
-            temp = rotateDeadlock(temp);
-            rotated.add(temp);
-        }
-        ThreeThreeDeadlocks.addAll(rotated);
-
     }
 
 /*
     Parses a varargs of cell contents into a matrix that's usable for lookups
 */
     private static CellContent[][] parseDeadlock(CellContent... content) {
-        CellContent[][] deadlock;
-        int mod;
-        if (content.length == 4) {
-            deadlock = new CellContent[2][2];
-            mod = 2;
-        }
-        else if (content.length == 9) {
-            deadlock = new CellContent[3][3];
-            mod = 3;
-        }
-        else return null;
+        int mod = (int) Math.sqrt(content.length);
+        CellContent[][] deadlock = new CellContent[mod][mod];
 
         int row=0, column=0;
         for (int i = 0; i < content.length; i++) {
@@ -573,6 +467,9 @@ public class DeadlockDetector {
         return result;
     }
 
+
+    //GETTERS AND SETTERS
+
     public static int getPrunedNodes() {
         return prunedNodes;
     }
@@ -580,4 +477,10 @@ public class DeadlockDetector {
     public static void setPrunedNodes(int prunedNodes) {
         DeadlockDetector.prunedNodes = prunedNodes;
     }
+
+    public static void setRoutine(DDRoutine routine) {
+        DeadlockDetector.routine = routine;
+        deadCells.clear();
+    }
+
 }

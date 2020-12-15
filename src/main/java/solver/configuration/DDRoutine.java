@@ -4,6 +4,7 @@ public enum DDRoutine {
     ALL_ROUTINES,
     LOOKUP_TABLES,
     DEAD_POSITIONS,
+    FROZEN_BOXES,
     NO_DEADLOCK_DETECTION;
 
     public static DDRoutine mapString(String toMap) {
@@ -13,6 +14,9 @@ public enum DDRoutine {
             }
             case "Check for dead positions" : {
                 return DDRoutine.DEAD_POSITIONS;
+            }
+            case "Check for frozen boxes" : {
+                return DDRoutine.FROZEN_BOXES;
             }
             case "Check in precomputed deadlock table" : {
                 return DDRoutine.LOOKUP_TABLES;
@@ -31,6 +35,9 @@ public enum DDRoutine {
             }
             case LOOKUP_TABLES : {
                 return "Check in precomputed deadlock table";
+            }
+            case FROZEN_BOXES : {
+                return "Check for frozen boxes";
             }
             case NO_DEADLOCK_DETECTION : {
                 return "No deadlock detection";

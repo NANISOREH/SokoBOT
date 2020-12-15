@@ -25,6 +25,10 @@ public class SMAStar {
         PriorityQueue<ExtendedNode> frontier = new PriorityQueue<ExtendedNode>(new Comparator<ExtendedNode>() {
             @Override
             public int compare(ExtendedNode extendedNode, ExtendedNode t1) {
+                //main criteria for insertion into the pqueue
+                //it will favor the lowest f(n) label value among the two nodes, but every node keeps
+                //the label value of his best child too, and that will be considered in the comparison, so that we can
+                //keep track of the nodes that were pruned to bound memory usage and rebuild pruned branches
                 int comparison = Integer.compare(Math.min(extendedNode.getLabel(), extendedNode.getBestChild()),
                         Math.min(t1.getLabel(), t1.getBestChild()));
 
@@ -80,24 +84,28 @@ public class SMAStar {
                     log.info("after pruning" + "\nfrontier " + frontier.size());
             }
 
-            if (innerCount % 100 == 0) {
-                log.info("Frontier size: " + frontier.size() + "\nVisited nodes: " + Node.getExaminedNodes());
-                SokobanSolver.setLogLine("Frontier size: " + frontier.size() + "\nVisited nodes: " + Node.getExaminedNodes());
-            }
+            SokobanSolver.setLogLine("Top f(n) value: " + Math.min(frontier.peek().getLabel(), frontier.peek().getBestChild()) +
+                    "\nFrontier size: " + frontier.size() + "\nVisited nodes: " + Node.getExaminedNodes());
         }
 
         return null;
     }
 
 
-    public static PriorityQueue pruneWorst(PriorityQueue<ExtendedNode> frontier, int amount) {
+    public static PriorityQueue pruneWorst(PriorityQueue<ExtendedNode> frontier, int amount) throws CloneNotSupportedException {
         PriorityQueue<ExtendedNode> newFrontier = new PriorityQueue<>(frontier.comparator());
         ExtendedNode temp;
+        int initialSize = frontier.size();
         int target = frontier.size() - amount;
 
-        for (int i=0; i < target; i++) {
+        int i;
+        for (i=0; i < target; i++) {
             temp = frontier.remove();
             newFrontier.add(new ExtendedNode(temp, temp.getParent(), temp.getLabel()));
+        }
+        for (i=0; i < initialSize - target; i++) {
+            temp = frontier.remove();
+            Node.forgetNode(temp);
         }
 
         return newFrontier;
