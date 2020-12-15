@@ -46,21 +46,7 @@ public class GreedyBFS {
             if (examined.getLabel() < topH) topH = examined.getLabel();
 
             if (examined.isGoal()) { //a solution was found
-                if (solution == null) { //first solution node reached
-                    solution = examined;
-                }
-                else if (solution != null && examined.getPathCost() < solution.getPathCost()) {
-                    //found a better solution than the one previously stored
-                    solution = examined;
-                }
-                else if (solution != null && examined.getPathCost() == solution.getPathCost()) {
-                    //this check gives a tie breaker: in case we're searching by pushes and we found two solutions
-                    //with the same number of pushes, we use the number of moves to discriminate
-                    if (examined.getActionHistory().size() < solution.getActionHistory().size())
-                        solution = examined;
-                }
-
-                continue;
+                return examined;
             }
 
             //expanding the current node and adding the resulting nodes to the frontier Pqueue
