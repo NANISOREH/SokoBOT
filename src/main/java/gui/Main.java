@@ -220,7 +220,7 @@ public class Main extends Application {
         manualGameplay = false;
         boardLayout = new VBox();
         boardLayout.setBackground(background);
-        boardLayout.setAlignment(Pos.TOP_CENTER);
+        boardLayout.setAlignment(Pos.CENTER);
         boardLayout.setSpacing(15);
 
         Level toLoad = new Level(levelValue);
@@ -241,9 +241,10 @@ public class Main extends Application {
 
         gameScene = new Scene(boardLayout, 1100, 800);
         Stage gameStage = new Stage();
-        gameStage.setScene(gameScene);
-        gameStage.setTitle("SokoBOT - Level " + level.getValue());
-        gameStage.show();
+        primaryStage.close();
+        primaryStage.setScene(gameScene);
+        primaryStage.setTitle("SokoBOT - Level " + level.getValue());
+        primaryStage.show();
 
         //Starting the thread that will execute the sokoban solver and actually move sokoban on the board
         Thread t1 = new Thread(() -> {
@@ -262,9 +263,11 @@ public class Main extends Application {
         executorService.scheduleAtFixedRate(Main::updateBoard, 0, 200, TimeUnit.MILLISECONDS);
 
         //You can click on the board to get back to the menu
-        gameBoard.setOnMouseClicked(keyEvent -> {
+        boardLayout.setOnMouseClicked(keyEvent -> {
             SokobanSolver.setSolution(null);
-            gameStage.close();
+            primaryStage.setTitle("SokoBOT");
+            primaryStage.setScene(menu);
+            primaryStage.show();
         });
     }
 
@@ -358,6 +361,7 @@ public class Main extends Application {
 
             if (SokobanSolver.getLogLine() != null)
                 text = text + SokobanSolver.getLogLine();
+
             result.setText(text);
         }
 

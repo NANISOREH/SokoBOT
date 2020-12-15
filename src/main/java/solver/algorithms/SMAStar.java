@@ -17,9 +17,11 @@ Implementation of a simple memory-bounded A* search
 */
 public class SMAStar {
     private static final Logger log = Logger.getLogger("SMAStar");
+    private static Node solution;
 
     public static Node launch(GameBoard game) throws CloneNotSupportedException {
 
+        solution = null;
         SokobanSolver.setLogLine("Frontier size: " + "\nVisited nodes: ");
         ExtendedNode root = new ExtendedNode(game, new ArrayList<>(), null, 0 + SokobanToolkit.estimateLowerBound(game));
         PriorityQueue<ExtendedNode> frontier = new PriorityQueue<ExtendedNode>(new Comparator<ExtendedNode>() {
@@ -55,7 +57,21 @@ public class SMAStar {
             ExtendedNode examined = frontier.remove();
 
             if (examined.isGoal()) { //a solution was found
-                return examined;
+                if (solution == null) { //first solution node reached
+                    solution = examined;
+                }
+                else if (solution != null && examined.getPathCost() < solution.getPathCost()) {
+                    //found a better solution than the one previously stored
+                    solution = examined;
+                }
+                else if (solution != null && examined.getPathCost() == solution.getPathCost()) {
+                    //this check gives a tie breaker: in case we're searching by pushes and we found two solutions
+                    //with the same number of pushes, we use the number of moves to discriminate
+                    if (examined.getActionHistory().size() < solution.getActionHistory().size())
+                        solution = examined;
+                }
+
+                continue;
             }
 
             //expanding the current node and adding the resulting nodes to the frontier Pqueue
@@ -63,8 +79,9 @@ public class SMAStar {
             for (Node n : expanded) {
                 //we assign the value f(n) = h(n) + g(n) to the label of the new nodes,
                 //meaning the sum of the path cost until this point plus the value of the heuristic function
-                ExtendedNode temp = new ExtendedNode(n, examined,1 + examined.getPathCost() +
-                        SokobanToolkit.estimateLowerBound(n.getGame()));
+
+                ExtendedNode temp = new ExtendedNode(n, examined, 1 + examined.getPathCost() +
+                            SokobanToolkit.estimateLowerBound(n.getGame()));
 
                 //storing the heuristic estimate of the best child of the current node:
                 //we will use it to determine if we have to regenerate pruned nodes
@@ -72,7 +89,8 @@ public class SMAStar {
                     examined.setBestChild(temp.getLabel());
 
                 //adding the newly generated note to the frontier
-                frontier.add(temp);
+                if (!frontier.contains(temp))
+                    frontier.add(temp);
             }
 
             //running out of memory, we're pruning a bunch of nodes from the frontier
@@ -84,11 +102,12 @@ public class SMAStar {
                     log.info("after pruning" + "\nfrontier " + frontier.size());
             }
 
-            SokobanSolver.setLogLine("Top f(n) value: " + Math.min(frontier.peek().getLabel(), frontier.peek().getBestChild()) +
+            if (frontier.peek() != null)
+                SokobanSolver.setLogLine("Top f(n) value: " + Math.min(frontier.peek().getLabel(), frontier.peek().getBestChild()) +
                     "\nFrontier size: " + frontier.size() + "\nVisited nodes: " + Node.getExaminedNodes());
         }
 
-        return null;
+        return solution;
     }
 
 

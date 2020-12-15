@@ -16,6 +16,11 @@ public class DeadlockDetector {
     private static ArrayList<Cell> deadCells = new ArrayList<>();
     private static ArrayList<CellContent[][]> TwoTwoDeadlocks = new ArrayList<>();
 
+    //this structure will contain, for every box involved in a freeze deadlock, a boolean meaning whether or not
+    //these boxes are on a goal cell. If every goal cell involved in a freeze deadlock are on a goal cell (no false values)
+    //said boxes are deadlocked but we don't mind, since they're already on goal.
+    private static ArrayList<Boolean> frozenBoxesOnGoal = new ArrayList<>();
+
 /*
     Facade method that the client launches to get the deadlock detection routines asked by configuring the routine variable.
     Intuitively, it returns true if a deadlock was found
@@ -28,15 +33,37 @@ public class DeadlockDetector {
 
         switch (routine) {
             case ALL_ROUTINES : {
+
                 if (isDeadPosition(board)) return true;
                 else if (isInDeadlockTable(board)) return true;
-                else return isFrozenBox(board.getBoxCells().get(board.getLastMovedBox()), (GameBoard) board.clone());
+                else if (isFrozenBox(board.getBoxCells().get(board.getLastMovedBox()), (GameBoard) board.clone())) {
+                    //the box is certainly frozen, but we first have to check if the freeze deadlock involves boxes
+                    //that aren't on a goal cell
+                    if (frozenBoxesOnGoal.contains(false)) {
+                        frozenBoxesOnGoal.clear();
+                        prunedNodes++;
+                        return true;
+                    }
+                    frozenBoxesOnGoal.clear();
+                }
+                return false;
+
             }
             case LOOKUP_TABLES: {
                 return isInDeadlockTable(board);
             }
             case FROZEN_BOXES : {
-                return isFrozenBox(board.getBoxCells().get(board.getLastMovedBox()), (GameBoard) board.clone());
+
+                if (isFrozenBox(board.getBoxCells().get(board.getLastMovedBox()), (GameBoard) board.clone())) {
+                    if (frozenBoxesOnGoal.contains(false)) {
+                        frozenBoxesOnGoal.clear();
+                        prunedNodes++;
+                        return true;
+                    }
+                    frozenBoxesOnGoal.clear();
+                }
+                return false;
+
             }
             case NO_DEADLOCK_DETECTION: {
                 return false;
@@ -53,9 +80,7 @@ public class DeadlockDetector {
     //ONLINE OPERATIONS
 
     private static boolean isFrozenBox(Cell box, GameBoard board) throws CloneNotSupportedException {
-        boolean frozen = false;
-
-        if (box.isGoal()) return false;
+        boolean frozen;
 
         //Horizontal checks
         frozen = isHorizontallyFrozen(box, board);
@@ -82,8 +107,13 @@ public class DeadlockDetector {
             box.setContent(CellContent.BOX);
         }
 
+        //the box passed both horizontal and vertical checks, it's frozen
         if (frozen) {
-            prunedNodes++;
+            //for every box that's declared frozen, we keep track of whether said box is on a goal or not
+            //if all of the boxes touched by this freeze deadlock are on a goal, it's not a real deadlock
+            if (box.isGoal()) frozenBoxesOnGoal.add(true);
+            else frozenBoxesOnGoal.add(false);
+
             return true;
         }
         else return false;

@@ -7,23 +7,24 @@ import solver.Node;
 import solver.SokobanSolver;
 import solver.SokobanToolkit;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class IDAStar {
     private static final Logger log = Logger.getLogger("IDASTAR");
-    private static Node solution = null;
+    private static Node solution;
     private static int newLimit;
     private static TreeSet<Long> transpositionTableCopy = new TreeSet<>();
     private static boolean memoryFull = false;
 
     //these two hashmaps are used as a cache to avoid re-exploring the lower levels in iterative deepening
-    private static ArrayList<ExtendedNode> cache = new ArrayList<>();
-    private static ArrayList<ExtendedNode> candidateCache = new ArrayList<>();
+    private static ArrayList<ExtendedNode> cache;
+    private static ArrayList<ExtendedNode> candidateCache;
 
     public static Node launch(GameBoard game) throws CloneNotSupportedException {
+        newLimit = Integer.MAX_VALUE;
+        cache = new ArrayList<>();
+        candidateCache = new ArrayList<>();
 
         SokobanSolver.setLogLine("f(n) cutoff point: 0" + "\nVisited nodes: " + Node.getExaminedNodes() +
                 "\nCached nodes: " + (cache.size() + candidateCache.size()));
@@ -70,7 +71,6 @@ public class IDAStar {
 
             }
 
-
             //If we found a solution in this iteration, we put out the garbage and then return it
             if (solution != null && solution.getActionHistory().size() > 0) {
                 transpositionTableCopy.clear();
@@ -106,18 +106,20 @@ public class IDAStar {
         //if the memory allows it, this node will be in the cache for the next iteration
         if (root.getLabel() > limit && !memoryFull) {
             if (cache.size() + candidateCache.size() < SokobanToolkit.MAX_NODES) {
+                //this node will be cached
                 candidateCache.add(root);
+
+                if (root.getLabel() < newLimit)
+                    newLimit = root.getLabel();
             }
             else {
+                //no more space, we clean the thing and start from the last cached frontier
                 memoryFull = true;
                 log.info("NO MORE MEMORY");
                 candidateCache.clear();
                 newLimit = limit;
                 return;
             }
-
-            if (root.getLabel() < newLimit)
-                newLimit = root.getLabel();
 
             return;
         }
@@ -127,12 +129,39 @@ public class IDAStar {
             return;
         }
 
+        //this queue will keep the expanded batch of nodes ordered
+        PriorityQueue<ExtendedNode> queue = new PriorityQueue<ExtendedNode>(new Comparator<ExtendedNode>() {
+            @Override
+            public int compare(ExtendedNode extendedNode, ExtendedNode t1) {
+                //main criteria for insertion into the pqueue
+                //it will favor the lowest f(n) label value among the two nodes
+                int comparison = Integer.compare(extendedNode.getLabel(), t1.getLabel());
+
+                //tie breaker: inertia
+                if (comparison == 0 && extendedNode.getParent() != null && t1.getParent() != null)
+                    comparison = SokobanToolkit.compareByInertia(extendedNode, t1, extendedNode.getParent(), t1.getParent());
+
+                //tie breaker: heuristics without the path cost
+                if (comparison == 0)
+                    comparison = Integer.compare(extendedNode.getLabel() - extendedNode.getPathCost(),
+                            t1.getLabel() - t1.getPathCost());
+
+                return comparison;
+            }
+        });
+
         //expanding the current node and launching the search on its children
-        ArrayList<Node> expanded = SokobanToolkit.orderByInertia(root, (ArrayList<Node>) root.expand());
+        //ordered by their labels
+        ArrayList<Node> expanded = (ArrayList<Node>) root.expand();
         for (Node n : expanded) {
-            recursiveComponent(new ExtendedNode(n, root,1 + root.getPathCost() +
-                    SokobanToolkit.estimateLowerBound(n.getGame())), limit);
+            queue.add(new ExtendedNode(n, root, 1 + n.getPathCost() +
+                    SokobanToolkit.estimateLowerBound(n.getGame())));
         }
+        int size = queue.size();
+        for (int i = 0; i < size; i++) {
+            recursiveComponent(queue.remove(), limit);
+        }
+
     }
 
 }
