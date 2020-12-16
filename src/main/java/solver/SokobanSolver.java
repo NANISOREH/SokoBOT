@@ -65,7 +65,11 @@ public class SokobanSolver {
                 break;
             }
             case SMASTAR : {
-                solution = SMAStar.launch((GameBoard) toSolve.clone());
+                solution = SMAstar.launch((GameBoard) toSolve.clone());
+                break;
+            }
+            case ASTAR:  {
+                solution = VanillaAStar.launch((GameBoard) toSolve.clone());
                 break;
             }
             case GBFS : {

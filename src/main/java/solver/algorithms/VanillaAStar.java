@@ -1,3 +1,4 @@
+
 package solver.algorithms;
 
 import game.GameBoard;
@@ -6,42 +7,59 @@ import solver.Node;
 import solver.SokobanSolver;
 import solver.SokobanToolkit;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.PriorityQueue;
 import java.util.logging.Logger;
 
-public class GreedyBFS {
-    private static final Logger log = Logger.getLogger("BestFirst");
+/*
+Implementation of a simple memory-bounded A* search
+*/
+public class VanillaAStar {
+    private static final Logger log = Logger.getLogger("SMAStar");
+
+    //This structure will keep track of transpositions and current best label of corresponding nodes.
+    //It's the only way to have a fast lookup for items in the PQueue with a label that must be updated.
+    //The alternative was using a structure that supported arbitrary access to items and just going for get(object)
+    //for any expanded node. But these would all be linear time lookups and it was very slow.
+    //This way I can do O(1) lookups to check if there's need to update the label
+    //and then I only need the linear time access if the check is positive.
+    private static HashMap<Long, Integer> accounting = new HashMap<>();
 
     public static Node launch(GameBoard game) throws CloneNotSupportedException {
-
         //for this algorithm I need to manage transpositions manually rather than letting the Node class do it
         Node.setManageTransposition(false);
 
-        //This structure will keep track of transpositions and current best label of corresponding nodes.
-        //It's the only way to have a fast lookup for items in the PQueue with a label that must be updated.
-        //The alternative was using a structure that supported arbitrary access to items and just going for get(object)
-        //for any expanded node. But these would all be linear time lookups and it was very slow.
-        //This way I can do O(1) lookups to check if there's need to update the label
-        //and then I only need the linear time access if the check is positive.
-        HashMap<Long, Integer> accounting = new HashMap<>();
-
         SokobanSolver.setLogLine("Top h(n) value: " + "\nFrontier size: 0" + "\nNumber of visited nodes: " + Node.getExaminedNodes());
-        int topH = Integer.MAX_VALUE;
         ExtendedNode root = new ExtendedNode(game, new ArrayList<>(), null, SokobanToolkit.estimateLowerBound(game));
+        int branchingFactor = game.getBoxCells().size() * 4;
 
         //comparing criteria for the PQueue ordering
-        Comparator c = (Comparator<ExtendedNode>) (extendedNode, t1) -> {
-            int comparison = Integer.compare(extendedNode.getLabel(), t1.getLabel());
+        PriorityQueue<ExtendedNode> frontier = new PriorityQueue<ExtendedNode>(new Comparator<ExtendedNode>() {
+            @Override
+            public int compare(ExtendedNode extendedNode, ExtendedNode t1) {
+                //main criteria for insertion into the pqueue
+                //it will favor the lowest f(n) label value among the two nodes, but every node keeps
+                //the label value of his best child too, and that will be considered in the comparison, so that we can
+                //keep track of the nodes that were pruned to bound memory usage and rebuild pruned branches
+                int comparison = Integer.compare(Math.min(extendedNode.getLabel(), extendedNode.getBestChild()),
+                        Math.min(t1.getLabel(), t1.getBestChild()));
 
-            //tie breaker: inertia
-            if (comparison == 0 && extendedNode.getParent() != null && t1.getParent() != null)
-                comparison = SokobanToolkit.compareByInertia(extendedNode, t1, extendedNode.getParent(), t1.getParent());
+                //tie breaker: inertia
+                if (comparison == 0 && extendedNode.getParent() != null && t1.getParent() != null)
+                    comparison = SokobanToolkit.compareByInertia(extendedNode, t1, extendedNode.getParent(), t1.getParent());
 
-            return comparison;
-        };
+                //tie breaker: heuristics without the path cost
+                if (comparison == 0)
+                    comparison = Integer.compare(extendedNode.getLabel() - extendedNode.getPathCost(),
+                            t1.getLabel() - t1.getPathCost());
 
-        //Creating the PQueue and inserting the root node in both the queue and the accounting structure
-        PriorityQueue<ExtendedNode> frontier = new PriorityQueue<>(c);
+                return comparison;
+            }
+        });
+
+        //Inserting the root node in both the queue and the accounting structure
         frontier.add(root);
         accounting.put(root.getHash(), root.getLabel());
 
@@ -55,9 +73,6 @@ public class GreedyBFS {
             Node.transpose(examined.getHash());
             accounting.remove(examined.getHash());
 
-            //storing the top h(n) value for logging purposes
-            if (examined.getLabel() < topH) topH = examined.getLabel();
-
             //SOLUTION
             if (examined.isGoal()) {
                 Node.setManageTransposition(true);
@@ -67,9 +82,8 @@ public class GreedyBFS {
             //expanding the current node and adding the resulting nodes to the frontier Pqueue
             ArrayList<ExtendedNode> expanded = (ArrayList<ExtendedNode>) examined.expand();
             for (Node n : expanded) {
-
                 //we assign the value of the heuristic h(n) to the label of the new nodes,
-                ExtendedNode temp = new ExtendedNode(n, examined, SokobanToolkit.estimateLowerBound(n.getGame()));
+                ExtendedNode temp = new ExtendedNode(n, examined, n.getPathCost() + SokobanToolkit.estimateLowerBound(n.getGame()));
 
                 if (Node.isTransposed(temp.getHash())) continue;
 
@@ -88,15 +102,19 @@ public class GreedyBFS {
                     frontier.add(temp);
                     accounting.put(temp.getHash(), temp.getLabel());
                 }
+
             }
 
             //logging
-            SokobanSolver.setLogLine("Best h(n) value encountered: " + topH + "\nFrontier size: "
-                    + frontier.size() + "\nNumber of visited nodes: " + Node.getExaminedNodes());
+            if (frontier.peek() != null)
+                SokobanSolver.setLogLine("Top f(n) value: " + Math.min(frontier.peek().getLabel(), frontier.peek().getBestChild()) +
+                        "\nFrontier size: " + frontier.size() + "\nVisited nodes: " + Node.getExaminedNodes());
 
         }
 
         return null;
     }
-
 }
+
+
+

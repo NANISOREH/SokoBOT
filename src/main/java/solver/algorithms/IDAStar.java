@@ -87,20 +87,6 @@ public class IDAStar {
         SokobanSolver.setLogLine("f(n) cutoff point: " + limit + "\nVisited nodes: " + Node.getExaminedNodes() +
                 "\nCached nodes: " + (cache.size() + candidateCache.size()));
 
-        if (root.isGoal()) {
-            if (solution == null) {
-                solution = (Node) root.clone();
-            }
-            else if (root.getPathCost() < solution.getPathCost()) {
-                solution = (Node) root.clone();
-            }
-            else if (root.getPathCost() == solution.getPathCost()) {
-                if (root.getActionHistory().size() < solution.getActionHistory().size())
-                    solution = (Node) root.clone();
-            }
-            return;
-        }
-
         //we surpassed the current heuristic estimate, so we stop the recursion and update the limit
         //the new limit will be the lowest f(n) value among those who surpassed the current limit
         //if the memory allows it, this node will be in the cache for the next iteration
@@ -159,9 +145,28 @@ public class IDAStar {
         }
         int size = queue.size();
         for (int i = 0; i < size; i++) {
-            recursiveComponent(queue.remove(), limit);
+            if (isSolution(queue.peek())) return;
+            else recursiveComponent(queue.remove(), limit);
         }
 
+    }
+
+    private static boolean isSolution(Node n) {
+        if (n.isGoal()) {
+            if (solution == null) {
+                solution = n;
+            }
+            else if (solution != null && n.getPathCost() < solution.getPathCost()) {
+                solution = n;
+            }
+            else if (solution != null && n.getPathCost() == solution.getPathCost()) {
+                if (n.getActionHistory().size() < solution.getActionHistory().size())
+                    solution = n;
+            }
+            return true;
+        }
+
+        return false;
     }
 
 }
