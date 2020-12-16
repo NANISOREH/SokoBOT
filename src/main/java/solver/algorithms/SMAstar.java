@@ -9,15 +9,23 @@ import solver.SokobanToolkit;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.PriorityQueue;
-import java.util.TreeSet;
 import java.util.logging.Logger;
 
 /*
 Implementation of a simple memory-bounded A* search
 */
-public class SMAStar {
+public class SMAstar {
     private static final Logger log = Logger.getLogger("SMAStar");
+
+    //This structure will keep track of transpositions and current best label of corresponding nodes.
+    //It's the only way to have a fast lookup for items in the PQueue with a label that must be updated.
+    //The alternative was using a structure that supported arbitrary access to items and just going for get(object)
+    //for any expanded node. But these would all be linear time lookups and it was very slow.
+    //This way I can do O(1) lookups to check if there's need to update the label
+    //and then I only need the linear time access if the check is positive.
+    private static HashMap<Long, Integer> accounting = new HashMap<>();
 
     public static Node launch(GameBoard game) throws CloneNotSupportedException {
 
@@ -76,6 +84,7 @@ public class SMAStar {
                 //adding the newly generated note to the frontier
                 if (!frontier.contains(temp))
                     frontier.add(temp);
+
             }
 
             //running out of memory, we're pruning a bunch of nodes from the frontier
@@ -109,7 +118,8 @@ public class SMAStar {
         }
         for (i=0; i < initialSize - target; i++) {
             temp = frontier.remove();
-            Node.forgetNode(temp);
+            //Node.untranspose(temp);
+            accounting.remove(temp.getHash());
         }
 
         return newFrontier;

@@ -191,7 +191,9 @@ public class Main extends Application {
         menu = new Scene(layout, 600, 700);
 
         //The button on the first scene triggers the switch to the gameplay scene and starts the game
-        button.setOnAction(actionEvent -> {configureGame(primaryStage);});
+        button.setOnAction(actionEvent -> {
+            configureGame(primaryStage);
+        });
 
         //Closing the application when the window gets closed
         primaryStage.setOnCloseRequest(t -> {
@@ -216,14 +218,19 @@ public class Main extends Application {
         schemeValue = scheme.getValue();
         levelValue = level.getValue();
         routineValue = routine.getValue();
+        Level toLoad = new Level(levelValue);
 
         manualGameplay = false;
+        SokobanSolver.setSolution(null);
+        SokobanSolver.setLogLine(null);
+        isSearching = true;
+        isShowing = false;
+
         boardLayout = new VBox();
         boardLayout.setBackground(background);
         boardLayout.setAlignment(Pos.CENTER);
         boardLayout.setSpacing(15);
 
-        Level toLoad = new Level(levelValue);
         Label label1 = new Label("Requires " + toLoad.getBestSolution() + " moves and " +
                 toLoad.getMinPushes() + " pushes");
         label1.setMaxHeight(60);
@@ -238,9 +245,8 @@ public class Main extends Application {
         gameBoard = createBoard(game);
 
         boardLayout.getChildren().addAll(label1, gameBoard, result);
-
         gameScene = new Scene(boardLayout, 1100, 800);
-        Stage gameStage = new Stage();
+
         primaryStage.close();
         primaryStage.setScene(gameScene);
         primaryStage.setTitle("SokoBOT - Level " + level.getValue());
@@ -264,7 +270,6 @@ public class Main extends Application {
 
         //You can click on the board to get back to the menu
         boardLayout.setOnMouseClicked(keyEvent -> {
-            SokobanSolver.setSolution(null);
             primaryStage.setTitle("SokoBOT");
             primaryStage.setScene(menu);
             primaryStage.show();

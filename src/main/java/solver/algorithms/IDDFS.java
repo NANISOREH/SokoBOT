@@ -109,20 +109,7 @@ public class IDDFS {
         SokobanSolver.setLogLine("Depth cutoff point: " + Node.getDepth() + "\nVisited nodes: " + Node.getExaminedNodes() +
                 "\nCached nodes: " + (cache.size() + candidateCache.size()));
 
-        //solution checking
-        if (root.isGoal()) {
-            if (solution == null) {
-                solution = root;
-            }
-            else if (solution != null && root.getPathCost() < solution.getPathCost()) {
-                solution = root;
-            }
-            else if (solution != null && root.getPathCost() == solution.getPathCost()) {
-                if (root.getActionHistory().size() < solution.getActionHistory().size())
-                    solution = root;
-            }
-            return;
-        }
+        if (isSolution(root)) return;
 
         //if we reached the bottom without finding a solution, the search will stop and
         //(if the memory allows it) this node will be in the cache for the next iteration
@@ -148,9 +135,28 @@ public class IDDFS {
 
         //recursively calling this method on root's children, lowering by one the depth they are allowed to explore
         for (Node n : expanded) {
-            recursiveComponent(n, limit - 1);
+            if (isSolution(n)) return;
+            else recursiveComponent(n, limit - 1);
         }
 
+    }
+
+    private static boolean isSolution(Node n) {
+        if (n.isGoal()) {
+            if (solution == null) {
+                solution = n;
+            }
+            else if (solution != null && n.getPathCost() < solution.getPathCost()) {
+                solution = n;
+            }
+            else if (solution != null && n.getPathCost() == solution.getPathCost()) {
+                if (n.getActionHistory().size() < solution.getActionHistory().size())
+                    solution = n;
+            }
+            return true;
+        }
+
+        return false;
     }
 
 }

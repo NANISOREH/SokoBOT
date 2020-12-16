@@ -23,6 +23,10 @@ The class also stores a transposition table of the visited nodes as a static var
 public class Node {
     private static Logger log = Logger.getLogger("Node");
     protected static TreeSet<Long> transpositionTable = new TreeSet<>();
+    //by setting this variable you choose if the node expansion methods automatically manage transpositions
+    //you can just disable it and see your search crawl or manage transpositions manually by calling Node.transpose(n)
+    private static boolean manageTransposition = true;
+    //maximum depth reached by the search at a certain point in time
     protected static int depth;
     protected static ExpansionScheme expansionScheme;
     protected GameBoard game;
@@ -43,8 +47,8 @@ public class Node {
     This way, it doesn't have to be hardcoded into the algorithms and it can be switched at runtime.
 */
     public Collection<? extends Node> expand() throws CloneNotSupportedException {
-        if (actionHistory.isEmpty() && !Node.transpositionTable.contains(this.hash()))
-            Node.transpositionTable.add(this.hash());
+        if (actionHistory.isEmpty())
+            transpose();
 
         if (expansionScheme == ExpansionScheme.MOVE_BASED)
             return this.expandByMoves();
@@ -80,8 +84,8 @@ public class Node {
                 //if that's true, the actions involved in reaching the box and pushing it can be carried out
                 //after that, we let the deadlock detector do its job
                 if (push (down, neighbour, Action.MOVE_DOWN)) {
-                    if (!transpositionTable.contains(down.hash())) {
-                        transpositionTable.add(down.hash());
+                    if (!down.isTransposed()) {
+                        down.transpose();
                         expanded.add(down);
                     }
                 }
@@ -97,8 +101,8 @@ public class Node {
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
                 if (push (up, neighbour, Action.MOVE_UP)) {
-                    if (!transpositionTable.contains(up.hash())) {
-                        transpositionTable.add(up.hash());
+                    if (!up.isTransposed()) {
+                        up.transpose();
                         expanded.add(up);
                     }
                 }
@@ -111,8 +115,8 @@ public class Node {
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
                 if (push (left, neighbour, Action.MOVE_LEFT)) {
-                    if (!transpositionTable.contains(left.hash())) {
-                        transpositionTable.add(left.hash());
+                    if (!left.isTransposed()) {
+                        left.transpose();
                         expanded.add(left);
                     }
                 }
@@ -126,8 +130,8 @@ public class Node {
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
                 if (push (right, neighbour, Action.MOVE_RIGHT)) {
-                    if (!transpositionTable.contains(right.hash())) {
-                        transpositionTable.add(right.hash());
+                    if (!right.isTransposed()) {
+                        right.transpose();
                         expanded.add(right);
                     }
                 }
@@ -178,12 +182,12 @@ public class Node {
         Node first = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         first.setPushesNumber(this.pushesNumber);
         //Checkin if the move is legal and we execute it, then we check if the generated state was already discovered
-        if (executeMove(first, Action.MOVE_DOWN) && !transpositionTable.contains(first.hash())) {
+        if (executeMove(first, Action.MOVE_DOWN) && !first.isTransposed()) {
             expanded.add(first);
             //If we reached a new maximum depth in the search, we keep note of it in depth. a static variable of Node
             if (first.getActionHistory().size() > depth)
                 depth = first.getActionHistory().size();
-            transpositionTable.add(first.hash());
+            first.transpose();
         }
 
         //Same as before with other directions.
@@ -191,31 +195,31 @@ public class Node {
 
         Node second = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         second.setPushesNumber(this.pushesNumber);
-        if (executeMove(second, Action.MOVE_UP) && !transpositionTable.contains(second.hash())) {
+        if (executeMove(second, Action.MOVE_UP) && !second.isTransposed()) {
             expanded.add(second);
             if (second.getActionHistory().size() > depth)
                 depth = second.getActionHistory().size();
-            transpositionTable.add(second.hash());
+            second.transpose();
         }
 
         Node third = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         third.setPushesNumber(this.pushesNumber);
-        if (executeMove(third, Action.MOVE_LEFT) && !transpositionTable.contains(third.hash())) {
+        if (executeMove(third, Action.MOVE_LEFT) && !third.isTransposed()) {
 
             expanded.add(third);
             if (third.getActionHistory().size() > depth)
                 depth = third.getActionHistory().size();
-            transpositionTable.add(third.hash());
+            third.transpose();
         }
 
         Node fourth = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         fourth.setPushesNumber(this.pushesNumber);
-        if (executeMove(fourth, Action.MOVE_RIGHT)&& !transpositionTable.contains(fourth.hash())) {
+        if (executeMove(fourth, Action.MOVE_RIGHT)&& !fourth.isTransposed()) {
 
             expanded.add(fourth);
             if (fourth.getActionHistory().size() > depth)
                 depth = fourth.getActionHistory().size();
-            transpositionTable.add(fourth.hash());
+            fourth.transpose();
         }
 
         return expanded;
@@ -248,6 +252,16 @@ public class Node {
         }
         else
             return false;
+    }
+
+    private boolean isTransposed() throws CloneNotSupportedException {
+        return transpositionTable.contains(this.hash());
+    }
+
+    private void transpose() throws CloneNotSupportedException {
+        if (manageTransposition) {
+            transpositionTable.add(this.hash());
+        }
     }
 
     /*
@@ -326,6 +340,33 @@ public class Node {
     }
 
 /*
+    Adds a node to the transposition table by passing the node to transpose
+*/
+    public static void transpose (Node n) throws CloneNotSupportedException {
+        transpositionTable.add(n.hash());
+    }
+/*
+    Adds a node to the transposition table by passing the hashed value directly
+*/
+    public static void transpose (Long v) throws CloneNotSupportedException {
+        transpositionTable.add(v);
+    }
+
+    public static boolean isTransposed (Node n) throws CloneNotSupportedException {
+        return transpositionTable.contains(n.hash());
+    }
+
+    public static boolean isTransposed (Long hash) throws CloneNotSupportedException {
+        return transpositionTable.contains(hash);
+    }
+
+    public static void untranspose(Node n) throws CloneNotSupportedException {
+        if (transpositionTable.contains(n.hash())) {
+            transpositionTable.remove(n.hash());
+        }
+    }
+
+/*
 Returns the cost of the path in the search tree up until this node
 */
     public int getPathCost() {
@@ -338,12 +379,6 @@ Returns the cost of the path in the search tree up until this node
             }
         }
         return -1;
-    }
-
-    public int compare(Node extendedNode) {
-        int comparison = Integer.compare(this.getPathCost(), extendedNode.getPathCost());
-
-        return comparison;
     }
 
     public boolean isGoal() {
@@ -405,10 +440,12 @@ Returns the cost of the path in the search tree up until this node
         this.pushesNumber = pushesNumber;
     }
 
-    public static void forgetNode (Node n) throws CloneNotSupportedException {
-        if (transpositionTable.contains(n.hash())) {
-            transpositionTable.remove(n.hash());
-        }
+    public static boolean isTranspositionManaged() {
+        return manageTransposition;
+    }
+
+    public static void setManageTransposition(boolean manageTransposition) {
+        Node.manageTransposition = manageTransposition;
     }
 
     @Override
