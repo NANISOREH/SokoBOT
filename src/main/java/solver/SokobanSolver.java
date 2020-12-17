@@ -22,7 +22,7 @@ public class SokobanSolver {
     private static Logger log = Logger.getLogger("SokobanSolver");
     private static Node solution = null;
     private static double timeElapsed;
-    private static String logLine = "";
+    private static String logLine;
 /*
     Static method that acts as a façade between the client and the actual algorithms.
     It takes a GameBoard configured with the level to solve, and the strategy chosen by the client to solve it,
@@ -30,6 +30,7 @@ public class SokobanSolver {
 */
     public static void solve(GameBoard toSolve, Configuration configuration) throws InterruptedException, CloneNotSupportedException {
 
+        logLine = "\n\n";
         solution = null;
         Long start;
 
@@ -47,8 +48,10 @@ public class SokobanSolver {
         start = Instant.now().toEpochMilli();
 
         //Precomputes dead positions before starting the search, if required
-        if (configuration.getRoutine() == DDRoutine.ALL_ROUTINES || configuration.getRoutine() == DDRoutine.DEAD_POSITIONS)
+        if (configuration.getRoutine() == DDRoutine.ALL_ROUTINES || configuration.getRoutine() == DDRoutine.DEAD_POSITIONS) {
             DeadlockDetector.handleDeadPositions((GameBoard) toSolve.clone());
+            logLine = "\n\nComputing dead positions";
+        }
 
         //Starting the search with the required algorithm
         switch (configuration.getStrategy()) {
@@ -121,8 +124,11 @@ public class SokobanSolver {
     }
 
     public static int getSolutionPushes() {
-        if (solution != null && solution.getActionHistory().size() > 0)
+        if (solution != null && solution.getActionHistory().size() > 0) {
+
             return solution.getPushesNumber();
+
+        }
         else
             return -1;
     }

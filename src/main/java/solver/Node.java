@@ -180,7 +180,6 @@ public class Node {
         ArrayList<Node> expanded = new ArrayList<>();
 
         Node first = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
-        first.setPushesNumber(this.pushesNumber);
         //Checkin if the move is legal and we execute it, then we check if the generated state was already discovered
         if (executeMove(first, Action.MOVE_DOWN) && !first.isTransposed()) {
             expanded.add(first);
@@ -194,7 +193,6 @@ public class Node {
         //Generalizing this stuff to avoid repeated code is possible but not worth the time investment.
 
         Node second = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
-        second.setPushesNumber(this.pushesNumber);
         if (executeMove(second, Action.MOVE_UP) && !second.isTransposed()) {
             expanded.add(second);
             if (second.getActionHistory().size() > depth)
@@ -203,7 +201,6 @@ public class Node {
         }
 
         Node third = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
-        third.setPushesNumber(this.pushesNumber);
         if (executeMove(third, Action.MOVE_LEFT) && !third.isTransposed()) {
 
             expanded.add(third);
@@ -213,7 +210,6 @@ public class Node {
         }
 
         Node fourth = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
-        fourth.setPushesNumber(this.pushesNumber);
         if (executeMove(fourth, Action.MOVE_RIGHT)&& !fourth.isTransposed()) {
 
             expanded.add(fourth);
@@ -248,6 +244,7 @@ public class Node {
                     return true;
                 }
             }
+            node.pushesNumber = this.pushesNumber;
             return true;
         }
         else

@@ -1,7 +1,6 @@
 package game;
 
 import com.google.gson.Gson;
-import gui.Main;
 
 import java.io.*;
 import java.util.logging.Logger;

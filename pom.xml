@@ -35,7 +35,7 @@
                     <noManPages>true</noManPages>
                     <launcher>launcher</launcher>
                     <jlinkImageName>output</jlinkImageName>
-                    <mainClass>gui.Main</mainClass>
+                    <mainClass>gui.MainMenu</mainClass>
                 </configuration>
             </plugin>
             <plugin>
@@ -51,7 +51,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>gui.Main</mainClass>
+                                    <mainClass>gui.MainMenu</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
