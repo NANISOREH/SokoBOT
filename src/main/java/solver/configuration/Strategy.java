@@ -1,7 +1,7 @@
 package solver.configuration;
 
 public enum Strategy {
-    BFS, IDDFS, GBFS, ASTAR, SMASTAR, IDASTAR;
+    BFS, IDDFS, GBFS, ASTAR, IDASTAR;
 
     public static Strategy mapString(String toMap) {
         switch (toMap) {
@@ -16,9 +16,6 @@ public enum Strategy {
             }
             case "Vanilla A*" : {
                 return Strategy.ASTAR;
-            }
-            case "Simplified Memory Bounded A*" : {
-                return Strategy.SMASTAR;
             }
             case "Iterative Deepening A*" : {
                 return Strategy.IDASTAR;
@@ -40,9 +37,6 @@ public enum Strategy {
             }
             case ASTAR : {
                 return ("Vanilla A*");
-            }
-            case SMASTAR : {
-                return ("Simplified Memory Bounded A*");
             }
             case GBFS: {
                 return ("Greedy Best First Search");

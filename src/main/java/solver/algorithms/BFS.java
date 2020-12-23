@@ -11,10 +11,10 @@ import java.util.logging.Logger;
 /*
 Implementation of a simple BFS search
 */
-public class BFS {
+public class BFS extends Algorithm{
     private static Logger log = Logger.getLogger("BFS");
 
-    public static Node launch(GameBoard game) throws CloneNotSupportedException {
+    public Node launch(GameBoard game) throws CloneNotSupportedException {
 
         SokobanSolver.setLogLine("Depth level 0" + "\nFront size: 0" +"\nExplored nodes: 0");
 

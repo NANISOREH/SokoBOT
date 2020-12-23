@@ -16,7 +16,7 @@ Implementation of a DFS search with Iterative Deepening and a couple of optimiza
 namely move ordering by inertia and caching of the lower depths of the search to speed up the initial part of the search.
 TODO: test move ordering, right now it seems to have no effect
 */
-public class IDDFS {
+public class IDDFS extends Algorithm{
     private static Logger log = Logger.getLogger("IDDFS");
     private static Node solution = null;
     private static TreeSet<Long> transpositionTableCopy = new TreeSet<>();
@@ -27,7 +27,7 @@ public class IDDFS {
     private static ArrayList<Node> cache = new ArrayList<>();
     private static ArrayList<Node> candidateCache = new ArrayList<>();
 
-    public static Node launch(GameBoard game) throws CloneNotSupportedException {
+    public Node launch(GameBoard game) throws CloneNotSupportedException {
 
         SokobanSolver.setLogLine("Depth cutoff point: " + Node.getDepth() + "\nVisited nodes: " + Node.getExaminedNodes() +
                 "\nCached nodes: " + (cache.size() + candidateCache.size()));
@@ -70,6 +70,8 @@ public class IDDFS {
 
             //Launching the DFS on every element in the cache.
             for (Node n : cache) {
+                if (solution != null) break;
+
                 //In case memory is full we will start with a cached frontier as a starting point
                 //so we'll set the depth of the recursion to the depth limit minus the current depth.
                 //Also, if it's the first iteration we will go as deep as the lower bound of the solution
@@ -128,6 +130,7 @@ public class IDDFS {
             candidateCache.clear();
             return;
         }
+
         //creating the children of the current root node
         ArrayList<Node> expanded = (ArrayList<Node>) root.expand();
         //ordering by inertia if move ordering was selected by the client

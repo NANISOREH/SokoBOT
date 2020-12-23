@@ -12,7 +12,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Text;
 import solver.DeadlockDetector;
 import solver.Node;
 import solver.SokobanSolver;
@@ -20,7 +19,7 @@ import solver.configuration.Strategy;
 
 import java.util.logging.Logger;
 
-public class BoardView {
+public class BoardHandler {
     private static final Logger log = Logger.getLogger("Board");
     protected static Rectangle[][] tiles;
     protected static Image sokoban;
@@ -124,24 +123,21 @@ public class BoardView {
             SolverView.result.setText(MainMenu.algorithmValue + " found a solution in " + moves + " moves - " + pushes + " pushes.\n\n" +
                     Node.getExaminedNodes() + " unique game states were examined.\n" +
                     "Time elapsed: " + SokobanSolver.getTimeElapsed() + " seconds\n" +
-                    "Branches pruned by the Deadlock Detector: " + DeadlockDetector.getPrunedNodes());
+                    "Branches pruned by the Deadlock Detector: " + DeadlockDetector.getPrunedNodes() + "\n");
             if (SokobanSolver.getSolution() == null) isShowing = false;
         }
         else if (!MainMenu.manualGameplay && isSearching) {
-                Platform.runLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        String text = "Search in progress. The solution will be demonstrated after the computation.\n" +
-                                "\nAlgorithm: " + MainMenu.algorithmValue +
-                                "\nExpansion scheme: " + MainMenu.schemeValue;
-                        if (MainMenu.algorithmValue != Strategy.mapStrategy(Strategy.BFS))
-                            text += "\nHeuristic evaluation: " + MainMenu.heuristicValue + "\n\n";
-                        else
-                            text += "\n\n";
+                Platform.runLater(() -> {
+                    String text = "Search in progress. The solution will be demonstrated after the computation.\n" +
+                            "\nAlgorithm: " + MainMenu.algorithmValue +
+                            "\nExpansion scheme: " + MainMenu.schemeValue;
+                    if (MainMenu.algorithmValue != Strategy.mapStrategy(Strategy.BFS))
+                        text += "\nHeuristic evaluation: " + MainMenu.heuristicValue + "\n\n";
+                    else
+                        text += "\n\n";
 
-                        text = text + SokobanSolver.getLogLine();
-                        SolverView.result.setText(text);
-                    }
+                    text = text + SokobanSolver.getLogLine();
+                    SolverView.result.setText(text);
                 });
 
         }

@@ -9,10 +9,10 @@ import solver.SokobanToolkit;
 import java.util.*;
 import java.util.logging.Logger;
 
-public class GreedyBFS {
+public class GreedyBFS extends Algorithm{
     private static final Logger log = Logger.getLogger("BestFirst");
 
-    public static Node launch(GameBoard game) throws CloneNotSupportedException {
+    public Node launch(GameBoard game) throws CloneNotSupportedException {
 
         //for this algorithm I need to manage transpositions manually rather than letting the Node class do it
         Node.setManageTransposition(false);
@@ -44,6 +44,7 @@ public class GreedyBFS {
         PriorityQueue<ExtendedNode> frontier = new PriorityQueue<>(c);
         frontier.add(root);
         accounting.put(root.getHash(), root.getLabel());
+        Node.transpose(root);
 
         //Main loop of the algorithm, we're only going to break it if we found a solution or if the frontier is empty,
         for (int innerCount = 0; !frontier.isEmpty(); innerCount++) {
@@ -52,7 +53,6 @@ public class GreedyBFS {
             ExtendedNode examined = frontier.remove();
             //We put the node we just popped into the transposition table so that it never gets visited again
             //and we remove it from the accounting structure
-            Node.transpose(examined.getHash());
             accounting.remove(examined.getHash());
 
             //storing the top h(n) value for logging purposes
@@ -71,10 +71,15 @@ public class GreedyBFS {
                 //we assign the value of the heuristic h(n) to the label of the new nodes,
                 ExtendedNode temp = new ExtendedNode(n, examined, SokobanToolkit.estimateLowerBound(n.getGame()));
 
-                if (Node.isTransposed(temp.getHash())) continue;
+                //SOLUTION
+                if (temp.isGoal()) {
+                    Node.setManageTransposition(true);
+                    return temp;
+                }
 
                 //checking if the expanded node is already in the frontier with a worse label
                 if (accounting.containsKey(temp.getHash()) && temp.getLabel() < accounting.get(temp.getHash())) {
+                    log.info("PROVA");
                     //we remove the node from the frontier and insert it again with the new label
                     //because the PQueue does not support arbitrary access to just get the entry and edit the label field
                     if (frontier.remove(temp)) {
@@ -83,10 +88,11 @@ public class GreedyBFS {
                     }
 
                 }
-                else {
+                else if (!Node.isTransposed(temp.getHash())){
                     //this node is not present in both the frontier and the transposition table, so we just add it
                     frontier.add(temp);
                     accounting.put(temp.getHash(), temp.getLabel());
+                    Node.transpose(temp);
                 }
             }
 

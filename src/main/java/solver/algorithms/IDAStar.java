@@ -10,7 +10,7 @@ import solver.SokobanToolkit;
 import java.util.*;
 import java.util.logging.Logger;
 
-public class IDAStar {
+public class IDAStar extends Algorithm{
     private static final Logger log = Logger.getLogger("IDASTAR");
     private static Node solution;
     private static int newLimit;
@@ -21,7 +21,7 @@ public class IDAStar {
     private static ArrayList<ExtendedNode> cache;
     private static ArrayList<ExtendedNode> candidateCache;
 
-    public static Node launch(GameBoard game) throws CloneNotSupportedException {
+    public Node launch(GameBoard game) throws CloneNotSupportedException {
         newLimit = Integer.MAX_VALUE;
         cache = new ArrayList<>();
         candidateCache = new ArrayList<>();
@@ -57,7 +57,10 @@ public class IDAStar {
             //the limit will be raised inside the recursive component and stored in newLimit
             if (!memoryFull) candidateCache = new ArrayList<>();
             for (ExtendedNode n : cache) {
-                recursiveComponent(n, limit);
+                if (solution == null)
+                    recursiveComponent(n, limit);
+                else
+                    break;
             }
             limit = newLimit;
 
@@ -115,6 +118,8 @@ public class IDAStar {
             return;
         }
 
+        if (isSolution(root)) return;
+
         //this queue will keep the expanded batch of nodes ordered
         PriorityQueue<ExtendedNode> queue = new PriorityQueue<ExtendedNode>(new Comparator<ExtendedNode>() {
             @Override
@@ -145,8 +150,7 @@ public class IDAStar {
         }
         int size = queue.size();
         for (int i = 0; i < size; i++) {
-            if (isSolution(queue.peek())) return;
-            else recursiveComponent(queue.remove(), limit);
+            recursiveComponent(queue.remove(), limit);
         }
 
     }

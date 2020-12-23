@@ -147,6 +147,7 @@ public class MainMenu extends Application {
         Button button = new Button("Start computation");
         button.setBackground(new Background(new BackgroundFill(Color.TOMATO, null, null)));
         button.setPrefSize(150, 30);
+        button.setAlignment(Pos.CENTER);
 
 
         //Configuring main layout and adding it to the menu scene
