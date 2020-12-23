@@ -8,6 +8,6 @@
     ["W","W","W","E","E","W","W","E","E","E","E","W"],
     ["W","W","W","W","W","W","W","W","W","W","W","W"]
   ],
-  "bestSolution" : 104,
+  "bestSolution" : 102,
   "minPushes" : 36
 }

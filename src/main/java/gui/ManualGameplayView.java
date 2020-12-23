@@ -30,8 +30,8 @@ public class ManualGameplayView {
         toLoad = new Level(MainMenu.levelValue);
 
         game = new GameBoard(toLoad);
-        GridPane gameBoard = BoardView.createBoard(game);
-        BoardView.isShowing = true;
+        GridPane gameBoard = BoardHandler.createBoard(game);
+        BoardHandler.isShowing = true;
 
         Text inGame = new Text();
         inGame.setText("Moves: " + moves + "\n\n\n");
@@ -58,7 +58,7 @@ public class ManualGameplayView {
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
-                    BoardView.updateBoard(game, toLoad);
+                    BoardHandler.updateBoard(game, toLoad);
                     break;
                 }
                 case DOWN : {
@@ -70,7 +70,7 @@ public class ManualGameplayView {
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
-                    BoardView.updateBoard(game, toLoad);
+                    BoardHandler.updateBoard(game, toLoad);
                     break;
                 }
                 case RIGHT : {
@@ -82,7 +82,7 @@ public class ManualGameplayView {
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
-                    BoardView.updateBoard(game, toLoad);
+                    BoardHandler.updateBoard(game, toLoad);
                     break;
                 }
                 case LEFT : {
@@ -94,7 +94,7 @@ public class ManualGameplayView {
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
-                    BoardView.updateBoard(game, toLoad);
+                    BoardHandler.updateBoard(game, toLoad);
                     break;
                 }
                 case R : {

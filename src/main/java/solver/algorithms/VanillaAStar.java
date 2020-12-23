@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 /*
 Implementation of a simple memory-bounded A* search
 */
-public class VanillaAStar {
+public class VanillaAStar extends Algorithm{
     private static final Logger log = Logger.getLogger("SMAStar");
 
     //This structure will keep track of transpositions and current best label of corresponding nodes.
@@ -27,7 +27,7 @@ public class VanillaAStar {
     //and then I only need the linear time access if the check is positive.
     private static HashMap<Long, Integer> accounting = new HashMap<>();
 
-    public static Node launch(GameBoard game) throws CloneNotSupportedException {
+    public Node launch(GameBoard game) throws CloneNotSupportedException {
         //for this algorithm I need to manage transpositions manually rather than letting the Node class do it
         Node.setManageTransposition(false);
 
@@ -59,18 +59,17 @@ public class VanillaAStar {
             }
         });
 
-        //Inserting the root node in both the queue and the accounting structure
+        //Inserting the root node in the queue, in the accounting structure and the transposition table
         frontier.add(root);
         accounting.put(root.getHash(), root.getLabel());
+        Node.transpose(root);
 
         //Main loop of the algorithm, we're only going to break it if we found a solution or if the frontier is empty,
         for (int innerCount = 0; !frontier.isEmpty(); innerCount++) {
 
             //We pop the node with the best heuristic estimate off the PQueue
             ExtendedNode examined = frontier.remove();
-            //We put the node we just popped into the transposition table so that it never gets visited again
-            //and we remove it from the accounting structure
-            Node.transpose(examined.getHash());
+            //We remove the node we just popped from the accounting structure
             accounting.remove(examined.getHash());
 
             //SOLUTION
@@ -85,7 +84,11 @@ public class VanillaAStar {
                 //we assign the value of the heuristic h(n) to the label of the new nodes,
                 ExtendedNode temp = new ExtendedNode(n, examined, n.getPathCost() + SokobanToolkit.estimateLowerBound(n.getGame()));
 
-                if (Node.isTransposed(temp.getHash())) continue;
+                //SOLUTION
+                if (temp.isGoal()) {
+                    Node.setManageTransposition(true);
+                    return temp;
+                }
 
                 //checking if the expanded node is already in the frontier with a worse label
                 if (accounting.containsKey(temp.getHash()) && temp.getLabel() < accounting.get(temp.getHash())) {
@@ -97,10 +100,11 @@ public class VanillaAStar {
                     }
 
                 }
-                else {
+                else if (!Node.isTransposed(temp.getHash())){
                     //this node is not present in both the frontier and the transposition table, so we just add it
                     frontier.add(temp);
                     accounting.put(temp.getHash(), temp.getLabel());
+                    Node.transpose(temp);
                 }
 
             }

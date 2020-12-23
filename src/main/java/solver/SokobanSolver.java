@@ -54,37 +54,15 @@ public class SokobanSolver {
         }
 
         //Starting the search with the required algorithm
-        switch (configuration.getStrategy()) {
-            case BFS : {
-                solution = BFS.launch((GameBoard) toSolve.clone());
-                break;
-            }
-            case IDDFS : {
-                solution = IDDFS.launch((GameBoard) toSolve.clone());
-                break;
-            }
-            case IDASTAR : {
-                solution = IDAStar.launch((GameBoard) toSolve.clone());
-                break;
-            }
-            case SMASTAR : {
-                solution = SMAstar.launch((GameBoard) toSolve.clone());
-                break;
-            }
-            case ASTAR:  {
-                solution = VanillaAStar.launch((GameBoard) toSolve.clone());
-                break;
-            }
-            case GBFS : {
-                solution = GreedyBFS.launch((GameBoard) toSolve.clone());
-            }
-        }
+        Algorithm chosen = Algorithm.getInstance(configuration.getStrategy());
+        solution = chosen.launch((GameBoard) toSolve.clone());
+
+        //Stopping the clock
         timeElapsed = (double) (Instant.now().toEpochMilli() - start) / 1000;
 
+        //Showing the list of actions in the console and executing the corresponding moves on the board
         ArrayList<Action> solutionActions = new ArrayList<>();
         if (solution != null) solutionActions = solution.getActionHistory();
-
-        //Showing the list of actions in the console and executing the corresponding moves on the board
         if (!solutionActions.isEmpty()) {
             logLine = "";
             log.info("Solution found in " + solutionActions.size() + " moves!");
@@ -104,7 +82,10 @@ public class SokobanSolver {
             log.info("number of examined nodes: " + Node.getExaminedNodes());
         }
     }
-    
+
+/*
+    Obtains the list of actions in the solution node, or null if there's no solution available
+*/
     public static ArrayList<Action> getSolution() {
         if (solution != null && solution.getActionHistory().size() > 0)
             return solution.getActionHistory();
@@ -112,10 +93,9 @@ public class SokobanSolver {
             return null;
     }
 
-    public static void setSolution(Node solution) {
-        SokobanSolver.solution = solution;
-    }
-
+/*
+    Obtains the number of moves required by the solution, or a negative value if there's no solution available
+*/
     public static int getSolutionMoves() {
         if (solution != null && solution.getActionHistory().size() > 0)
             return solution.getActionHistory().size();
@@ -123,14 +103,21 @@ public class SokobanSolver {
             return -1;
     }
 
+/*
+    Obtains the number of pushes required by the solution, or a negative value if there's no solution available
+*/
     public static int getSolutionPushes() {
         if (solution != null && solution.getActionHistory().size() > 0) {
-
             return solution.getPushesNumber();
-
         }
         else
             return -1;
+    }
+
+    //A bunch of standard getters and setters
+
+    public static void setSolution(Node solution) {
+        SokobanSolver.solution = solution;
     }
 
     public static double getTimeElapsed() {

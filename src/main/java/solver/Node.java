@@ -252,7 +252,10 @@ public class Node {
     }
 
     private boolean isTransposed() throws CloneNotSupportedException {
-        return transpositionTable.contains(this.hash());
+        if (isTranspositionManaged())
+            return transpositionTable.contains(this.hash());
+        else
+            return false;
     }
 
     private void transpose() throws CloneNotSupportedException {

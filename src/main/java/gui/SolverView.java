@@ -34,9 +34,8 @@ public class SolverView {
         toLoad = new Level(MainMenu.levelValue);
         MainMenu.manualGameplay = false;
         SokobanSolver.setSolution(null);
-        SokobanSolver.setLogLine(null);
-        BoardView.isSearching = true;
-        BoardView.isShowing = false;
+        BoardHandler.isSearching = true;
+        BoardHandler.isShowing = false;
 
         boardLayout = new VBox();
         boardLayout.setBackground(MainMenu.background);
@@ -54,7 +53,7 @@ public class SolverView {
 
         //Creating, configuring and finally setting the scene for the game itself
         game = new GameBoard(toLoad);
-        GridPane gameBoard = BoardView.createBoard(game);
+        GridPane gameBoard = BoardHandler.createBoard(game);
 
         //Configuring back button
         back = new Button("Go back to Menu");
@@ -77,7 +76,7 @@ public class SolverView {
             try {
                 //Launching the solver with the configuration specified by the UI elements
                 game = new GameBoard(toLoad);
-                BoardView.isSearching = true;
+                BoardHandler.isSearching = true;
                 SokobanSolver.solve(game, Configuration.getInstance(MainMenu.schemeValue, MainMenu.algorithmValue,
                         MainMenu.heuristicValue, MainMenu.routineValue));
             } catch (InterruptedException | CloneNotSupportedException e1) {
@@ -91,14 +90,17 @@ public class SolverView {
         executorService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                BoardView.updateBoard(game, toLoad);
+                BoardHandler.updateBoard(game, toLoad);
             }
         }, 0, 200, TimeUnit.MILLISECONDS);
 
-        //You can click on the board to get back to the menu
+        //You can click on the button to get back to the menu
         back.setOnMouseClicked(keyEvent -> {
-            BoardView.isShowing = false;
-            BoardView.isSearching = false;
+            BoardHandler.isShowing = false;
+            BoardHandler.isSearching = false;
+            game = null;
+            result = null;
+            SokobanSolver.setSolution(null);
             moves = 0;
             pushes = 0;
             primaryStage.close();
