@@ -10,8 +10,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-import static java.lang.StrictMath.abs;
-
 /*
     Actor class that solves a sokoban puzzle.
     This class's responsibility is to take "orders" from the client, executing the preliminary operations for the algorithm's

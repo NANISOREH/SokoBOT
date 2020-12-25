@@ -1,5 +1,8 @@
 package gui;
 
+import java.util.ArrayList;
+import java.util.logging.Logger;
+
 import game.Action;
 import game.GameBoard;
 import game.Level;
@@ -12,14 +15,18 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import solver.DeadlockDetector;
+import solver.Node;
 import solver.SokobanSolver;
 import solver.configuration.DDRoutine;
+import solver.configuration.ExpansionScheme;
 
 public class ManualGameplayView {
+    private static final Logger log = Logger.getLogger("manualGameplayView");
     private static Level toLoad;
     private static GameBoard game;
     private static int moves = 0;
     protected static VBox boardLayout;
+    static Node test;
 
     static void start() throws CloneNotSupportedException {
         boardLayout = new VBox();
@@ -47,6 +54,10 @@ public class ManualGameplayView {
         DeadlockDetector.handleDeadPositions((GameBoard) game.clone());
         DeadlockDetector.setPrunedNodes(0);
 
+        Node.setExpansionScheme(ExpansionScheme.PUSH_BASED);
+        test = new Node(game, new ArrayList<>());
+        log.info("hash " + test.hash());
+
         gameStage.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
             switch (keyEvent.getCode()) {
                 case UP : {
@@ -55,6 +66,8 @@ public class ManualGameplayView {
                             if (game.takeAction(Action.MOVE_UP))
                                 moves++;
                         }
+                        test = new Node(game, new ArrayList<>());
+                        log.info("hash " + test.hash());                        
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
@@ -67,30 +80,36 @@ public class ManualGameplayView {
                             if (game.takeAction(Action.MOVE_DOWN))
                                 moves++;
                         }
+                        test = new Node(game, new ArrayList<>());
+                        log.info("hash " + test.hash());     
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
                     BoardHandler.updateBoard(game, toLoad);
                     break;
                 }
-                case RIGHT : {
-                    try {
+                case RIGHT : {                 
+                    try {                         
                         if (DeadlockDetector.getPrunedNodes()==0 && !game.checkVictory()) {
                             if (game.takeAction(Action.MOVE_RIGHT))
                                 moves++;
                         }
+                        test = new Node(game, new ArrayList<>());
+                        log.info("hash " + test.hash());                             
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
                     BoardHandler.updateBoard(game, toLoad);
                     break;
                 }
-                case LEFT : {
-                    try {
+                case LEFT : {                    
+                    try {                     
                         if (DeadlockDetector.getPrunedNodes()==0 && !game.checkVictory()) {
                             if (game.takeAction(Action.MOVE_LEFT))
                                 moves++;
                         }
+                        test = new Node(game, new ArrayList<>());
+                        log.info("hash " + test.hash());                           
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }

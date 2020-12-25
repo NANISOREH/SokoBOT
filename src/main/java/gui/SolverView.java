@@ -20,22 +20,22 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/*
+This class configures the UI of the solver part of the program.
+It starts both the actual solver instance and the board drawing methods.
+*/
 public class SolverView {
     private static Level toLoad;
     private static GameBoard game;
     private static VBox boardLayout;
     protected static Text result;
     protected static Button back;
-    private static int moves;
-    private static int pushes;
 
     protected static void start(Stage primaryStage) {
 
         toLoad = new Level(MainMenu.levelValue);
         MainMenu.manualGameplay = false;
         SokobanSolver.setSolution(null);
-        BoardHandler.isSearching = true;
-        BoardHandler.isShowing = false;
 
         boardLayout = new VBox();
         boardLayout.setBackground(MainMenu.background);
@@ -76,7 +76,6 @@ public class SolverView {
             try {
                 //Launching the solver with the configuration specified by the UI elements
                 game = new GameBoard(toLoad);
-                BoardHandler.isSearching = true;
                 SokobanSolver.solve(game, Configuration.getInstance(MainMenu.schemeValue, MainMenu.algorithmValue,
                         MainMenu.heuristicValue, MainMenu.routineValue));
             } catch (InterruptedException | CloneNotSupportedException e1) {
@@ -101,8 +100,6 @@ public class SolverView {
             game = null;
             result = null;
             SokobanSolver.setSolution(null);
-            moves = 0;
-            pushes = 0;
             primaryStage.close();
             primaryStage.setTitle("SokoBOT");
             primaryStage.setScene(MainMenu.menu);

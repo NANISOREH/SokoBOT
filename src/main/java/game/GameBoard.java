@@ -54,6 +54,7 @@ public class GameBoard implements Cloneable{
                     board[i][j].setGoal(true);
                     goalCells.add(board[i][j]);
                 }
+                //Constructing the hashmap for the boxes and marking the cells themselves with the boxes' numbers
                 else if (parsed[i][j].equals(CellContent.BOX)) {
                     board[i][j].setBoxNumber(countBoxes);
                     boxCells.put(countBoxes, board[i][j]);

@@ -7,38 +7,38 @@ import solver.SokobanSolver;
 import solver.SokobanToolkit;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
 /*
 Implementation of a DFS search with Iterative Deepening and a couple of optimization,
 namely move ordering by inertia and caching of the lower depths of the search to speed up the initial part of the search.
-TODO: test move ordering, right now it seems to have no effect
 */
 public class IDDFS extends Algorithm{
     private static Logger log = Logger.getLogger("IDDFS");
-    private static Node solution = null;
-    private static TreeSet<Long> transpositionTableCopy = new TreeSet<>();
+    private static Node solution;
+    private static TreeSet<Long> transpositionTableCopy;
     private static int depthCopy;
-    private static boolean memoryFull = false;
+    private static boolean memoryFull;
 
     //these two hashmaps are used as a cache to avoid re-exploring the lower levels in iterative deepening
-    private static ArrayList<Node> cache = new ArrayList<>();
-    private static ArrayList<Node> candidateCache = new ArrayList<>();
+    private static ArrayList<Node> cache;
+    private static ArrayList<Node> candidateCache;
 
     public Node launch(GameBoard game) throws CloneNotSupportedException {
 
-        SokobanSolver.setLogLine("Depth cutoff point: " + Node.getDepth() + "\nVisited nodes: " + Node.getExaminedNodes() +
-                "\nCached nodes: " + (cache.size() + candidateCache.size()));
-
+        //initializing variables, adding root node to the cache, starting with the initial lower bound of the solution
+        //as the first limit for the iterative deepening
+        cache = new ArrayList<>();
+        candidateCache = new ArrayList<>();
+        transpositionTableCopy = new TreeSet<>();
+        memoryFull = false;
         solution = null;
         Node root = new Node(game, new ArrayList<>());
         if (root.isGoal()) return root;
         cache.add(root);
         int lowerBound = SokobanToolkit.estimateLowerBound(game);
         int limit = lowerBound;
-        log.info("The lower bound estimate is: " + limit);
 
         //Iterative deepening cycle
         for (int count = 0; true; count++) {
@@ -144,6 +144,7 @@ public class IDDFS extends Algorithm{
 
     }
 
+    //checks for the solution and updates the solution static variable if we didn't already find a better one
     private static boolean isSolution(Node n) {
         if (n.isGoal()) {
             if (solution == null) {

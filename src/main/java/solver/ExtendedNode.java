@@ -4,6 +4,7 @@ import game.Action;
 import game.GameBoard;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 /*
 This class extends a node by adding fields that are needed for informed search algorithms
@@ -11,7 +12,6 @@ This class extends a node by adding fields that are needed for informed search a
 public class ExtendedNode extends Node{
     private Node parent;
     private int label;
-    private int bestChild;
     private Long hash = 0L;
 
     //constructs a new extended node from scratch
@@ -19,7 +19,6 @@ public class ExtendedNode extends Node{
         super(game, actions);
         this.parent = parent;
         this.label = label;
-        this.bestChild = Integer.MAX_VALUE;
         if (!Node.isTranspositionManaged()) this.hash = this.hash();
         else this.hash = null;
     }
@@ -30,7 +29,6 @@ public class ExtendedNode extends Node{
         this.setPushesNumber(node.getPushesNumber());
         this.parent = parent;
         this.label = label;
-        this.bestChild = Integer.MAX_VALUE;
         if (!Node.isTranspositionManaged()) this.hash = this.hash();
         else this.hash = null;
     }
@@ -51,19 +49,53 @@ public class ExtendedNode extends Node{
         this.label = label;
     }
 
-    public int getBestChild() {
-        return bestChild;
-    }
-
-    public void setBestChild(int bestChild) {
-        this.bestChild = bestChild;
-    }
-
     public Long getHash () throws CloneNotSupportedException {
         if (hash != null)
             return hash;
         else
             return hash();
+    }
+
+    // Wraps node.expand() and converts the resulting nodes into expandedNodes
+    @Override
+    public Collection<? extends Node> expand() throws CloneNotSupportedException {
+        ArrayList<Node> nodes = (ArrayList<Node>) super.expand();
+        ArrayList<ExtendedNode> exNodes = new ArrayList<>();
+
+        for (Node n : nodes) {
+            exNodes.add(new ExtendedNode(n, this, 0));
+        }
+
+        return exNodes;
+    }
+
+    //Compare method to give a PQueue ordering criteria for greedy best-first search
+    public static int gbfsCompare(ExtendedNode extendedNode, ExtendedNode t1) {
+        int comparison = Integer.compare(extendedNode.getLabel(), t1.getLabel());
+
+            //tie breaker: inertia
+            if (comparison == 0 && extendedNode.getParent() != null && t1.getParent() != null)
+                comparison = SokobanToolkit.compareByInertia(extendedNode, t1, extendedNode.getParent(), t1.getParent());
+
+            return comparison;
+    }
+
+    //Compare method to give a PQueue ordering criteria for A* search
+    public static int astarCompare(ExtendedNode extendedNode, ExtendedNode t1) {
+        //main criteria for insertion into the pqueue
+        //it will favor the lowest f(n) label value among the two nodes
+        int comparison = Integer.compare(extendedNode.getLabel(), t1.getLabel());
+
+        //tie breaker: inertia
+        if (comparison == 0 && extendedNode.getParent() != null && t1.getParent() != null)
+            comparison = SokobanToolkit.compareByInertia(extendedNode, t1, extendedNode.getParent(), t1.getParent());
+
+        //tie breaker: heuristics without the path cost
+        if (comparison == 0)
+            comparison = Integer.compare(extendedNode.getLabel() - extendedNode.getPathCost(),
+                    t1.getLabel() - t1.getPathCost());
+
+        return comparison;
     }
 
     @Override

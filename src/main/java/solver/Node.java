@@ -307,17 +307,15 @@ public class Node {
         //if we're working with push based expansion scheme things are a little more complex
         //we need to save every position reachable by sokoban in the state transposition
         //because two states are equal only if the boxes are in the same places and sokoban can reach the same cells
-        ArrayList<Cell> reachableCells;
+        byte[] reachableCells;
         if (expansionScheme == ExpansionScheme.PUSH_BASED) {
             bytes.clear();
-            reachableCells = SokobanToolkit.getReachableCells(cloned);
 
-            for (int j=0; j<reachableCells.size(); j++) {
-                try {
-                    bytes.add(reachableCells.get(j).toBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            try {
+                reachableCells = SokobanToolkit.getReachableCells((GameBoard) this.getGame().clone());
+                bytes.add(reachableCells);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
             for (byte[] array : bytes) {
