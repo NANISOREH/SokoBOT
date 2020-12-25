@@ -11,6 +11,7 @@ import static java.lang.StrictMath.abs;
 This class models a cell on the board
 */
 public class Cell implements Cloneable, Serializable {
+    private static final long serialVersionUID = 1287497637042323985L;
     private int row;
     private int column;
     private CellContent content;
@@ -104,7 +105,7 @@ public class Cell implements Cloneable, Serializable {
                 cloned.content = CellContent.EMPTY;
                 break;
             }
-
+            default : break;
         }
 
         return cloned;

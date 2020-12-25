@@ -77,7 +77,10 @@ public class DeadlockDetector {
     }
 
 
-    //ONLINE OPERATIONS
+    
+    
+    
+    //FROZEN BOXES
 
     private static boolean isFrozenBox(Cell box, GameBoard board) throws CloneNotSupportedException {
         boolean frozen;
@@ -139,139 +142,10 @@ public class DeadlockDetector {
         return false;
     }
 
-    private static boolean isInDeadlockTable(GameBoard board) {
-        
-        Cell box = board.getBoxCells().get(board.getLastMovedBox());
 
-/*        log.info(board.getSokobanCell() + "");
-        log.info(box + "");*/
 
-        Action push = null;
-        if (board.getNorth(box).getContent() == CellContent.SOKOBAN)
-            push = Action.MOVE_DOWN;
-        else if (board.getSouth(box).getContent() == CellContent.SOKOBAN)
-            push = Action.MOVE_UP;
-        else if (board.getEast(box).getContent() == CellContent.SOKOBAN)
-            push = Action.MOVE_LEFT;
-        else if (board.getWest(box).getContent() == CellContent.SOKOBAN)
-            push = Action.MOVE_RIGHT;
 
-/*
-        log.info(push + "\n");
-*/
-
-        Cell[][] first = new Cell[2][2];
-        Cell[][] second = new Cell[2][2];
-
-        switch (push) {
-            case MOVE_LEFT : {
-                first[1][0] = box;
-                first[1][1] = board.getNorth(box);
-                Cell temp = board.getWest(box);
-                first[0][0] = temp;
-                first[0][1] = board.getNorth(temp);
-
-                second[1][1] = box;
-                second[1][0] = board.getSouth(box);
-                temp = board.getWest(box);
-                second[0][1] = temp;
-                second[0][0] = board.getSouth(temp);
-
-/*                log.info("\n" + first[0][0] + " " + first[0][1] + "\n" + first[1][0] + " " + first[1][1]);
-                log.info("\n" + second[0][0] + " " + second[0][1] + "\n" + second[1][0] + " " + second[1][1]);*/
-
-                break;
-            }
-            case MOVE_RIGHT : {
-                first[1][0] = box;
-                first[1][1] = board.getSouth(box);
-                Cell temp = board.getEast(box);
-                first[0][0] = temp;
-                first[0][1] = board.getSouth(temp);
-
-                second[1][1] = box;
-                second[1][0] = board.getNorth(box);
-                temp = board.getEast(box);
-                second[0][1] = temp;
-                second[0][0] = board.getNorth(temp);
-
-/*                log.info("\n" + first[0][0] + " " + first[0][1] + "\n" + first[1][0] + " " + first[1][1]);
-                log.info("\n" + second[0][0] + " " + second[0][1] + "\n" + second[1][0] + " " + second[1][1]);*/
-
-                break;
-            }
-            case MOVE_UP : {
-                first[1][0] = box;
-                first[0][0] = board.getNorth(box);
-                Cell temp = board.getEast(box);
-                first[1][1] = temp;
-                first[0][1] = board.getNorth(temp);
-
-                second[1][1] = box;
-                second[0][1] = board.getNorth(box);
-                temp = board.getWest(box);
-                second[0][0] = temp;
-                second[1][0] = board.getNorth(temp);
-
-/*                log.info("\n" + first[0][0] + " " + first[0][1] + "\n" + first[1][0] + " " + first[1][1]);
-                log.info("\n" + second[0][0] + " " + second[0][1] + "\n" + second[1][0] + " " + second[1][1]);*/
-                break;
-            }
-            case MOVE_DOWN : {
-                first[0][0] = box;
-                first[1][0] = board.getSouth(box);
-                Cell temp = board.getEast(box);
-                first[0][1] = temp;
-                first[1][1] = board.getSouth(temp);
-
-                second[0][1] = box;
-                second[1][1] = board.getSouth(box);
-                temp = board.getEast(box);
-                second[0][0] = temp;
-                second[1][0] = board.getSouth(temp);
-
-/*                log.info("\n" + first[0][0] + " " + first[0][1] + "\n" + first[1][0] + " " + first[1][1]);
-                log.info("\n" + second[0][0] + " " + second[0][1] + "\n" + second[1][0] + " " + second[1][1]);*/
-                break;
-            }
-        }
-
-        //checking if all the box cells in the patterns are on a goal
-        //in these cases we can't prune anything because we might be pruning a solution
-        boolean allBoxesFirst = true;
-        boolean allBoxesSecond = true;
-        for (int i = 0; i < 2; i++) {
-            for (int j = 0; j<2; j++) {
-                if (first[i][j].getContent() == CellContent.BOX && !first[i][j].isGoal())
-                    allBoxesFirst = false;
-                if (second[i][j].getContent() == CellContent.BOX && !second[i][j].isGoal())
-                    allBoxesSecond = false;
-            }
-        }
-        if (allBoxesFirst) return false;
-        if (allBoxesSecond) return false;
-
-        if (tableCheck(first) || tableCheck(second)) {
-            prunedNodes++;
-            return true;
-        }
-        else
-            return false;
-    }
-
-    private static boolean tableCheck(Cell[][] submatrix) {
-
-        if (submatrix.length == 2) {
-            for (CellContent[][] c : TwoTwoDeadlocks) {
-                if (c[0][0] == submatrix[0][0].getContent() && c[0][1] == submatrix[0][1].getContent() &&
-                        c[1][0] == submatrix[1][0].getContent() && c[1][1] == submatrix[1][1].getContent())
-                    return true;
-            }
-            return false;
-        }
-
-        return false;
-    }
+//DEAD POSITION HANDLING
 
 /*
     Confronts the cell containing the last moved box (if there's one) with the list of the dead cells and returns true
@@ -290,9 +164,6 @@ public class DeadlockDetector {
         else
             return false;
     }
-
-
-    //OFFLINE OPERATIONS
 
     /*
         This method launches the search for dead positions before the search for solutions starts.
@@ -422,6 +293,132 @@ public class DeadlockDetector {
         return minimumFirst;
     }
 
+
+    
+
+    //LOOKUP TABLES
+
+
+    // Checks if, after a push, there's a submatrix along the push direction that matches
+    // a pre-stored deadlock configuration
+    private static boolean isInDeadlockTable(GameBoard board) {
+        
+        Cell box = board.getBoxCells().get(board.getLastMovedBox());
+
+        Action push = null;
+        if (board.getNorth(box).getContent() == CellContent.SOKOBAN)
+            push = Action.MOVE_DOWN;
+        else if (board.getSouth(box).getContent() == CellContent.SOKOBAN)
+            push = Action.MOVE_UP;
+        else if (board.getEast(box).getContent() == CellContent.SOKOBAN)
+            push = Action.MOVE_LEFT;
+        else if (board.getWest(box).getContent() == CellContent.SOKOBAN)
+            push = Action.MOVE_RIGHT;
+
+        Cell[][] first = new Cell[2][2];
+        Cell[][] second = new Cell[2][2];
+
+        switch (push) {
+            case MOVE_LEFT : {
+                first[1][0] = box;
+                first[1][1] = board.getNorth(box);
+                Cell temp = board.getWest(box);
+                first[0][0] = temp;
+                first[0][1] = board.getNorth(temp);
+
+                second[1][1] = box;
+                second[1][0] = board.getSouth(box);
+                temp = board.getWest(box);
+                second[0][1] = temp;
+                second[0][0] = board.getSouth(temp);
+
+                break;
+            }
+            case MOVE_RIGHT : {
+                first[1][0] = box;
+                first[1][1] = board.getSouth(box);
+                Cell temp = board.getEast(box);
+                first[0][0] = temp;
+                first[0][1] = board.getSouth(temp);
+
+                second[1][1] = box;
+                second[1][0] = board.getNorth(box);
+                temp = board.getEast(box);
+                second[0][1] = temp;
+                second[0][0] = board.getNorth(temp);
+
+                break;
+            }
+            case MOVE_UP : {
+                first[1][0] = box;
+                first[0][0] = board.getNorth(box);
+                Cell temp = board.getEast(box);
+                first[1][1] = temp;
+                first[0][1] = board.getNorth(temp);
+
+                second[1][1] = box;
+                second[0][1] = board.getNorth(box);
+                temp = board.getWest(box);
+                second[0][0] = temp;
+                second[1][0] = board.getNorth(temp);
+
+                break;
+            }
+            case MOVE_DOWN : {
+                first[0][0] = box;
+                first[1][0] = board.getSouth(box);
+                Cell temp = board.getEast(box);
+                first[0][1] = temp;
+                first[1][1] = board.getSouth(temp);
+
+                second[0][1] = box;
+                second[1][1] = board.getSouth(box);
+                temp = board.getEast(box);
+                second[0][0] = temp;
+                second[1][0] = board.getSouth(temp);
+
+                break;
+            }
+        }
+
+        //checking if all the box cells in the patterns are on a goal
+        //in these cases we can't prune anything because we might be pruning a solution
+        boolean allBoxesFirst = true;
+        boolean allBoxesSecond = true;
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j<2; j++) {
+                if (first[i][j].getContent() == CellContent.BOX && !first[i][j].isGoal())
+                    allBoxesFirst = false;
+                if (second[i][j].getContent() == CellContent.BOX && !second[i][j].isGoal())
+                    allBoxesSecond = false;
+            }
+        }
+        if (allBoxesFirst) return false;
+        if (allBoxesSecond) return false;
+
+        if (tableCheck(first) || tableCheck(second)) {
+            prunedNodes++;
+            return true;
+        }
+        else
+            return false;
+    }
+
+    //Executes the comparison between a 2x2 submatrix and the ones in the lookup table
+    private static boolean tableCheck(Cell[][] submatrix) {
+
+        if (submatrix.length == 2) {
+            for (CellContent[][] c : TwoTwoDeadlocks) {
+                if (c[0][0] == submatrix[0][0].getContent() && c[0][1] == submatrix[0][1].getContent() &&
+                        c[1][0] == submatrix[1][0].getContent() && c[1][1] == submatrix[1][1].getContent())
+                    return true;
+            }
+            return false;
+        }
+
+        return false;
+    }
+
 /*
     Inserting some deadlocks into the lookup table
 */
@@ -496,6 +493,8 @@ public class DeadlockDetector {
 
         return result;
     }
+
+
 
 
     //GETTERS AND SETTERS

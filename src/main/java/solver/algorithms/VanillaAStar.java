@@ -8,7 +8,6 @@ import solver.SokobanSolver;
 import solver.SokobanToolkit;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.logging.Logger;
@@ -23,8 +22,8 @@ public class VanillaAStar extends Algorithm{
     //It's the only way to have a fast lookup for items in the PQueue with a label that must be updated.
     //The alternative was using a structure that supported arbitrary access to items and just going for get(object)
     //for any expanded node. But these would all be linear time lookups and it was very slow.
-    //This way I can do O(1) lookups to check if there's need to update the label
-    //and then I only need the linear time access if the check is positive.
+    //With this accounting structure instead I can do O(1) lookups to check if there's a need to update the label
+    //and then I only do the linear time access if the check is positive.
     private static HashMap<Long, Integer> accounting = new HashMap<>();
 
     public Node launch(GameBoard game) throws CloneNotSupportedException {
@@ -32,34 +31,12 @@ public class VanillaAStar extends Algorithm{
         Node.setManageTransposition(false);
 
         SokobanSolver.setLogLine("Top h(n) value: " + "\nFrontier size: 0" + "\nNumber of visited nodes: " + Node.getExaminedNodes());
-        ExtendedNode root = new ExtendedNode(game, new ArrayList<>(), null, SokobanToolkit.estimateLowerBound(game));
-        int branchingFactor = game.getBoxCells().size() * 4;
 
-        //comparing criteria for the PQueue ordering
-        PriorityQueue<ExtendedNode> frontier = new PriorityQueue<ExtendedNode>(new Comparator<ExtendedNode>() {
-            @Override
-            public int compare(ExtendedNode extendedNode, ExtendedNode t1) {
-                //main criteria for insertion into the pqueue
-                //it will favor the lowest f(n) label value among the two nodes, but every node keeps
-                //the label value of his best child too, and that will be considered in the comparison, so that we can
-                //keep track of the nodes that were pruned to bound memory usage and rebuild pruned branches
-                int comparison = Integer.compare(Math.min(extendedNode.getLabel(), extendedNode.getBestChild()),
-                        Math.min(t1.getLabel(), t1.getBestChild()));
-
-                //tie breaker: inertia
-                if (comparison == 0 && extendedNode.getParent() != null && t1.getParent() != null)
-                    comparison = SokobanToolkit.compareByInertia(extendedNode, t1, extendedNode.getParent(), t1.getParent());
-
-                //tie breaker: heuristics without the path cost
-                if (comparison == 0)
-                    comparison = Integer.compare(extendedNode.getLabel() - extendedNode.getPathCost(),
-                            t1.getLabel() - t1.getPathCost());
-
-                return comparison;
-            }
-        });
+        //comparing criteria for the PQueue ordering is defined in the ExtendedNode class
+        PriorityQueue<ExtendedNode> frontier = new PriorityQueue<ExtendedNode>(ExtendedNode::astarCompare);
 
         //Inserting the root node in the queue, in the accounting structure and the transposition table
+        ExtendedNode root = new ExtendedNode(game, new ArrayList<>(), null, SokobanToolkit.estimateLowerBound(game));
         frontier.add(root);
         accounting.put(root.getHash(), root.getLabel());
         Node.transpose(root);
@@ -80,38 +57,42 @@ public class VanillaAStar extends Algorithm{
 
             //expanding the current node and adding the resulting nodes to the frontier Pqueue
             ArrayList<ExtendedNode> expanded = (ArrayList<ExtendedNode>) examined.expand();
-            for (Node n : expanded) {
-                //we assign the value of the heuristic h(n) to the label of the new nodes,
-                ExtendedNode temp = new ExtendedNode(n, examined, n.getPathCost() + SokobanToolkit.estimateLowerBound(n.getGame()));
+            
+            //setting the heuristic estimate for the expanded nodes to f(n) = g(n) + h(n)
+            for (ExtendedNode n : expanded) {
+                n.setLabel(n.getPathCost() + SokobanToolkit.estimateLowerBound(n.getGame()));
+            }
 
+            //examining the expanded nodes
+            for (ExtendedNode n : expanded) {
                 //SOLUTION
-                if (temp.isGoal()) {
+                if (n.isGoal()) {
                     Node.setManageTransposition(true);
-                    return temp;
+                    return n;
                 }
 
                 //checking if the expanded node is already in the frontier with a worse label
-                if (accounting.containsKey(temp.getHash()) && temp.getLabel() < accounting.get(temp.getHash())) {
+                if (accounting.containsKey(n.getHash()) && n.getLabel() < accounting.get(n.getHash())) {
                     //we remove the node from the frontier and insert it again with the new label
                     //because the PQueue does not support arbitrary access to just get the entry and edit the label field
-                    if (frontier.remove(temp)) {
-                        frontier.add(temp);
-                        accounting.replace(temp.getHash(), temp.getLabel());
+                    if (frontier.remove(n)) {
+                        frontier.add(n);
+                        accounting.replace(n.getHash(), n.getLabel());
                     }
 
                 }
-                else if (!Node.isTransposed(temp.getHash())){
+                else if (!Node.isTransposed(n.getHash())){
                     //this node is not present in both the frontier and the transposition table, so we just add it
-                    frontier.add(temp);
-                    accounting.put(temp.getHash(), temp.getLabel());
-                    Node.transpose(temp);
+                    frontier.add(n);
+                    accounting.put(n.getHash(), n.getLabel());
+                    Node.transpose(n);
                 }
 
             }
 
             //logging
             if (frontier.peek() != null)
-                SokobanSolver.setLogLine("Top f(n) value: " + Math.min(frontier.peek().getLabel(), frontier.peek().getBestChild()) +
+                SokobanSolver.setLogLine("Top f(n) value: " + frontier.peek().getLabel() +
                         "\nFrontier size: " + frontier.size() + "\nVisited nodes: " + Node.getExaminedNodes());
 
         }
@@ -119,6 +100,3 @@ public class VanillaAStar extends Algorithm{
         return null;
     }
 }
-
-
-

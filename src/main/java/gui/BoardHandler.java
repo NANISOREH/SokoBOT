@@ -19,6 +19,7 @@ import solver.configuration.Strategy;
 
 import java.util.logging.Logger;
 
+// This class manages the creation and the updating of the game board during both search and manual play
 public class BoardHandler {
     private static final Logger log = Logger.getLogger("Board");
     protected static Rectangle[][] tiles;
@@ -38,7 +39,7 @@ public class BoardHandler {
         goal = new Image(MainMenu.class.getResourceAsStream("/goal.png"));
     }
 
-
+    // This method takes a GameBoard object and creates a GridPane with the initial content of the level 
     protected static GridPane createBoard(GameBoard game) {
         GridPane gameBoard = new GridPane();
         gameBoard.setAlignment(Pos.CENTER);
@@ -61,6 +62,7 @@ public class BoardHandler {
                         break;
                     case SOKOBAN: tile.setFill(new ImagePattern(sokoban));
                         break;
+                    default: break;
                 }
 
                 tiles[i][j] = tile;
@@ -69,6 +71,7 @@ public class BoardHandler {
         }
 
         isSearching = true;
+        isShowing = false;
         return gameBoard;
     }
 
@@ -89,11 +92,15 @@ public class BoardHandler {
             if (level.getBestSolution() >= SokobanSolver.getSolutionMoves())
                 pushes = level.getMinPushes();
 
+            //SokobanSolver has found a solution, that means we now need to show it by letting the update portion of
+            //code run in this method
             isSearching = false;
             isShowing = true;
         }
 
-        if (isShowing) {
+        //this part concretely handles board updating by drawing the correct item for every cell of the GameBoard object
+        //it only gets executed if we're showing a solution after finding it or if we're playing manually
+        if (isShowing) { 
             for (int i = 0; i < game.getRows(); i++) {
                 for (int j = 0; j < game.getColumns(); j++) {
 
@@ -110,6 +117,7 @@ public class BoardHandler {
                         case SOKOBAN:
                             tile.setFill(new ImagePattern(sokoban));
                             break;
+                        default: break;
                     }
 
                     tiles[i][j] = tile;
@@ -117,7 +125,7 @@ public class BoardHandler {
             }
         }
 
-        if (!MainMenu.manualGameplay && isShowing) {
+        if (!MainMenu.manualGameplay && isShowing) { //text to display when we're showing a solution
             SolverView.back.setDisable(false);
             SolverView.back.setOpacity(100);
             SolverView.result.setText(MainMenu.algorithmValue + " found a solution in " + moves + " moves - " + pushes + " pushes.\n\n" +
@@ -126,7 +134,7 @@ public class BoardHandler {
                     "Branches pruned by the Deadlock Detector: " + DeadlockDetector.getPrunedNodes() + "\n");
             if (SokobanSolver.getSolution() == null) isShowing = false;
         }
-        else if (!MainMenu.manualGameplay && isSearching) {
+        else if (!MainMenu.manualGameplay && isSearching) { //text to display when we're searching for a solution
                 Platform.runLater(() -> {
                     String text = "Search in progress. The solution will be demonstrated after the computation.\n" +
                             "\nAlgorithm: " + MainMenu.algorithmValue +

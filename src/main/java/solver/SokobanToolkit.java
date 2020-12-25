@@ -6,6 +6,10 @@ import game.CellContent;
 import game.GameBoard;
 import solver.configuration.Heuristic;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -20,10 +24,10 @@ public class SokobanToolkit {
 
     public static int estimateLowerBound(GameBoard toSolve) {
         switch (heuristic) {
-            case NAIVE_MATCHING : {
+            case NAIVE_MATCHING: {
                 return estimateNaively(toSolve);
             }
-            case MINIMUM_PERFECT_MATCHING : {
+            case MINIMUM_PERFECT_MATCHING: {
                 return estimateProperly(toSolve);
             }
         }
@@ -31,12 +35,13 @@ public class SokobanToolkit {
         return -1;
     }
 
-/*
-    This methods estimates a lower bound to get a starting point for iterative deepening algorithms and to estimate
-    the cost of the path between the current node and the solution as a heuristic function for A*.
-    It sees box tiles and goal tiles as two partitions of a bipartite graph and it matches every box with the nearest goal,
-    then sums the Manhattan distances between the couples.
-*/
+    /*
+     * This methods estimates a lower bound to get a starting point for iterative
+     * deepening algorithms and to estimate the cost of the path between the current
+     * node and the solution as a heuristic function for A*. It sees box tiles and
+     * goal tiles as two partitions of a bipartite graph and it matches every box
+     * with the nearest goal, then sums the Manhattan distances between the couples.
+     */
     private static int estimateNaively(GameBoard toSolve) {
         HashMap<Integer, Cell> boxes = (HashMap<Integer, Cell>) toSolve.getBoxCells().clone();
         ArrayList<Cell> goals = (ArrayList<Cell>) toSolve.getGoalCells().clone();
@@ -56,36 +61,40 @@ public class SokobanToolkit {
         return result;
     }
 
-/*
-    This methods estimates a lower bound to get a starting point for iterative deepening algorithms and to estimate
-    the cost of the path between the current node and the solution as a heuristic function for A*.
-    It sees box tiles and goal tiles as two partitions of a bipartite graph and it constructs a perfect matching
-    between the two that minimizes the sum of the manhattan distance between the couples in the matching.
-    It uses an off-the-shelf implementation of the Hungarian Algorithm to do so.
-*/
+    /*
+     * This methods estimates a lower bound to get a starting point for iterative
+     * deepening algorithms and to estimate the cost of the path between the current
+     * node and the solution as a heuristic function for A*. It sees box tiles and
+     * goal tiles as two partitions of a bipartite graph and it constructs a perfect
+     * matching between the two that minimizes the sum of the manhattan distance
+     * between the couples in the matching. It uses an off-the-shelf implementation
+     * of the Hungarian Algorithm to do so.
+     */
     private static int estimateProperly(GameBoard toSolve) {
-         class HungarianAlgorithm {
-/*             MIT License
-
-             Copyright (c) 2018 aalmi
-
-             Permission is hereby granted, free of charge, to any person obtaining a copy
-             of this software and associated documentation files (the "Software"), to deal
-             in the Software without restriction, including without limitation the rights
-             to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-             copies of the Software, and to permit persons to whom the Software is
-             furnished to do so, subject to the following conditions:
-
-             The above copyright notice and this permission notice shall be included in all
-             copies or substantial portions of the Software.
-
-             THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-             IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-             FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-             AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-             LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-             OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-             SOFTWARE.*/
+        class HungarianAlgorithm {
+            /*
+             * MIT License
+             * 
+             * Copyright (c) 2018 aalmi
+             * 
+             * Permission is hereby granted, free of charge, to any person obtaining a copy
+             * of this software and associated documentation files (the "Software"), to deal
+             * in the Software without restriction, including without limitation the rights
+             * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+             * copies of the Software, and to permit persons to whom the Software is
+             * furnished to do so, subject to the following conditions:
+             * 
+             * The above copyright notice and this permission notice shall be included in
+             * all copies or substantial portions of the Software.
+             * 
+             * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+             * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+             * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+             * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+             * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+             * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+             * SOFTWARE.
+             */
 
             int[][] matrix; // initial matrix (cost matrix)
 
@@ -103,11 +112,11 @@ public class SokobanToolkit {
                 }
 
                 this.matrix = matrix;
-                squareInRow = new int[matrix.length];       // squareInRow & squareInCol indicate the position
-                squareInCol = new int[matrix[0].length];    // of the marked zeroes
+                squareInRow = new int[matrix.length]; // squareInRow & squareInCol indicate the position
+                squareInCol = new int[matrix[0].length]; // of the marked zeroes
 
-                rowIsCovered = new int[matrix.length];      // indicates whether a row is covered
-                colIsCovered = new int[matrix[0].length];   // indicates whether a column is covered
+                rowIsCovered = new int[matrix.length]; // indicates whether a row is covered
+                colIsCovered = new int[matrix[0].length]; // indicates whether a column is covered
                 staredZeroesInRow = new int[matrix.length]; // storage for the 0*
                 Arrays.fill(staredZeroesInRow, -1);
                 Arrays.fill(squareInRow, -1);
@@ -120,39 +129,39 @@ public class SokobanToolkit {
              * @return optimal assignment
              */
             public int[][] findOptimalAssignment() {
-                step1();    // reduce matrix
-                step2();    // mark independent zeroes
-                step3();    // cover columns which contain a marked zero
+                step1(); // reduce matrix
+                step2(); // mark independent zeroes
+                step3(); // cover columns which contain a marked zero
 
                 while (!allColumnsAreCovered()) {
                     int[] mainZero = step4();
-                    while (mainZero == null) {      // while no zero found in step4
+                    while (mainZero == null) { // while no zero found in step4
                         step7();
                         mainZero = step4();
                     }
                     if (squareInRow[mainZero[0]] == -1) {
                         // there is no square mark in the mainZero line
                         step6(mainZero);
-                        step3();    // cover columns which contain a marked zero
+                        step3(); // cover columns which contain a marked zero
                     } else {
                         // there is square mark in the mainZero line
                         // step 5
-                        rowIsCovered[mainZero[0]] = 1;  // cover row of mainZero
-                        colIsCovered[squareInRow[mainZero[0]]] = 0;  // uncover column of mainZero
+                        rowIsCovered[mainZero[0]] = 1; // cover row of mainZero
+                        colIsCovered[squareInRow[mainZero[0]]] = 0; // uncover column of mainZero
                         step7();
                     }
                 }
 
                 int[][] optimalAssignment = new int[matrix.length][];
                 for (int i = 0; i < squareInCol.length; i++) {
-                    optimalAssignment[i] = new int[]{i, squareInCol[i]};
+                    optimalAssignment[i] = new int[] { i, squareInCol[i] };
                 }
                 return optimalAssignment;
             }
 
             /**
-             * Check if all columns are covered. If that's the case then the
-             * optimal solution is found
+             * Check if all columns are covered. If that's the case then the optimal
+             * solution is found
              *
              * @return true or false
              */
@@ -166,10 +175,9 @@ public class SokobanToolkit {
             }
 
             /**
-             * Step 1:
-             * Reduce the matrix so that in each row and column at least one zero exists:
-             * 1. subtract each row minima from each element of the row
-             * 2. subtract each column minima from each element of the column
+             * Step 1: Reduce the matrix so that in each row and column at least one zero
+             * exists: 1. subtract each row minima from each element of the row 2. subtract
+             * each column minima from each element of the column
              */
             private void step1() {
                 // rows
@@ -204,8 +212,8 @@ public class SokobanToolkit {
             }
 
             /**
-             * Step 2:
-             * mark each 0 with a "square", if there are no other marked zeroes in the same row or column
+             * Step 2: mark each 0 with a "square", if there are no other marked zeroes in
+             * the same row or column
              */
             private void step2() {
                 int[] rowHasSquare = new int[matrix.length];
@@ -213,7 +221,8 @@ public class SokobanToolkit {
 
                 for (int i = 0; i < matrix.length; i++) {
                     for (int j = 0; j < matrix.length; j++) {
-                        // mark if current value == 0 & there are no other marked zeroes in the same row or column
+                        // mark if current value == 0 & there are no other marked zeroes in the same row
+                        // or column
                         if (matrix[i][j] == 0 && rowHasSquare[i] == 0 && colHasSquare[j] == 0) {
                             rowHasSquare[i] = 1;
                             colHasSquare[j] = 1;
@@ -226,8 +235,7 @@ public class SokobanToolkit {
             }
 
             /**
-             * Step 3:
-             * Cover all columns which are marked with a "square"
+             * Step 3: Cover all columns which are marked with a "square"
              */
             private void step3() {
                 for (int i = 0; i < squareInCol.length; i++) {
@@ -236,10 +244,8 @@ public class SokobanToolkit {
             }
 
             /**
-             * Step 7:
-             * 1. Find the smallest uncovered value in the matrix.
-             * 2. Subtract it from all uncovered values
-             * 3. Add it to all twice-covered values
+             * Step 7: 1. Find the smallest uncovered value in the matrix. 2. Subtract it
+             * from all uncovered values 3. Add it to all twice-covered values
              */
             private void step7() {
                 // Find the smallest uncovered value in the matrix
@@ -271,8 +277,7 @@ public class SokobanToolkit {
             }
 
             /**
-             * Step 4:
-             * Find zero value Z_0 and mark it as "0*".
+             * Step 4: Find zero value Z_0 and mark it as "0*".
              *
              * @return position of Z_0 in the matrix
              */
@@ -282,7 +287,7 @@ public class SokobanToolkit {
                         for (int j = 0; j < matrix[i].length; j++) {
                             if (matrix[i][j] == 0 && colIsCovered[j] == 0) {
                                 staredZeroesInRow[i] = j; // mark as 0*
-                                return new int[]{i, j};
+                                return new int[] { i, j };
                             }
                         }
                     }
@@ -291,8 +296,7 @@ public class SokobanToolkit {
             }
 
             /**
-             * Step 6:
-             * Create a chain K of alternating "squares" and "0*"
+             * Step 6: Create a chain K of alternating "squares" and "0*"
              *
              * @param mainZero => Z_0 of Step 4
              */
@@ -301,7 +305,7 @@ public class SokobanToolkit {
                 int j = mainZero[1];
 
                 Set<int[]> K = new LinkedHashSet<>();
-                //(a)
+                // (a)
                 // add Z_0 to K
                 K.add(mainZero);
                 boolean found = false;
@@ -310,13 +314,14 @@ public class SokobanToolkit {
                     // add Z_1 to K if
                     // there is a zero Z_1 which is marked with a "square " in the column of Z_0
                     if (squareInCol[j] != -1) {
-                        K.add(new int[]{squareInCol[j], j});
+                        K.add(new int[] { squareInCol[j], j });
                         found = true;
                     } else {
                         found = false;
                     }
 
-                    // if no zero element Z_1 marked with "square" exists in the column of Z_0, then cancel the loop
+                    // if no zero element Z_1 marked with "square" exists in the column of Z_0, then
+                    // cancel the loop
                     if (!found) {
                         break;
                     }
@@ -327,7 +332,7 @@ public class SokobanToolkit {
                     j = staredZeroesInRow[i];
                     // add the new Z_0 to K
                     if (j != -1) {
-                        K.add(new int[]{i, j});
+                        K.add(new int[] { i, j });
                         found = true;
                     } else {
                         found = false;
@@ -359,7 +364,7 @@ public class SokobanToolkit {
 
         HashMap<Integer, Cell> boxes = (HashMap<Integer, Cell>) toSolve.getBoxCells().clone();
         ArrayList<Cell> goals = (ArrayList<Cell>) toSolve.getGoalCells().clone();
-        int [][] distances = new int[boxes.size()][goals.size()];
+        int[][] distances = new int[boxes.size()][goals.size()];
         int result = 0;
 
         for (int i = 0; i < boxes.size(); i++) {
@@ -378,12 +383,13 @@ public class SokobanToolkit {
         return result;
     }
 
-/*
-    A simple move ordering optimization: states that involve pushing a box that was pushed by their parents too
-    are considered before the others. This is useful because a lot of Sokoban proper solutions involve a certain number of consecutive
-    pushes to the same box.
-*/
-    public static ArrayList<Node> orderByInertia (Node root, ArrayList <Node> expanded){
+    /*
+     * A simple move ordering optimization: states that involve pushing a box that
+     * was pushed by their parents too are considered before the others. This is
+     * useful because a lot of Sokoban proper solutions involve a certain number of
+     * consecutive pushes to the same box.
+     */
+    public static ArrayList<Node> orderByInertia(Node root, ArrayList<Node> expanded) {
         Integer boxNumber = root.getGame().getLastMovedBox();
         if (boxNumber == null) {
             return expanded;
@@ -407,13 +413,15 @@ public class SokobanToolkit {
         return result;
     }
 
-/*
-    Takes two nodes in an expansion batch and their parent, and returns a positive value if the first child moved
-    the same box as the father while the second didn't, a negative value if the opposite happened, 0 if no distinction
-    has to be made. In other words, it allows for Primary Queue structures to order nodes with the same heuristic estimation
-    with a criteria of move ordering by inertia
-*/
-    public static int compareByInertia (Node first, Node second, Node firstRoot, Node secondRoot) {
+    /*
+     * Takes two nodes in an expansion batch and their parent, and returns a
+     * positive value if the first child moved the same box as the father while the
+     * second didn't, a negative value if the opposite happened, 0 if no distinction
+     * has to be made. In other words, it allows for Primary Queue structures to
+     * order nodes with the same heuristic estimation with a criteria of move
+     * ordering by inertia
+     */
+    public static int compareByInertia(Node first, Node second, Node firstRoot, Node secondRoot) {
 
         boolean firstMoved = false, secondMoved = false;
 
@@ -441,33 +449,33 @@ public class SokobanToolkit {
         return 0;
     }
 
-
-/*
-    Given a game state and a cell, it determines if Sokoban can reach that cell and returns a list of actions
-    containing the best path that Sokoban can use to get there, or a null list in case there's no way to reach the target.
-    It uses a BFS to do so.
-*/
-    public static ArrayList<Action> searchPath (GameBoard state, Cell target) throws CloneNotSupportedException {
+    /*
+     * Given a game state and a cell, it determines if Sokoban can reach that cell
+     * and returns a list of actions containing the best path that Sokoban can use
+     * to get there, or a null list in case there's no way to reach the target. It
+     * uses a BFS to do so.
+     */
+    public static ArrayList<Action> searchPath(GameBoard state, Cell target) throws CloneNotSupportedException {
 
         if (state.getSokobanCell().equals(target)) {
             return new ArrayList<>();
         }
 
-        //Local class modeling a node for the BFS
+        // Local class modeling a node for the BFS
         class BfsNode {
             ArrayList<Action> path;
             Cell node;
 
-            public BfsNode (ArrayList<Action> path, Cell node) {
+            public BfsNode(ArrayList<Action> path, Cell node) {
                 this.path = path;
                 this.node = node;
             }
 
-            public void addAction (Action a) {
+            public void addAction(Action a) {
                 path.add(a);
             }
 
-            public BfsNode clone () throws CloneNotSupportedException {
+            public BfsNode clone() throws CloneNotSupportedException {
                 BfsNode d = new BfsNode((ArrayList) this.path.clone(), (Cell) this.node.clone());
                 return d;
             }
@@ -532,7 +540,7 @@ public class SokobanToolkit {
                 return null;
 
             front.clear();
-            for (int i = nextLevel.size() - 1; i>=0; i--) {
+            for (int i = nextLevel.size() - 1; i >= 0; i--) {
                 front.add(nextLevel.remove(i));
             }
 
@@ -540,52 +548,88 @@ public class SokobanToolkit {
 
     }
 
-/*    This method uses a simple flood fill algorithm to return the list of every cell reachable by sokoban,
-    given a certain game state*/
-    public static ArrayList<Cell> getReachableCells(GameBoard state) throws CloneNotSupportedException {
+    /*
+     * This method uses a simple flood fill algorithm to return a byte array
+     * representing every cell reachable by sokoban, given a certain game state
+     */
+    public static byte[] getReachableCells(GameBoard state) throws CloneNotSupportedException, IOException {
+        
+        //This class encapsulates a couple of coordinates
+        class Coordinates implements Serializable{
+            private static final long serialVersionUID = 1L;
+            int row;
+            int column;
+
+            Coordinates (int row, int column) {
+                this.row = row;
+                this.column = column;
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                Coordinates c = (Coordinates) obj;
+                if (this.row == c.row && this.column == c.column)
+                    return true;
+                else
+                    return false;
+            }
+        }
 
         //structure initialization
         //transpositionTable will contain every visited cell and will be given as output
         //front will receive the cells to expand in every iteration
-        ArrayList<Cell> transpositionTable = new ArrayList<>();
+        ArrayList<Coordinates> transpositionTable = new ArrayList<>();
         ArrayList<Cell> front = new ArrayList<>();
         Cell root = state.getSokobanCell();
         front.add(root);
-        transpositionTable.add(root);
+        Coordinates initial = new Coordinates (root.getRow(), root.getColumn());
+        transpositionTable.add(initial);
 
         while (true) {
             ArrayList<Cell> nextLevel = new ArrayList<>();
             for (Cell c : front) {
 
                 //expanding the current cell by checking for unvisited empty cells in every possible direction
-                if (state.getNorth(c) != null && state.getNorth(c).getContent() == CellContent.EMPTY) {
+                if (state.getNorth(c) != null && state.getNorth(c).getContent() != CellContent.WALL
+                    && state.getNorth(c).getContent() != CellContent.BOX) {
+
                     Cell north = state.getNorth(c);
-                    if (!transpositionTable.contains(north)) {
-                        transpositionTable.add(north);
+                    Coordinates first = new Coordinates (north.getRow(), north.getColumn());
+                    if (!transpositionTable.contains(first)) {
+                        transpositionTable.add(first);
                         nextLevel.add(north);
                     }
                 }
 
-                if (state.getSouth(c) != null && state.getSouth(c).getContent() == CellContent.EMPTY) {
+                if (state.getSouth(c) != null && state.getSouth(c).getContent() != CellContent.WALL
+                    && state.getSouth(c).getContent() != CellContent.BOX) {
+
                     Cell south = state.getSouth(c);
-                    if (!transpositionTable.contains(south)) {
-                        transpositionTable.add(south);
+                    Coordinates second = new Coordinates (south.getRow(), south.getColumn());
+                    if (!transpositionTable.contains(second)) {
+                        transpositionTable.add(second);
                         nextLevel.add(south);
                     }
                 }
 
-                if (state.getEast(c) != null && state.getEast(c).getContent() == CellContent.EMPTY) {
-                    Cell east = state.getNorth(c);
-                    if (!transpositionTable.contains(east)) {
-                        transpositionTable.add(east);
+                if (state.getEast(c) != null && state.getEast(c).getContent() != CellContent.WALL
+                    && state.getEast(c).getContent() != CellContent.BOX) {
+                                            
+                    Cell east = state.getEast(c);
+                    Coordinates third = new Coordinates (east.getRow(), east.getColumn());
+                    if (!transpositionTable.contains(third)) {
+                        transpositionTable.add(third);
                         nextLevel.add(east);
                     }
                 }
 
-                if (state.getWest(c) != null && state.getWest(c).getContent() == CellContent.EMPTY) {
-                    Cell west = state.getNorth(c);
-                    if (!transpositionTable.contains(west)) {
-                        transpositionTable.add(west);
+                if (state.getWest(c) != null && state.getWest(c).getContent() != CellContent.WALL
+                    && state.getWest(c).getContent() != CellContent.BOX) {
+
+                    Cell west = state.getWest(c);
+                    Coordinates fourth = new Coordinates (west.getRow(), west.getColumn());
+                    if (!transpositionTable.contains(fourth)) {
+                        transpositionTable.add(fourth);
                         nextLevel.add(west);
                     }
                 }
@@ -594,33 +638,40 @@ public class SokobanToolkit {
 
             //forming the front to explore for the next iteration
             front.clear();
-            for (int i = nextLevel.size() - 1; i>=0; i--) {
+            int size = nextLevel.size();
+            for (int i = size - 1; i>=0; i--) {
                 front.add(nextLevel.remove(i));
             }
 
             //breaking the cycle if we don't have anything else to explore
-            if (front.size() == 0)
+            if (front.isEmpty())
                 break;
 
         }
 
         //sorting the resulting structure of cells so that states with the same cells reachable are
         //hashed the same way regardless of sokoban's position
-        transpositionTable.sort(new Comparator<Cell>() {
+        transpositionTable.sort(new Comparator<Coordinates>() {
             @Override
-            public int compare(Cell cell, Cell t1) {
-                if (cell.getRow() < t1.getRow())
+            public int compare(Coordinates t1, Coordinates t2) {
+                if (t1.row < t2.row)
                     return -1;
-                else if (cell.getRow() > t1.getRow())
+                else if (t1.row > t2.row)
                     return 1;
-                else if (cell.getRow() == t1.getRow()) {
-                    return Integer.compare(cell.getColumn(), t1.getColumn());
+                else if (t1.row == t2.row) {
+                    return Integer.compare(t1.column, t2.column);
                 }
                 return 0;
             }
         });
 
-        return transpositionTable;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(transpositionTable);
+        oos.flush();
+        byte [] data = bos.toByteArray();
+
+        return data;
     }
 
 

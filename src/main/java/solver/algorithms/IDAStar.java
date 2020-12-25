@@ -22,13 +22,16 @@ public class IDAStar extends Algorithm{
     private static ArrayList<ExtendedNode> candidateCache;
 
     public Node launch(GameBoard game) throws CloneNotSupportedException {
-        newLimit = Integer.MAX_VALUE;
-        cache = new ArrayList<>();
-        candidateCache = new ArrayList<>();
+
 
         SokobanSolver.setLogLine("f(n) cutoff point: 0" + "\nVisited nodes: " + Node.getExaminedNodes() +
-                "\nCached nodes: " + (cache.size() + candidateCache.size()));
+                "\nCached nodes: ");
 
+        //initializing variables, adding root node to the cache, starting with the initial lower bound of the solution
+        //as the first limit for the iterative deepening
+        newLimit = Integer.MAX_VALUE; //this variable will be updated with the new cutoff point during the recursive calls
+        cache = new ArrayList<>();
+        candidateCache = new ArrayList<>();
         solution = null;
         ExtendedNode root = new ExtendedNode(new Node(game, new ArrayList<>()), null, 0 + SokobanToolkit.estimateLowerBound(game));
         int lowerBound = root.getLabel();
@@ -121,25 +124,7 @@ public class IDAStar extends Algorithm{
         if (isSolution(root)) return;
 
         //this queue will keep the expanded batch of nodes ordered
-        PriorityQueue<ExtendedNode> queue = new PriorityQueue<ExtendedNode>(new Comparator<ExtendedNode>() {
-            @Override
-            public int compare(ExtendedNode extendedNode, ExtendedNode t1) {
-                //main criteria for insertion into the pqueue
-                //it will favor the lowest f(n) label value among the two nodes
-                int comparison = Integer.compare(extendedNode.getLabel(), t1.getLabel());
-
-                //tie breaker: inertia
-                if (comparison == 0 && extendedNode.getParent() != null && t1.getParent() != null)
-                    comparison = SokobanToolkit.compareByInertia(extendedNode, t1, extendedNode.getParent(), t1.getParent());
-
-                //tie breaker: heuristics without the path cost
-                if (comparison == 0)
-                    comparison = Integer.compare(extendedNode.getLabel() - extendedNode.getPathCost(),
-                            t1.getLabel() - t1.getPathCost());
-
-                return comparison;
-            }
-        });
+        PriorityQueue<ExtendedNode> queue = new PriorityQueue<ExtendedNode>(ExtendedNode::astarCompare);
 
         //expanding the current node and launching the search on its children
         //ordered by their labels
@@ -155,6 +140,7 @@ public class IDAStar extends Algorithm{
 
     }
 
+    //checks for the solution and updates the solution static variable if we didn't already find a better one
     private static boolean isSolution(Node n) {
         if (n.isGoal()) {
             if (solution == null) {
