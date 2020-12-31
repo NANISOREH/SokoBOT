@@ -15,8 +15,11 @@ import javafx.scene.shape.Rectangle;
 import solver.DeadlockDetector;
 import solver.Node;
 import solver.SokobanSolver;
+import solver.Transposer;
+import solver.configuration.ExpansionScheme;
 import solver.configuration.Strategy;
 
+import java.util.concurrent.TransferQueue;
 import java.util.logging.Logger;
 
 // This class manages the creation and the updating of the game board during both search and manual play
@@ -126,13 +129,32 @@ public class BoardHandler {
         }
 
         if (!MainMenu.manualGameplay && isShowing) { //text to display when we're showing a solution
-            SolverView.back.setDisable(false);
-            SolverView.back.setOpacity(100);
-            SolverView.result.setText(MainMenu.algorithmValue + " found a solution in " + moves + " moves - " + pushes + " pushes.\n\n" +
-                    Node.getExaminedNodes() + " unique game states were examined.\n" +
-                    "Time elapsed: " + SokobanSolver.getTimeElapsed() + " seconds\n" +
-                    "Branches pruned by the Deadlock Detector: " + DeadlockDetector.getPrunedNodes() + "\n");
-            if (SokobanSolver.getSolution() == null) isShowing = false;
+            Platform.runLater(() -> {
+                SolverView.back.setDisable(false);
+                SolverView.back.setOpacity(100);
+
+                //we show both moves and pushes in case we're expanding by pushes or we found a move optimal solution...
+                if (SokobanSolver.getConfiguration().getExpansionScheme().equals(ExpansionScheme.PUSH_BASED) ||
+                        level.getBestSolution() >= SokobanSolver.getSolutionMoves()) {
+
+                    SolverView.result.setText(MainMenu.algorithmValue + " found a solution in " + moves + " moves - " + pushes + " pushes.\n\n" +
+                            Transposer.getExaminedNodes() + " unique game states were examined.\n" +
+                            "Time elapsed: " + SokobanSolver.getTimeElapsed() + " seconds\n" +
+                            "Branches pruned by the Deadlock Detector: " + DeadlockDetector.getPrunedNodes() + "\n");
+                }
+                //...whereas in case we're expanding by moves and we didn't find a move optimal solution we just omit
+                //the number of pushes, because as of now we cannot accurately get the number of pushes if we don't go through
+                //the solution and manually count them, which is kind of a waste of time and code, since, in this case, we're
+                //trying to optimize by pushes anyway
+                else {
+                    SolverView.result.setText(MainMenu.algorithmValue + " found a solution in " + moves + " moves \n\n" +
+                            Transposer.getExaminedNodes() + " unique game states were examined.\n" +
+                            "Time elapsed: " + SokobanSolver.getTimeElapsed() + " seconds\n" +
+                            "Branches pruned by the Deadlock Detector: " + DeadlockDetector.getPrunedNodes() + "\n");
+                }
+
+                if (SokobanSolver.getSolution() == null) isShowing = false;
+            });
         }
         else if (!MainMenu.manualGameplay && isSearching) { //text to display when we're searching for a solution
                 Platform.runLater(() -> {

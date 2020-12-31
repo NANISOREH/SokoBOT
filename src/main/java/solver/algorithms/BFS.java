@@ -4,6 +4,7 @@ import game.Action;
 import game.GameBoard;
 import solver.Node;
 import solver.SokobanSolver;
+import solver.Transposer;
 
 import java.util.ArrayList;
 import java.util.logging.Logger;
@@ -34,12 +35,15 @@ public class BFS extends Algorithm{
         for (int count = 0; true; count++) {
             ArrayList<Node> nextLevel = new ArrayList<>();
             for (Node n : front) {
-                SokobanSolver.setLogLine("Depth level " + count + "\nFront size: " + front.size() + "\nExplored nodes: " + Node.getExaminedNodes());
+                SokobanSolver.setLogLine("Depth level " + count + "\nFront size: " + front.size() + "\nExplored nodes: " + Transposer.getExaminedNodes());
                 for (Node v : n.expand()){
                     if (v.isGoal()) {
                         return v;
                     }
-                    nextLevel.add(v);
+                    //only adding the node to the next frontier if it's not already in the transposition table
+                    else if (Transposer.transpose(v)) {
+                        nextLevel.add(v);
+                    }
                 }
             }
 

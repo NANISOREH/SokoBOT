@@ -9,28 +9,26 @@ import java.util.Collection;
 /*
 This class extends a node by adding fields that are needed for informed search algorithms
 */
-public class ExtendedNode extends Node{
+public class InformedNode extends Node{
     private Node parent;
     private int label;
     private Long hash = 0L;
 
     //constructs a new extended node from scratch
-    public ExtendedNode(GameBoard game, ArrayList<Action> actions, Node parent, int label) throws CloneNotSupportedException {
+    public InformedNode(GameBoard game, ArrayList<Action> actions, Node parent, int label) throws CloneNotSupportedException {
         super(game, actions);
         this.parent = parent;
         this.label = label;
-        if (!Node.isTranspositionManaged()) this.hash = this.hash();
-        else this.hash = null;
+        this.hash = this.hash();
     }
 
     //constructs an extended node starting from a Node
-    public ExtendedNode (Node node, Node parent, int label) throws CloneNotSupportedException {
+    public InformedNode(Node node, Node parent, int label) throws CloneNotSupportedException {
         super(node.getGame(), node.getActionHistory());
-        this.setPushesNumber(node.getPushesNumber());
+        this.setPathCost(node.getPathCost());
         this.parent = parent;
         this.label = label;
-        if (!Node.isTranspositionManaged()) this.hash = this.hash();
-        else this.hash = null;
+        this.hash = this.hash();
     }
 
     public Node getParent() {
@@ -60,39 +58,39 @@ public class ExtendedNode extends Node{
     @Override
     public Collection<? extends Node> expand() throws CloneNotSupportedException {
         ArrayList<Node> nodes = (ArrayList<Node>) super.expand();
-        ArrayList<ExtendedNode> exNodes = new ArrayList<>();
+        ArrayList<InformedNode> exNodes = new ArrayList<>();
 
         for (Node n : nodes) {
-            exNodes.add(new ExtendedNode(n, this, 0));
+            exNodes.add(new InformedNode(n, this, 0));
         }
 
         return exNodes;
     }
 
     //Compare method to give a PQueue ordering criteria for greedy best-first search
-    public static int gbfsCompare(ExtendedNode extendedNode, ExtendedNode t1) {
-        int comparison = Integer.compare(extendedNode.getLabel(), t1.getLabel());
+    public static int gbfsCompare(InformedNode informedNode, InformedNode t1) {
+        int comparison = Integer.compare(informedNode.getLabel(), t1.getLabel());
 
             //tie breaker: inertia
-            if (comparison == 0 && extendedNode.getParent() != null && t1.getParent() != null)
-                comparison = SokobanToolkit.compareByInertia(extendedNode, t1, extendedNode.getParent(), t1.getParent());
+            if (comparison == 0 && informedNode.getParent() != null && t1.getParent() != null)
+                comparison = SokobanToolkit.compareByInertia(informedNode, t1, informedNode.getParent(), t1.getParent());
 
             return comparison;
     }
 
     //Compare method to give a PQueue ordering criteria for A* search
-    public static int astarCompare(ExtendedNode extendedNode, ExtendedNode t1) {
+    public static int astarCompare(InformedNode informedNode, InformedNode t1) {
         //main criteria for insertion into the pqueue
         //it will favor the lowest f(n) label value among the two nodes
-        int comparison = Integer.compare(extendedNode.getLabel(), t1.getLabel());
+        int comparison = Integer.compare(informedNode.getLabel(), t1.getLabel());
 
         //tie breaker: inertia
-        if (comparison == 0 && extendedNode.getParent() != null && t1.getParent() != null)
-            comparison = SokobanToolkit.compareByInertia(extendedNode, t1, extendedNode.getParent(), t1.getParent());
+        if (comparison == 0 && informedNode.getParent() != null && t1.getParent() != null)
+            comparison = SokobanToolkit.compareByInertia(informedNode, t1, informedNode.getParent(), t1.getParent());
 
         //tie breaker: heuristics without the path cost
         if (comparison == 0)
-            comparison = Integer.compare(extendedNode.getLabel() - extendedNode.getPathCost(),
+            comparison = Integer.compare(informedNode.getLabel() - informedNode.getPathCost(),
                     t1.getLabel() - t1.getPathCost());
 
         return comparison;
@@ -103,7 +101,7 @@ public class ExtendedNode extends Node{
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ExtendedNode that = (ExtendedNode) o;
+        InformedNode that = (InformedNode) o;
         if (this.hash != null && that.hash != null) return this.hash.equals(that.hash);
         return false;
     }

@@ -21,20 +21,22 @@ public class SokobanSolver {
     private static Node solution = null;
     private static double timeElapsed;
     private static String logLine;
+    private static Configuration configuration;
 /*
     Static method that acts as a façade between the client and the actual algorithms.
     It takes a GameBoard configured with the level to solve, and the strategy chosen by the client to solve it,
     and launches the search accordingly. If a solution is found, it acts upon the original GameBoard to show it.
 */
-    public static void solve(GameBoard toSolve, Configuration configuration) throws InterruptedException, CloneNotSupportedException {
+    public static void solve(GameBoard toSolve, Configuration c) throws InterruptedException, CloneNotSupportedException {
 
+        configuration = c;
         logLine = "\n\n";
         solution = null;
         Long start;
 
         //Resetting the transposition table stored in the Node class just in case we are launching
         //a search on the same level in the same session of the program
-        Node.resetSearchSpace();
+        Transposer.resetSearchSpace();
 
         //Configuring components of the solver as the client asked
         Node.setExpansionScheme(configuration.getExpansionScheme());
@@ -64,8 +66,7 @@ public class SokobanSolver {
         if (!solutionActions.isEmpty()) {
             logLine = "";
             log.info("Solution found in " + solutionActions.size() + " moves!");
-            log.info(solution.getPushesNumber() + " pushes were needed");
-            log.info("number of examined nodes: " + Node.getExaminedNodes());
+            log.info("number of examined nodes: " + Transposer.getExaminedNodes());
             log.info("number of nodes pruned by DeadlockDetector: " + DeadlockDetector.getPrunedNodes());
             log.info("" + solution.getActionHistory());
             DeadlockDetector.setRoutine(DDRoutine.NO_DEADLOCK_DETECTION);
@@ -77,7 +78,7 @@ public class SokobanSolver {
         }
         else {
             log.info("Sorry, no solution was found!");
-            log.info("number of examined nodes: " + Node.getExaminedNodes());
+            log.info("number of examined nodes: " + Transposer.getExaminedNodes());
         }
     }
 
@@ -106,7 +107,7 @@ public class SokobanSolver {
 */
     public static int getSolutionPushes() {
         if (solution != null && solution.getActionHistory().size() > 0) {
-            return solution.getPushesNumber();
+            return solution.getPathCost();
         }
         else
             return -1;
@@ -128,5 +129,9 @@ public class SokobanSolver {
 
     public static void setLogLine(String logLine) {
         SokobanSolver.logLine = logLine;
+    }
+
+    public static Configuration getConfiguration() {
+        return configuration;
     }
 }
