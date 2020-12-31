@@ -10,27 +10,20 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.logging.Logger;
 
 /*This class represents a node in the search graph.
-It stores a Node's parent, the information about the game state it models and the history of actions that led to said state.
-The class also stores a transposition table of the visited nodes as a static variable.
+It stores the information about the game state it models and the history of actions that led to said state.
+It also implements node expansion algorithms.
 */
 public class Node {
     private static Logger log = Logger.getLogger("Node");
-    protected static TreeSet<Long> transpositionTable = new TreeSet<>();
-    //by setting this variable you choose if the node expansion methods automatically manage transpositions
-    //you can just disable it and see your search crawl or manage transpositions manually by calling Node.transpose(n)
-    private static boolean manageTransposition = true;
     //maximum depth reached by the search at a certain point in time
     protected static int depth;
     protected static ExpansionScheme expansionScheme;
     protected GameBoard game;
-    protected int pushesNumber;
+    protected int pathCost;
     protected ArrayList<Action> actionHistory = new ArrayList<>();
 
     public Node(){};
@@ -38,7 +31,7 @@ public class Node {
     public Node(GameBoard game, ArrayList<Action> actions) {
         this.game = game;
         this.actionHistory = actions;
-        this.pushesNumber = 0;
+        this.pathCost = 0;
     }
 
 /*
@@ -47,13 +40,21 @@ public class Node {
     This way, it doesn't have to be hardcoded into the algorithms and it can be switched at runtime.
 */
     public Collection<? extends Node> expand() throws CloneNotSupportedException {
-        if (actionHistory.isEmpty())
-            transpose();
-
+        ArrayList<Node> expanded;
         if (expansionScheme == ExpansionScheme.MOVE_BASED)
-            return this.expandByMoves();
+            expanded = (ArrayList<Node>) this.expandByMoves();
         else
-            return this.expandByPushes();
+            expanded = (ArrayList<Node>) this.expandByPushes();
+
+        //incrementing the path cost of the new nodes
+        for (Node n : expanded) {
+            n.pathCost = this.pathCost + 1;
+        }
+
+        if (!expanded.isEmpty() && expanded.get(0).pathCost > depth)
+            depth = expanded.get(0).pathCost;
+
+        return expanded;
     }
 
 /*
@@ -84,10 +85,8 @@ public class Node {
                 //if that's true, the actions involved in reaching the box and pushing it can be carried out
                 //after that, we let the deadlock detector do its job
                 if (push (down, neighbour, Action.MOVE_DOWN)) {
-                    if (!down.isTransposed()) {
-                        down.transpose();
-                        expanded.add(down);
-                    }
+                    expanded.add(down);
+
                 }
             }
 
@@ -101,10 +100,7 @@ public class Node {
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
                 if (push (up, neighbour, Action.MOVE_UP)) {
-                    if (!up.isTransposed()) {
-                        up.transpose();
-                        expanded.add(up);
-                    }
+                    expanded.add(up);
                 }
             }
 
@@ -115,10 +111,7 @@ public class Node {
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
                 if (push (left, neighbour, Action.MOVE_LEFT)) {
-                    if (!left.isTransposed()) {
-                        left.transpose();
-                        expanded.add(left);
-                    }
+                    expanded.add(left);
                 }
 
             }
@@ -130,10 +123,7 @@ public class Node {
                     (oppositeNeighbour.getContent() == CellContent.EMPTY || oppositeNeighbour.getContent() == CellContent.SOKOBAN)) {
 
                 if (push (right, neighbour, Action.MOVE_RIGHT)) {
-                    if (!right.isTransposed()) {
-                        right.transpose();
-                        expanded.add(right);
-                    }
+                    expanded.add(right);
                 }
 
             }
@@ -160,9 +150,6 @@ public class Node {
             if (!executeMove(newState, action))
                 return false;
 
-            if (newState.getPushesNumber() > depth)
-                depth = newState.pushesNumber;
-
             if (newState.game.getLastMovedBox() != null)
                 return true;
         }
@@ -181,41 +168,37 @@ public class Node {
 
         Node first = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
         //Checkin if the move is legal and we execute it, then we check if the generated state was already discovered
-        if (executeMove(first, Action.MOVE_DOWN) && !first.isTransposed()) {
+        if (executeMove(first, Action.MOVE_DOWN)) {
             expanded.add(first);
             //If we reached a new maximum depth in the search, we keep note of it in depth. a static variable of Node
             if (first.getActionHistory().size() > depth)
                 depth = first.getActionHistory().size();
-            first.transpose();
         }
 
         //Same as before with other directions.
         //Generalizing this stuff to avoid repeated code is possible but not worth the time investment.
 
         Node second = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
-        if (executeMove(second, Action.MOVE_UP) && !second.isTransposed()) {
+        if (executeMove(second, Action.MOVE_UP)) {
             expanded.add(second);
             if (second.getActionHistory().size() > depth)
                 depth = second.getActionHistory().size();
-            second.transpose();
         }
 
         Node third = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
-        if (executeMove(third, Action.MOVE_LEFT) && !third.isTransposed()) {
+        if (executeMove(third, Action.MOVE_LEFT)) {
 
             expanded.add(third);
             if (third.getActionHistory().size() > depth)
                 depth = third.getActionHistory().size();
-            third.transpose();
         }
 
         Node fourth = new Node((GameBoard) this.getGame().clone(), (ArrayList<Action>) this.getActionHistory().clone());
-        if (executeMove(fourth, Action.MOVE_RIGHT)&& !fourth.isTransposed()) {
+        if (executeMove(fourth, Action.MOVE_RIGHT)) {
 
             expanded.add(fourth);
             if (fourth.getActionHistory().size() > depth)
                 depth = fourth.getActionHistory().size();
-            fourth.transpose();
         }
 
         return expanded;
@@ -240,28 +223,13 @@ public class Node {
             for (int i = 0; i < beforeBoxCells.size(); i++) {
                 if (beforeBoxCells.get(i).getRow() != afterBoxCells.get(i).getRow() ||
                         beforeBoxCells.get(i).getColumn() != afterBoxCells.get(i).getColumn()) {
-                    node.pushesNumber = this.pushesNumber + 1;
                     return true;
                 }
             }
-            node.pushesNumber = this.pushesNumber;
             return true;
         }
         else
             return false;
-    }
-
-    private boolean isTransposed() throws CloneNotSupportedException {
-        if (isTranspositionManaged())
-            return transpositionTable.contains(this.hash());
-        else
-            return false;
-    }
-
-    private void transpose() throws CloneNotSupportedException {
-        if (manageTransposition) {
-            transpositionTable.add(this.hash());
-        }
     }
 
     /*
@@ -332,59 +300,20 @@ public class Node {
         return no.longValue();
     }
 
-    public static void resetSearchSpace () {
-        transpositionTable.clear();
-        depth = 0;
-    }
-
-/*
-    Adds a node to the transposition table by passing the node to transpose
-*/
-    public static void transpose (Node n) throws CloneNotSupportedException {
-        transpositionTable.add(n.hash());
-    }
-/*
-    Adds a node to the transposition table by passing the hashed value directly
-*/
-    public static void transpose (Long v) throws CloneNotSupportedException {
-        transpositionTable.add(v);
-    }
-
-    public static boolean isTransposed (Node n) throws CloneNotSupportedException {
-        return transpositionTable.contains(n.hash());
-    }
-
-    public static boolean isTransposed (Long hash) throws CloneNotSupportedException {
-        return transpositionTable.contains(hash);
-    }
-
-    public static void untranspose(Node n) throws CloneNotSupportedException {
-        if (transpositionTable.contains(n.hash())) {
-            transpositionTable.remove(n.hash());
-        }
-    }
-
-/*
-Returns the cost of the path in the search tree up until this node
-*/
-    public int getPathCost() {
-        switch (expansionScheme) {
-            case MOVE_BASED : {
-                return actionHistory.size();
-            }
-            case PUSH_BASED : {
-                return pushesNumber;
-            }
-        }
-        return -1;
-    }
-
     public boolean isGoal() {
         return this.getGame().checkVictory();
     }
 
 
     //GETTERS AND SETTERS
+
+    public int getPathCost() {
+        return pathCost;
+    }
+
+    public void setPathCost(int pathCost) {
+        this.pathCost = pathCost;
+    }
 
     public GameBoard getGame() {
         return game;
@@ -402,24 +331,12 @@ Returns the cost of the path in the search tree up until this node
         this.actionHistory = actions;
     }
 
-    public static TreeSet<Long> getTranspositionTable() {
-        return transpositionTable;
-    }
-
-    public static void setTranspositionTable(TreeSet<Long> transpositionTable) {
-        Node.transpositionTable = transpositionTable;
-    }
-
     public static ExpansionScheme getExpansionScheme() {
         return expansionScheme;
     }
 
     public static void setExpansionScheme(ExpansionScheme expansionScheme) {
         Node.expansionScheme = expansionScheme;
-    }
-
-    public static long getExaminedNodes () {
-        return transpositionTable.size();
     }
 
     public static int getDepth() {
@@ -430,28 +347,12 @@ Returns the cost of the path in the search tree up until this node
         Node.depth = depth;
     }
 
-    public int getPushesNumber() {
-        return pushesNumber;
-    }
-
-    public void setPushesNumber(int pushesNumber) {
-        this.pushesNumber = pushesNumber;
-    }
-
-    public static boolean isTranspositionManaged() {
-        return manageTransposition;
-    }
-
-    public static void setManageTransposition(boolean manageTransposition) {
-        Node.manageTransposition = manageTransposition;
-    }
-
     @Override
     public Object clone() throws CloneNotSupportedException {
         Node cloned = new Node();
 
         cloned.game = (GameBoard) this.game.clone();
-        cloned.pushesNumber = this.pushesNumber;
+        cloned.pathCost = this.pathCost;
         cloned.actionHistory = (ArrayList<Action>) this.actionHistory.clone();
 
         return cloned;

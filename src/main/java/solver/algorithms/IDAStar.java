@@ -2,142 +2,102 @@
 package solver.algorithms;
 
 import game.GameBoard;
-import solver.ExtendedNode;
-import solver.Node;
-import solver.SokobanSolver;
-import solver.SokobanToolkit;
+import solver.*;
 
 import java.util.*;
 import java.util.logging.Logger;
 
+/*
+Implementation of an IDA* algorithm
+*/
 public class IDAStar extends Algorithm{
     private static final Logger log = Logger.getLogger("IDASTAR");
     private static Node solution;
-    private static int newLimit;
-    private static TreeSet<Long> transpositionTableCopy = new TreeSet<>();
-    private static boolean memoryFull = false;
-
-    //these two hashmaps are used as a cache to avoid re-exploring the lower levels in iterative deepening
-    private static ArrayList<ExtendedNode> cache;
-    private static ArrayList<ExtendedNode> candidateCache;
 
     public Node launch(GameBoard game) throws CloneNotSupportedException {
 
-
-        SokobanSolver.setLogLine("f(n) cutoff point: 0" + "\nVisited nodes: " + Node.getExaminedNodes() +
+        SokobanSolver.setLogLine("f(n) cutoff point: 0" + "\nVisited nodes: " +
                 "\nCached nodes: ");
 
         //initializing variables, adding root node to the cache, starting with the initial lower bound of the solution
         //as the first limit for the iterative deepening
-        newLimit = Integer.MAX_VALUE; //this variable will be updated with the new cutoff point during the recursive calls
-        cache = new ArrayList<>();
-        candidateCache = new ArrayList<>();
         solution = null;
-        ExtendedNode root = new ExtendedNode(new Node(game, new ArrayList<>()), null, 0 + SokobanToolkit.estimateLowerBound(game));
+        InformedNode root = new InformedNode(new Node(game, new ArrayList<>()), null, 0 + SokobanToolkit.estimateLowerBound(game));
         int lowerBound = root.getLabel();
         int limit = lowerBound;
-        cache.add(root);
 
         //Loop of the iterative deepening
         for (int count = 0; true; count++) {
-            //Before every iteration, if the memory is not full yet, we make a copy of the transposition table so that,
-            //when we finally have no more space, we can can restore its state to effectively start a proper, uncached
-            //iterative deepening starting from the last cached frontier
-            if (!memoryFull) {
-                transpositionTableCopy.clear();
-                transpositionTableCopy = (TreeSet<Long>) Node.getTranspositionTable().clone();
-            }
-            //If memory is full, we have to restore the transposition table backup and increment the limit of the search:
-            //from now on, no more cached nodes and we will start over from the last cached frontier
-            else if (memoryFull){
-                Node.resetSearchSpace();
-                Node.setTranspositionTable((TreeSet<Long>) transpositionTableCopy.clone());
-            }
 
+            //Resetting everything
+            Transposer.resetSearchSpace();
+            Transposer.transpose(root);
+            DeadlockDetector.setPrunedNodes(0);
 
-            newLimit = Integer.MAX_VALUE;
+            int newLimit;
             //launching the search on the current limit
             //the limit will be raised inside the recursive component and stored in newLimit
-            if (!memoryFull) candidateCache = new ArrayList<>();
-            for (ExtendedNode n : cache) {
-                if (solution == null)
-                    recursiveComponent(n, limit);
-                else
-                    break;
-            }
+            if (solution == null)
+                newLimit = recursiveComponent(root, 0, limit);
+            else
+                break;
+
             limit = newLimit;
 
-            //We copy the frontier we formed in the last iteration to be used as a starting point for the next one
-            if (!memoryFull) {
-                cache = new ArrayList<>();
-                for (int i = candidateCache.size() - 1; i >= 0; i--) {
-                    cache.add(candidateCache.get(i));
-                    candidateCache.remove(i);
-                }
-
-            }
-
-            //If we found a solution in this iteration, we put out the garbage and then return it
+            //If we found a solution in this iteration, we return it
             if (solution != null && solution.getActionHistory().size() > 0) {
-                transpositionTableCopy.clear();
-                cache.clear();
-                candidateCache.clear();
                 return solution;
             }
 
         }
-
+        return solution;
     }
 
-    private static void recursiveComponent (ExtendedNode root, int limit) throws CloneNotSupportedException {
-        SokobanSolver.setLogLine("f(n) cutoff point: " + limit + "\nVisited nodes: " + Node.getExaminedNodes() +
-                "\nCached nodes: " + (cache.size() + candidateCache.size()));
+    private static int recursiveComponent (InformedNode root, int pathLength, int limit) throws CloneNotSupportedException {
+        SokobanSolver.setLogLine("f(n) cutoff point: " + limit + "\nVisited nodes: " + Transposer.getExaminedNodes() +
+                "\n");
 
-        //we surpassed the current heuristic estimate, so we stop the recursion and update the limit
-        //the new limit will be the lowest f(n) value among those who surpassed the current limit
-        //if the memory allows it, this node will be in the cache for the next iteration
-        if (root.getLabel() > limit && !memoryFull) {
-            if (cache.size() + candidateCache.size() < SokobanToolkit.MAX_NODES) {
-                //this node will be cached
-                candidateCache.add(root);
-
-                if (root.getLabel() < newLimit)
-                    newLimit = root.getLabel();
-            }
-            else {
-                //no more space, we clean the thing and start from the last cached frontier
-                memoryFull = true;
-                log.info("NO MORE MEMORY");
-                candidateCache.clear();
-                newLimit = limit;
-                return;
-            }
-
-            return;
-        }
-        else if (root.getLabel() > limit && memoryFull) {
-            if (root.getLabel() < newLimit)
-                newLimit = root.getLabel();
-            return;
+        //SOLUTION
+        if (isSolution(root)) {
+            return 0;
         }
 
-        if (isSolution(root)) return;
+        //we surpassed the threshold, returning the label of the current node to his father
+        if (root.getLabel() > limit) {
+            return root.getLabel();
+        }
 
-        //this queue will keep the expanded batch of nodes ordered
-        PriorityQueue<ExtendedNode> queue = new PriorityQueue<ExtendedNode>(ExtendedNode::astarCompare);
+        //this queue will keep the expanded batch of nodes ordered by heuristic estimate
+        PriorityQueue<InformedNode> queue = new PriorityQueue<InformedNode>(InformedNode::astarCompare);
 
         //expanding the current node and launching the search on its children
         //ordered by their labels
-        ArrayList<Node> expanded = (ArrayList<Node>) root.expand();
-        for (Node n : expanded) {
-            queue.add(new ExtendedNode(n, root, n.getPathCost() +
-                    SokobanToolkit.estimateLowerBound(n.getGame())));
-        }
-        int size = queue.size();
-        for (int i = 0; i < size; i++) {
-            recursiveComponent(queue.remove(), limit);
+        ArrayList<InformedNode> expanded = (ArrayList<InformedNode>) root.expand();
+        for (InformedNode n : expanded) {
+            if (!Transposer.transpose(n))
+                continue;
+            else {
+                n.setLabel(pathLength + SokobanToolkit.estimateLowerBound(n.getGame()));
+                queue.add(n);
+            }
         }
 
+        //launching the recursive method on the expanded batch
+        //and using the return values to determine the minimum label value surpassing the limit
+        //met during the exploration of all subtrees starting from the current node:
+        //of course the actual root will collect the global minimum after all recursive calls got "wrapped"
+        int size = queue.size();
+        int min = Integer.MAX_VALUE;
+        int temp;
+        for (int i = 0; i < size; i++) {
+            if (isSolution(queue.peek())) return 0;
+            else temp = recursiveComponent(queue.remove(), pathLength + 1, limit);
+
+            if (temp < min) min = temp;
+        }
+
+        //returning the minimum to the father of the current node
+        return min;
     }
 
     //checks for the solution and updates the solution static variable if we didn't already find a better one
