@@ -130,9 +130,6 @@ public class BoardHandler {
 
         if (!MainMenu.manualGameplay && isShowing) { //text to display when we're showing a solution
             Platform.runLater(() -> {
-                SolverView.back.setDisable(false);
-                SolverView.back.setOpacity(100);
-
                 //we show both moves and pushes in case we're expanding by pushes or we found a move optimal solution...
                 if (SokobanSolver.getConfiguration().getExpansionScheme().equals(ExpansionScheme.PUSH_BASED) ||
                         level.getBestSolution() >= SokobanSolver.getSolutionMoves()) {

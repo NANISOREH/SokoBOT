@@ -37,7 +37,7 @@ public class IDDFS extends Algorithm{
             visited.push(root);
             DeadlockDetector.setPrunedNodes(0);
 
-            while (!visited.empty()) {
+            while (!visited.empty() && !SokobanSolver.isInterrupted()) {
                 Node current;
                 current = visited.pop();
 

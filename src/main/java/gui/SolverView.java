@@ -60,8 +60,6 @@ public class SolverView {
         back.setBackground(new Background(new BackgroundFill(Color.TOMATO, null, null)));
         back.setPrefSize(150, 30);
         back.setAlignment(Pos.BOTTOM_CENTER);
-        back.setOpacity(0);
-        back.setDisable(true);
 
         boardLayout.getChildren().addAll(label1, gameBoard, result, back);
         Scene gameScene = new Scene(boardLayout, 1100, 840);
@@ -77,7 +75,7 @@ public class SolverView {
                 //Launching the solver with the configuration specified by the UI elements
                 game = new GameBoard(toLoad);
                 SokobanSolver.solve(game, Configuration.getInstance(MainMenu.schemeValue, MainMenu.algorithmValue,
-                        MainMenu.heuristicValue, MainMenu.routineValue));
+                        MainMenu.heuristicValue, MainMenu.routineValue, toLoad));
             } catch (InterruptedException | CloneNotSupportedException e1) {
                 e1.printStackTrace();
             }
@@ -95,6 +93,7 @@ public class SolverView {
 
         //You can click on the button to get back to the menu
         back.setOnMouseClicked(keyEvent -> {
+            SokobanSolver.interrupt();
             BoardHandler.isShowing = false;
             BoardHandler.isSearching = false;
             game = null;

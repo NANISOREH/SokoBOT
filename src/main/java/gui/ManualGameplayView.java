@@ -17,6 +17,7 @@ import javafx.stage.Stage;
 import solver.DeadlockDetector;
 import solver.Node;
 import solver.SokobanSolver;
+import solver.SokobanToolkit;
 import solver.configuration.DDRoutine;
 import solver.configuration.ExpansionScheme;
 
@@ -24,7 +25,7 @@ public class ManualGameplayView {
     private static final Logger log = Logger.getLogger("manualGameplayView");
     private static Level toLoad;
     private static GameBoard game;
-    private static int moves = 0;
+    private static int moves;
     protected static VBox boardLayout;
     static Node test;
 
@@ -41,6 +42,7 @@ public class ManualGameplayView {
         BoardHandler.isShowing = true;
 
         Text inGame = new Text();
+        moves = 0;
         inGame.setText("Moves: " + moves + "\n\n\n");
         inGame.setFill(Color.LIGHTGRAY);
         boardLayout.getChildren().addAll(gameBoard, inGame);
@@ -50,7 +52,7 @@ public class ManualGameplayView {
         gameStage.setScene(gameScene);
         gameStage.show();
 
-        DeadlockDetector.setRoutine(DDRoutine.ALL_ROUTINES);
+        DeadlockDetector.setRoutine(DDRoutine.DEAD_POSITIONS);
         DeadlockDetector.handleDeadPositions((GameBoard) game.clone());
         DeadlockDetector.setPrunedNodes(0);
 
@@ -66,8 +68,7 @@ public class ManualGameplayView {
                             if (game.takeAction(Action.MOVE_UP))
                                 moves++;
                         }
-                        test = new Node(game, new ArrayList<>());
-                        log.info("hash " + test.hash());                        
+                        log.info("hash " + test.hash() + "\nlower bound " + SokobanToolkit.estimateLowerBound(game));
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
@@ -80,8 +81,7 @@ public class ManualGameplayView {
                             if (game.takeAction(Action.MOVE_DOWN))
                                 moves++;
                         }
-                        test = new Node(game, new ArrayList<>());
-                        log.info("hash " + test.hash());     
+                        log.info("hash " + test.hash() + "\nlower bound " + SokobanToolkit.estimateLowerBound(game));
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
@@ -94,8 +94,7 @@ public class ManualGameplayView {
                             if (game.takeAction(Action.MOVE_RIGHT))
                                 moves++;
                         }
-                        test = new Node(game, new ArrayList<>());
-                        log.info("hash " + test.hash());                             
+                        log.info("hash " + test.hash() + "\nlower bound " + SokobanToolkit.estimateLowerBound(game));
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
@@ -108,8 +107,7 @@ public class ManualGameplayView {
                             if (game.takeAction(Action.MOVE_LEFT))
                                 moves++;
                         }
-                        test = new Node(game, new ArrayList<>());
-                        log.info("hash " + test.hash());                           
+                        log.info("hash " + test.hash() + "\nlower bound " + SokobanToolkit.estimateLowerBound(game));
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }

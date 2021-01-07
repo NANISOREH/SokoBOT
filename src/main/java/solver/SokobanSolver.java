@@ -2,9 +2,11 @@ package solver;
 
 import game.Action;
 import game.GameBoard;
+import game.Level;
 import solver.algorithms.*;
 import solver.configuration.Configuration;
 import solver.configuration.DDRoutine;
+import solver.configuration.ExpansionScheme;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -22,6 +24,7 @@ public class SokobanSolver {
     private static double timeElapsed;
     private static String logLine;
     private static Configuration configuration;
+    private static boolean interrupted;
 /*
     Static method that acts as a façade between the client and the actual algorithms.
     It takes a GameBoard configured with the level to solve, and the strategy chosen by the client to solve it,
@@ -32,6 +35,7 @@ public class SokobanSolver {
         configuration = c;
         logLine = "\n\n";
         solution = null;
+        interrupted = false;
         Long start;
 
         //Resetting the transposition table stored in the Node class just in case we are launching
@@ -113,6 +117,22 @@ public class SokobanSolver {
             return -1;
     }
 
+/*
+    Obtains the optimal number of moves or pushes required by the level that we're solving
+*/
+    public static int getOptimalSolution() {
+        Level l = configuration.getLevel();
+        if (configuration.getExpansionScheme() == ExpansionScheme.MOVE_BASED) {
+            return l.getBestSolution();
+        }
+        else
+            return l.getMinPushes();
+    }
+
+    public static void interrupt() {
+        interrupted = true;
+    }
+
     //A bunch of standard getters and setters
 
     public static void setSolution(Node solution) {
@@ -133,5 +153,9 @@ public class SokobanSolver {
 
     public static Configuration getConfiguration() {
         return configuration;
+    }
+
+    public static boolean isInterrupted() {
+        return interrupted;
     }
 }

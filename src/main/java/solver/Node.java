@@ -263,7 +263,7 @@ public class Node {
         }
 
         //every byte array in the arraylist is merged into just one byte array that will be hashed
-        byte[] toHash = new byte[(bytes.get(0).length) * (bytes.size()) + 5000]; //TODO: check why it goes out of bounds if you don't add stuff (?!)
+        byte[] toHash = new byte[(bytes.get(0).length) * (bytes.size()) + 5000];
         int count = 0;
         for (byte[] array : bytes) {
             for (int i = 0; i < array.length; i++) {

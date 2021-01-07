@@ -1,11 +1,15 @@
 package solver;
 
+import solver.configuration.Strategy;
+
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 /*
 This class is in charge of managing state transpositions
 */
 public class Transposer {
+    private static final Logger log = Logger.getLogger("Transposer");
     //transposition table, using the hashed state as key and the depth at which a state was encountered as value
     private static TreeMap<Long, Integer> transpositionTable = new TreeMap();
 
@@ -33,7 +37,8 @@ public class Transposer {
         }
 
         int oldDepth = transpositionTable.get(nodeHash);
-        if (oldDepth > n.getPathCost()) {
+        if ( (SokobanSolver.getConfiguration().getStrategy().equals(Strategy.IDDFS) || (SokobanSolver.getConfiguration().getStrategy().equals(Strategy.IDASTAR)))
+                && oldDepth > n.getPathCost()) {
             transpositionTable.put(nodeHash, n.getPathCost());
             return true;
         }
@@ -77,8 +82,9 @@ public class Transposer {
         if (!accountingTable.containsKey(n.getHash())) return false;
         else oldLabel = accountingTable.get(n.getHash());
 
-        if (n.getLabel() < oldLabel)
+        if (n.getLabel() < oldLabel) {
             return true;
+        }
         else
             return false;
     }

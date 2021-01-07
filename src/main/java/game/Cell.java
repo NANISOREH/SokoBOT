@@ -77,9 +77,6 @@ public class Cell implements Cloneable, Serializable {
         this.deadPosition = deadPosition;
     }
 
-    /*    public Cell clone () {
-                return new Cell (this.getRow(), this.getColumn(), this.content, this.goal);
-            }*/
     @Override
     public Object clone() throws CloneNotSupportedException {
         Object obj = super.clone();

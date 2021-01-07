@@ -1,7 +1,7 @@
 package solver.configuration;
 
 public enum Heuristic {
-    MINIMUM_PERFECT_MATCHING, NAIVE_MATCHING;
+    NAIVE_MATCHING, MINIMUM_PERFECT_MATCHING;
 
     public static Heuristic mapString(String toMap) {
         switch (toMap) {
