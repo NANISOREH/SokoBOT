@@ -32,7 +32,7 @@ public class BFS extends Algorithm{
         //to a second utility structure that will be expanded the same way on the next iteration.
         //The stopping condition is, of course, finding a node that represents a winning state.
         front.add(root);
-        for (int count = 0; true; count++) {
+        for (int count = 0; !SokobanSolver.isInterrupted(); count++) {
             ArrayList<Node> nextLevel = new ArrayList<>();
             for (Node n : front) {
                 SokobanSolver.setLogLine("Depth level " + count + "\nFront size: " + front.size() + "\nExplored nodes: " + Transposer.getExaminedNodes());
@@ -57,5 +57,6 @@ public class BFS extends Algorithm{
 
         }
 
+        return null;
     }
 }

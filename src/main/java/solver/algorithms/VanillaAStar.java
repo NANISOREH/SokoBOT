@@ -17,7 +17,7 @@ public class VanillaAStar extends Algorithm{
 
         SokobanSolver.setLogLine("Top h(n) value: " + "\nFrontier size: 0" + "\nNumber of visited nodes: " + Transposer.getExaminedNodes());
 
-        //comparing criteria for the PQueue ordering is defined in the ExtendedNode class
+        //comparing criteria for the PQueue ordering is defined in the InformedNode class
         PriorityQueue<InformedNode> frontier = new PriorityQueue<InformedNode>(InformedNode::astarCompare);
 
         //Inserting the root node in the queue, in the accounting structure and the transposition table
@@ -27,10 +27,13 @@ public class VanillaAStar extends Algorithm{
         Transposer.saveLabel(root);
 
         //Main loop of the algorithm, we're only going to break it if we found a solution or if the frontier is empty,
-        while (!frontier.isEmpty()) {
+        while (!frontier.isEmpty() && !SokobanSolver.isInterrupted()) {
 
             //We pop the node with the best heuristic estimate off the PQueue
             InformedNode examined = frontier.remove();
+            //We remove the node we just popped from the structure that keeps the labels for the frontier.
+            //If the heuristic chosen is consistent, then A* doesn't need to keep track of "closed" nodes:
+            //we will be sure that whenever a node is extracted from the frontier, it will be extracted with the best value.
             Transposer.removeLabel(examined);
 
             //SOLUTION
@@ -53,7 +56,7 @@ public class VanillaAStar extends Algorithm{
                     return n;
                 }
 
-                //checking if the expanded node was already reached with a worse label
+                //checking if the expanded node is already in the frontier with a worse label
                 if (Transposer.hasBetterLabel(n)) {
                     //we remove the node from the frontier and insert it again with the new label
                     //because the PQueue does not support arbitrary access to just get the entry and edit the label field
@@ -65,7 +68,7 @@ public class VanillaAStar extends Algorithm{
                 }
                 //checking if the expanded node is already in the transposition table and, if it's not, adding it
                 else if (Transposer.transpose(n)){
-                    //this node is not present in both the frontier and the accounting table, so we just add it
+                    //we add the node to the frontier and we transpose its label for later checking
                     Transposer.saveLabel(n);
                     frontier.add(n);
                 }

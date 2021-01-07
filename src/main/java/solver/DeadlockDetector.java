@@ -115,7 +115,7 @@ public class DeadlockDetector {
             //for every box that's declared frozen, we keep track of whether said box is on a goal or not
             //if all of the boxes touched by this freeze deadlock are on a goal, it's not a real deadlock
             if (box.isGoal()) frozenBoxesOnGoal.add(true);
-            else frozenBoxesOnGoal.add(false);
+            else if (!box.isGoal()) frozenBoxesOnGoal.add(false);
 
             return true;
         }

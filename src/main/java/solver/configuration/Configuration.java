@@ -1,5 +1,7 @@
 package solver.configuration;
 
+import game.Level;
+
 /*
 This class encapsulates a configuration of the solver
 */
@@ -9,22 +11,24 @@ public class Configuration {
     private Strategy strategy;
     private Heuristic heuristic;
     private DDRoutine routine;
+    private Level level;
 
-    private Configuration (ExpansionScheme e, Strategy s, Heuristic h, DDRoutine r) {
+    private Configuration (ExpansionScheme e, Strategy s, Heuristic h, DDRoutine r, Level l) {
         this.expansionScheme = e;
         this.strategy = s;
         this.heuristic = h;
         this.routine = r;
+        this.level = l;
     }
 
-    public static Configuration getInstance(String expansionScheme, String strategy, String heuristic, String routine) {
+    public static Configuration getInstance(String expansionScheme, String strategy, String heuristic, String routine, Level l) {
         Configuration c = new Configuration(ExpansionScheme.mapString(expansionScheme), Strategy.mapString(strategy),
-                Heuristic.mapString(heuristic), DDRoutine.mapString(routine));
+                Heuristic.mapString(heuristic), DDRoutine.mapString(routine), l);
         return c;
     }
 
-    public static Configuration getInstance(ExpansionScheme expansionScheme, Strategy strategy, Heuristic heuristic, DDRoutine routine) {
-        Configuration c = new Configuration(expansionScheme, strategy, heuristic, routine);
+    public static Configuration getInstance(ExpansionScheme expansionScheme, Strategy strategy, Heuristic heuristic, DDRoutine routine, Level l) {
+        Configuration c = new Configuration(expansionScheme, strategy, heuristic, routine, l);
         return c;
     }
 
@@ -60,7 +64,6 @@ public class Configuration {
         this.heuristic = heuristic;
     }
 
-
     public DDRoutine getRoutine() {
         return routine;
     }
@@ -69,4 +72,11 @@ public class Configuration {
         this.routine = routine;
     }
 
+    public Level getLevel() {
+        return level;
+    }
+
+    public void setLevel(Level level) {
+        this.level = level;
+    }
 }

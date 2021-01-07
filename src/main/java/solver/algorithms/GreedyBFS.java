@@ -24,7 +24,7 @@ public class GreedyBFS extends Algorithm{
         Transposer.transpose(root);
 
         //Main loop of the algorithm, we're only going to break it if we found a solution or if the frontier is empty,
-        for (int innerCount = 0; !frontier.isEmpty(); innerCount++) {
+        for (int innerCount = 0; !frontier.isEmpty() && !SokobanSolver.isInterrupted(); innerCount++) {
 
             //We pop the node with the best heuristic estimate off the PQueue and remove it from the accounting table
             InformedNode examined = frontier.remove();

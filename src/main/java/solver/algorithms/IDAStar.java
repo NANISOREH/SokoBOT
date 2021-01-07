@@ -27,7 +27,7 @@ public class IDAStar extends Algorithm{
         int limit = lowerBound;
 
         //Loop of the iterative deepening
-        for (int count = 0; true; count++) {
+        for (int count = 0; !SokobanSolver.isInterrupted(); count++) {
 
             //Resetting everything
             Transposer.resetSearchSpace();
@@ -58,7 +58,7 @@ public class IDAStar extends Algorithm{
                 "\n");
 
         //SOLUTION
-        if (isSolution(root)) {
+        if (isSolution(root) || solution != null) {
             return 0;
         }
 
