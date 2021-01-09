@@ -33,8 +33,6 @@ public class BoardHandler {
     private static int moves, pushes;
     protected static boolean isShowing;
     protected static boolean isSearching;
-
-    protected static Background background = new Background(new BackgroundFill(Color.rgb(54, 54, 54), null, null));
     static {
         sokoban = new Image(MainMenu.class.getResourceAsStream("/sokoban.png"));
         box = new Image(MainMenu.class.getResourceAsStream("/cassa.png"));
@@ -46,14 +44,14 @@ public class BoardHandler {
     protected static GridPane createBoard(GameBoard game) {
         GridPane gameBoard = new GridPane();
         gameBoard.setAlignment(Pos.CENTER);
-        gameBoard.setBackground(background);
+        gameBoard.setBackground(MainMenu.background);
         Cell[][] board = game.getBoard();
         tiles = new Rectangle[game.getRows()][game.getColumns()];
 
         for (int i = 0; i < game.getRows(); i++) {
             for (int j = 0; j < game.getColumns(); j++) {
 
-                Rectangle tile = new Rectangle(50, 50);
+                Rectangle tile = new Rectangle(MainMenu.scaleByResolution(50), MainMenu.scaleByResolution(50));
 
                 switch (board[i][j].getContent()) {
                     case WALL : tile.setFill(new ImagePattern(wall));
@@ -79,7 +77,7 @@ public class BoardHandler {
     }
 
     protected static void updateBoard (GameBoard game, Level level) {
-        if (!isSearching && !isShowing) {
+        if ((!isSearching && !isShowing) || SokobanSolver.isInterrupted()) {
             return;
         }
 
@@ -103,7 +101,7 @@ public class BoardHandler {
 
         //this part concretely handles board updating by drawing the correct item for every cell of the GameBoard object
         //it only gets executed if we're showing a solution after finding it or if we're playing manually
-        if (isShowing) { 
+        if (isShowing && !SokobanSolver.isInterrupted()) {
             for (int i = 0; i < game.getRows(); i++) {
                 for (int j = 0; j < game.getColumns(); j++) {
 
@@ -128,7 +126,7 @@ public class BoardHandler {
             }
         }
 
-        if (!MainMenu.manualGameplay && isShowing) { //text to display when we're showing a solution
+        if (!MainMenu.manualGameplay && isShowing && !SokobanSolver.isInterrupted()) { //text to display when we're showing a solution
             Platform.runLater(() -> {
                 //we show both moves and pushes in case we're expanding by pushes or we found a move optimal solution...
                 if (SokobanSolver.getConfiguration().getExpansionScheme().equals(ExpansionScheme.PUSH_BASED) ||
@@ -153,7 +151,7 @@ public class BoardHandler {
                 if (SokobanSolver.getSolution() == null) isShowing = false;
             });
         }
-        else if (!MainMenu.manualGameplay && isSearching) { //text to display when we're searching for a solution
+        else if (!MainMenu.manualGameplay && isSearching && !SokobanSolver.isInterrupted()) { //text to display when we're searching for a solution
                 Platform.runLater(() -> {
                     String text = "Search in progress. The solution will be demonstrated after the computation.\n" +
                             "\nAlgorithm: " + MainMenu.algorithmValue +

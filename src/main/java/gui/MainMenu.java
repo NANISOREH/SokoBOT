@@ -29,7 +29,7 @@ public class MainMenu extends Application {
     protected static Logger log = Logger.getLogger("Main");
 
     //Elements of the UI
-    protected static Background background = new Background(new BackgroundFill(Color.rgb(54, 54, 54), null, null));
+    protected static Background background = new Background(new BackgroundFill(Color.rgb(36, 36, 36), null, null));
     private static ChoiceBox<Integer> level = new ChoiceBox<>();
     private static ChoiceBox<String> algorithm = new ChoiceBox<>();
     private static ChoiceBox<String> scheme = new ChoiceBox<>();
@@ -148,7 +148,7 @@ public class MainMenu extends Application {
         //Configuring start button
         Button button = new Button("Start computation");
         button.setBackground(new Background(new BackgroundFill(Color.TOMATO, null, null)));
-        button.setPrefSize(scaleByResolution(150), scaleByResolution(30));
+        button.setPrefSize(150, scaleByResolution(30));
         button.setAlignment(Pos.CENTER);
 
 
@@ -158,7 +158,7 @@ public class MainMenu extends Application {
         layout.setBackground(background);
         layout.setSpacing(scaleByResolution(50));
         layout.getChildren().addAll(levelContainer, algorithmSide, expSide, heuristicSide, ddSide, button);
-        menu = new Scene(layout, scaleByResolution(600), scaleByResolution(700));
+        menu = new Scene(layout, 600, 700);
 
         //The button on the first scene triggers the switch to the gameplay scene and starts the game
         button.setOnAction(actionEvent -> {
@@ -189,7 +189,7 @@ public class MainMenu extends Application {
 
     protected static int scaleByResolution (int value) {
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
-        double ratio = primaryScreenBounds.getWidth() / 1920;
+        double ratio = (primaryScreenBounds.getWidth() / 1920) + 0.05;
         return (int) (value * ratio);
     }
 
