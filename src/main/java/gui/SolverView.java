@@ -2,16 +2,18 @@ package gui;
 
 import game.GameBoard;
 import game.Level;
+import javafx.geometry.Insets;
+import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import solver.SokobanSolver;
 import solver.configuration.Configuration;
@@ -30,6 +32,7 @@ public class SolverView {
     private static VBox boardLayout;
     protected static Text result;
     protected static Button back;
+    protected static Image arrow = new Image(MainMenu.class.getResourceAsStream("/back.png"));
 
     protected static void start(Stage primaryStage) {
 
@@ -37,33 +40,54 @@ public class SolverView {
         MainMenu.manualGameplay = false;
         SokobanSolver.setSolution(null);
 
+        //root layout
         boardLayout = new VBox();
         boardLayout.setBackground(MainMenu.background);
-        boardLayout.setAlignment(Pos.CENTER);
-        boardLayout.setSpacing(15);
 
+        //Configuring top label
         Label label1 = new Label("Requires " + toLoad.getBestSolution() + " moves and " +
                 toLoad.getMinPushes() + " pushes");
-        label1.setMaxHeight(60);
-        label1.setMinHeight(60);
         label1.setTextFill(Color.LIGHTGRAY);
-        label1.setAlignment(Pos.CENTER);
-        result = new Text("");
-        result.setFill(Color.LIGHTGRAY);
+        label1.setTextAlignment(TextAlignment.CENTER);
 
-        //Creating, configuring and finally setting the scene for the game itself
+        //Configuring back button
+        ImageView iv = new ImageView(arrow);
+        iv.setFitHeight(80);
+        iv.setFitWidth(80);
+        iv.setPreserveRatio(true);
+        back = new Button();
+        back.setGraphic(iv);
+        back.setBackground(new Background(new BackgroundFill(Color.TRANSPARENT, null, null)));
+        back.setMaxSize(80,80);
+        back.setPrefSize(80,80);
+        back.setPadding(new Insets(10,0,10,10));
+
+        //Dummy right element to center the label in the BorderPane
+        HBox dummy = new HBox();
+        dummy.setPrefSize(80,80);
+
+        //BorderPane to contain the elments at the top
+        BorderPane top = new BorderPane();
+        top.setLeft(back);
+        top.setCenter(label1);
+        top.setRight(dummy);
+
+        //Creating the board
         game = new GameBoard(toLoad);
         GridPane gameBoard = BoardHandler.createBoard(game);
 
-        //Configuring back button
-        back = new Button("Go back to Menu");
-        back.setBackground(new Background(new BackgroundFill(Color.TOMATO, null, null)));
-        back.setPrefSize(150, 30);
-        back.setAlignment(Pos.BOTTOM_CENTER);
+        //Creating the result text (will be updated by BoardHandler during the search)
+        HBox bottom = new HBox();
+        result = new Text("");
+        result.setFill(Color.LIGHTGRAY);
+        result.setTextAlignment(TextAlignment.CENTER);
+        bottom.getChildren().addAll(result);
+        bottom.setMinSize(600, 170);
+        bottom.setAlignment(Pos.CENTER);
 
-        boardLayout.getChildren().addAll(label1, gameBoard, result, back);
-        Scene gameScene = new Scene(boardLayout, 1100, 840);
-
+        //Configuring and showing the scene
+        boardLayout.getChildren().addAll(top, gameBoard, bottom);
+        Scene gameScene = new Scene(boardLayout);
         primaryStage.close();
         primaryStage.setScene(gameScene);
         primaryStage.setTitle("SokoBOT - Level " + MainMenu.levelValue);
