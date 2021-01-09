@@ -46,10 +46,12 @@ public class ManualGameplayView {
         inGame.setText("Moves: " + moves + "\n\n\n");
         inGame.setFill(Color.LIGHTGRAY);
         boardLayout.getChildren().addAll(gameBoard, inGame);
+        boardLayout.setMinWidth(350);
         Scene gameScene = new Scene(boardLayout);
 
         Stage gameStage = new Stage();
         gameStage.setScene(gameScene);
+        gameStage.setTitle("Level " + MainMenu.levelValue);
         gameStage.show();
 
         DeadlockDetector.setRoutine(DDRoutine.DEAD_POSITIONS);

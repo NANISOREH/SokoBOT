@@ -75,6 +75,7 @@ public class SolverView {
         //Creating the board
         game = new GameBoard(toLoad);
         GridPane gameBoard = BoardHandler.createBoard(game);
+        gameBoard.setPadding(new Insets(0,30,0,30));
 
         //Creating the result text (will be updated by BoardHandler during the search)
         HBox bottom = new HBox();
