@@ -4,10 +4,12 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import game.Level;
 import solver.DeadlockDetector;
@@ -52,7 +54,7 @@ public class MainMenu extends Application {
         //Configuring level selection label and choicebox, and play manually button
         HBox levelContainer = new HBox();
         levelContainer.setAlignment(Pos.CENTER);
-        levelContainer.setSpacing(30);
+        levelContainer.setSpacing(scaleByResolution(30));
         Button button2 = new Button("Play manually");
         button2.setAlignment(Pos.BOTTOM_CENTER);
         button2.setOnAction(actionEvent -> {
@@ -74,7 +76,7 @@ public class MainMenu extends Application {
             levels.add(i);
         }
         level.setValue(levels.get(0));
-        levelSide.setSpacing(15);
+        levelSide.setSpacing(scaleByResolution(15));
         levelSide.setAlignment(Pos.CENTER);
         levelSide.getChildren().addAll(label1, level);
         levelContainer.getChildren().addAll(levelSide, button2);
@@ -91,7 +93,7 @@ public class MainMenu extends Application {
         }
         strategies.addAll(finalNames);
         algorithm.setValue(strategies.get(0));
-        algorithmSide.setSpacing(15);
+        algorithmSide.setSpacing(scaleByResolution(15));
         algorithmSide.setAlignment(Pos.CENTER);
         algorithmSide.getChildren().addAll(label2, algorithm);
 
@@ -107,7 +109,7 @@ public class MainMenu extends Application {
         }
         schemes.addAll(schemeNames);
         scheme.setValue(schemeNames.get(0));
-        expSide.setSpacing(15);
+        expSide.setSpacing(scaleByResolution(15));
         expSide.setAlignment(Pos.CENTER);
         expSide.getChildren().addAll(label3, scheme);
 
@@ -123,7 +125,7 @@ public class MainMenu extends Application {
         }
         heuristics.addAll(heuristicNames);
         heuristic.setValue(heuristicNames.get(0));
-        heuristicSide.setSpacing(15);
+        heuristicSide.setSpacing(scaleByResolution(15));
         heuristicSide.setAlignment(Pos.CENTER);
         heuristicSide.getChildren().addAll(label4, heuristic);
 
@@ -139,14 +141,14 @@ public class MainMenu extends Application {
         }
         routines.addAll(routineNames);
         routine.setValue(routineNames.get(0));
-        ddSide.setSpacing(15);
+        ddSide.setSpacing(scaleByResolution(15));
         ddSide.setAlignment(Pos.CENTER);
         ddSide.getChildren().addAll(label5, routine);
 
         //Configuring start button
         Button button = new Button("Start computation");
         button.setBackground(new Background(new BackgroundFill(Color.TOMATO, null, null)));
-        button.setPrefSize(150, 30);
+        button.setPrefSize(scaleByResolution(150), scaleByResolution(30));
         button.setAlignment(Pos.CENTER);
 
 
@@ -154,9 +156,9 @@ public class MainMenu extends Application {
         VBox layout = new VBox();
         layout.setAlignment(Pos.CENTER);
         layout.setBackground(background);
-        layout.setSpacing(50);
+        layout.setSpacing(scaleByResolution(50));
         layout.getChildren().addAll(levelContainer, algorithmSide, expSide, heuristicSide, ddSide, button);
-        menu = new Scene(layout, 600, 700);
+        menu = new Scene(layout, scaleByResolution(600), scaleByResolution(700));
 
         //The button on the first scene triggers the switch to the gameplay scene and starts the game
         button.setOnAction(actionEvent -> {
@@ -183,6 +185,12 @@ public class MainMenu extends Application {
 
     public static void main(String[] args) {
         launch(args);
+    }
+
+    protected static int scaleByResolution (int value) {
+        Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
+        double ratio = primaryScreenBounds.getWidth() / 1920;
+        return (int) (value * ratio);
     }
 
 }

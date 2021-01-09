@@ -57,8 +57,8 @@ public class IDAStar extends Algorithm{
         SokobanSolver.setLogLine("f(n) cutoff point: " + limit + "\nVisited nodes: " + Transposer.getExaminedNodes() +
                 "\n");
 
-        //SOLUTION
-        if (isSolution(root) || solution != null) {
+        //SOLUTION OR INTERRUPTED SEARCH
+        if (isSolution(root) || solution != null || SokobanSolver.isInterrupted()) {
             return 0;
         }
 

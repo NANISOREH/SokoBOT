@@ -33,7 +33,7 @@ public class ManualGameplayView {
         boardLayout = new VBox();
         boardLayout.setBackground(MainMenu.background);
         boardLayout.setAlignment(Pos.CENTER);
-        boardLayout.setSpacing(15);
+        boardLayout.setSpacing(MainMenu.scaleByResolution(15));
 
         toLoad = new Level(MainMenu.levelValue);
 
