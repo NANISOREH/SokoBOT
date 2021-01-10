@@ -67,35 +67,6 @@ public class InformedNode extends Node{
         return exNodes;
     }
 
-    //Compare method to give a PQueue ordering criteria for greedy best-first search
-    public static int gbfsCompare(InformedNode informedNode, InformedNode t1) {
-        int comparison = Integer.compare(informedNode.getLabel(), t1.getLabel());
-
-            //tie breaker: inertia
-            if (comparison == 0 && informedNode.getParent() != null && t1.getParent() != null)
-                comparison = SokobanToolkit.compareByInertia(informedNode, t1, informedNode.getParent(), t1.getParent());
-
-            return comparison;
-    }
-
-    //Compare method to give a PQueue ordering criteria for A* search
-    public static int astarCompare(InformedNode informedNode, InformedNode t1) {
-        //main criteria for insertion into the pqueue
-        //it will favor the lowest f(n) label value among the two nodes
-        int comparison = Integer.compare(informedNode.getLabel(), t1.getLabel());
-
-        //tie breaker: inertia
-        if (comparison == 0 && informedNode.getParent() != null && t1.getParent() != null)
-            comparison = SokobanToolkit.compareByInertia(informedNode, t1, informedNode.getParent(), t1.getParent());
-
-        //tie breaker: heuristics without the path cost
-        if (comparison == 0)
-            comparison = Integer.compare(informedNode.getLabel() - informedNode.getPathCost(),
-                    t1.getLabel() - t1.getPathCost());
-
-        return comparison;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -82,11 +82,7 @@ public class Transposer {
         if (!accountingTable.containsKey(n.getHash())) return false;
         else oldLabel = accountingTable.get(n.getHash());
 
-        if (n.getLabel() < oldLabel) {
-            return true;
-        }
-        else
-            return false;
+        return n.getLabel() < oldLabel;
     }
 
     public static long getExaminedNodes() {
@@ -96,9 +92,5 @@ public class Transposer {
     public static void resetSearchSpace() {
         transpositionTable.clear();
         accountingTable.clear();
-    }
-
-    public static void setTranspositionTable(TreeMap<Long, Integer> transpositionTable) {
-        Transposer.transpositionTable = transpositionTable;
     }
 }

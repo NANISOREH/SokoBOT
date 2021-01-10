@@ -42,7 +42,7 @@ public class IDDFS extends Algorithm{
                 current = visited.pop();
 
                 //SOLUTION
-                if (isSolution(current)) return current;
+                if (current.isGoal(solution)) return current;
 
                 //we surpassed the depth limit, we won't expand this node
                 if (current.getPathCost() == limit) continue;
@@ -53,7 +53,7 @@ public class IDDFS extends Algorithm{
                 for (int i = expanded.size() - 1; i >= 0; i--) {
                     Node n = expanded.get(i);
 
-                    if (isSolution(n)) return n;
+                    if (n.isGoal(solution)) return n;
                     if (current.getPathCost() == limit) continue;
 
                     if (Transposer.transpose(n)) {
@@ -69,25 +69,5 @@ public class IDDFS extends Algorithm{
 
         }
     }
-
-    //checks for the solution and updates the solution static variable if we didn't already find a better one
-    private static boolean isSolution(Node n) {
-        if (n.isGoal()) {
-            if (solution == null) {
-                solution = n;
-            }
-            else if (solution != null && n.getPathCost() < solution.getPathCost()) {
-                solution = n;
-            }
-            else if (solution != null && n.getPathCost() == solution.getPathCost()) {
-                if (n.getActionHistory().size() < solution.getActionHistory().size())
-                    solution = n;
-            }
-            return true;
-        }
-
-        return false;
-    }
-
 
 }

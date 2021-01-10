@@ -300,10 +300,33 @@ public class Node {
         return no.longValue();
     }
 
+/*
+    Simply checks if this node is a solution
+*/
     public boolean isGoal() {
         return this.getGame().checkVictory();
     }
 
+/*
+    Checks if the node is a solution and updates a solution variable if the new solution is an improvement
+*/
+    public boolean isGoal(Node solution) {
+        if (this.isGoal() && solution.isGoal()) {
+            if (solution == null) {
+                solution = this;
+            }
+            else if (solution != null && this.getPathCost() < solution.getPathCost()) {
+                solution = this;
+            }
+            else if (solution != null && this.getPathCost() == solution.getPathCost()) {
+                if (this.getActionHistory().size() < solution.getActionHistory().size())
+                    solution = this;
+            }
+            return true;
+        }
+
+        return false;
+    }
 
     //GETTERS AND SETTERS
 
