@@ -15,9 +15,7 @@ import game.Level;
 import solver.DeadlockDetector;
 import solver.configuration.*;
 
-import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -47,7 +45,7 @@ public class MainMenu extends Application {
 
 
     @Override
-    public void start(Stage primaryStage) throws IOException {
+    public void start(Stage primaryStage) {
         //Starting precomputation of the level-independent deadlocks as early as possible
         DeadlockDetector.populateDeadlocks();
 
@@ -88,7 +86,7 @@ public class MainMenu extends Application {
         algorithm.setValue(null);
         ObservableList<String> strategies = algorithm.getItems();
         List<String> finalNames = new ArrayList<>();
-        for (Strategy strategy : Arrays.asList(Strategy.values())) {
+        for (Strategy strategy : Strategy.values()) {
             finalNames.add(Strategy.mapStrategy(strategy));
         }
         strategies.addAll(finalNames);
@@ -104,7 +102,7 @@ public class MainMenu extends Application {
         scheme.setValue(null);
         ObservableList<String> schemes = scheme.getItems();
         List<String> schemeNames = new ArrayList<>();
-        for (ExpansionScheme e : Arrays.asList(ExpansionScheme.values())) {
+        for (ExpansionScheme e : ExpansionScheme.values()) {
             schemeNames.add(ExpansionScheme.mapExpansionScheme(e));
         }
         schemes.addAll(schemeNames);
@@ -120,7 +118,7 @@ public class MainMenu extends Application {
         heuristic.setValue(null);
         ObservableList<String> heuristics = heuristic.getItems();
         List<String> heuristicNames = new ArrayList<>();
-        for (Heuristic h : Arrays.asList(Heuristic.values())) {
+        for (Heuristic h : Heuristic.values()) {
             heuristicNames.add(Heuristic.mapHeuristic(h));
         }
         heuristics.addAll(heuristicNames);
@@ -136,7 +134,7 @@ public class MainMenu extends Application {
         routine.setValue(null);
         ObservableList<String> routines = routine.getItems();
         List<String> routineNames = new ArrayList<>();
-        for (DDRoutine d : Arrays.asList(DDRoutine.values())) {
+        for (DDRoutine d : DDRoutine.values()) {
             routineNames.add(DDRoutine.mapDDRoutine(d));
         }
         routines.addAll(routineNames);

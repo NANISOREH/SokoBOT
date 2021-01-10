@@ -26,11 +26,10 @@ public class ManualGameplayView {
     private static Level toLoad;
     private static GameBoard game;
     private static int moves;
-    protected static VBox boardLayout;
     static Node test;
 
     static void start() throws CloneNotSupportedException {
-        boardLayout = new VBox();
+        VBox boardLayout = new VBox();
         boardLayout.setBackground(MainMenu.background);
         boardLayout.setAlignment(Pos.CENTER);
         boardLayout.setSpacing(MainMenu.scaleByResolution(15));

@@ -1,6 +1,5 @@
 package solver.algorithms;
 
-import game.Action;
 import game.GameBoard;
 import solver.Node;
 import solver.SokobanSolver;
@@ -13,7 +12,7 @@ import java.util.logging.Logger;
 Implementation of a simple BFS search
 */
 public class BFS extends Algorithm{
-    private static Logger log = Logger.getLogger("BFS");
+    private static final Logger log = Logger.getLogger("BFS");
 
     public Node launch(GameBoard game) throws CloneNotSupportedException {
 
@@ -22,7 +21,7 @@ public class BFS extends Algorithm{
         //Utility data structure used to isolate the nodes inside the "frontier" of the search, the ones we will need to
         //expand in the current iteration. It's initialized by adding the first frontier, with only the root node inside
         ArrayList<Node> front = new ArrayList<>();
-        Node root = new Node(game, new ArrayList<Action>());
+        Node root = new Node(game, new ArrayList<>());
         if (root.isGoal()) {
             return root;
         }

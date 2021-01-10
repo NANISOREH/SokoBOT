@@ -6,20 +6,16 @@ import game.Level;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.image.Image;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 import solver.DeadlockDetector;
-import solver.Node;
 import solver.SokobanSolver;
 import solver.Transposer;
 import solver.configuration.ExpansionScheme;
 import solver.configuration.Strategy;
 
-import java.util.concurrent.TransferQueue;
 import java.util.logging.Logger;
 
 // This class manages the creation and the updating of the game board during both search and manual play
@@ -156,7 +152,7 @@ public class BoardHandler {
                     String text = "Search in progress. The solution will be demonstrated after the computation.\n" +
                             "\nAlgorithm: " + MainMenu.algorithmValue +
                             "\nExpansion scheme: " + MainMenu.schemeValue;
-                    if (MainMenu.algorithmValue != Strategy.mapStrategy(Strategy.BFS))
+                    if (!MainMenu.algorithmValue.equals(Strategy.mapStrategy(Strategy.BFS)))
                         text += "\nHeuristic evaluation: " + MainMenu.heuristicValue + "\n\n";
                     else
                         text += "\n\n";

@@ -58,7 +58,7 @@ public class IDAStar extends Algorithm{
                 "\n");
 
         //SOLUTION OR INTERRUPTED SEARCH
-        if (isSolution(root) || solution != null || SokobanSolver.isInterrupted()) {
+        if (root.isGoal(solution) || solution != null || SokobanSolver.isInterrupted()) {
             return 0;
         }
 
@@ -68,7 +68,8 @@ public class IDAStar extends Algorithm{
         }
 
         //this queue will keep the expanded batch of nodes ordered by heuristic estimate
-        PriorityQueue<InformedNode> queue = new PriorityQueue<InformedNode>(InformedNode::astarCompare);
+        //we're reusing the PQueue comparing method from vanilla A*
+        PriorityQueue<InformedNode> queue = new PriorityQueue<>(VanillaAStar::astarCompare);
 
         //expanding the current node and launching the search on its children
         //ordered by their labels
@@ -90,7 +91,7 @@ public class IDAStar extends Algorithm{
         int min = Integer.MAX_VALUE;
         int temp;
         for (int i = 0; i < size; i++) {
-            if (isSolution(queue.peek())) return 0;
+            if (queue.peek().isGoal(solution)) return 0;
             else temp = recursiveComponent(queue.remove(), pathLength + 1, limit);
 
             if (temp < min) min = temp;
@@ -98,25 +99,6 @@ public class IDAStar extends Algorithm{
 
         //returning the minimum to the father of the current node
         return min;
-    }
-
-    //checks for the solution and updates the solution static variable if we didn't already find a better one
-    private static boolean isSolution(Node n) {
-        if (n.isGoal()) {
-            if (solution == null) {
-                solution = n;
-            }
-            else if (solution != null && n.getPathCost() < solution.getPathCost()) {
-                solution = n;
-            }
-            else if (solution != null && n.getPathCost() == solution.getPathCost()) {
-                if (n.getActionHistory().size() < solution.getActionHistory().size())
-                    solution = n;
-            }
-            return true;
-        }
-
-        return false;
     }
 
 }
