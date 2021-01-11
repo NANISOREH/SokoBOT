@@ -21,7 +21,11 @@ public class SokobanToolkit {
     private static Heuristic heuristic = Heuristic.MINIMUM_PERFECT_MATCHING;
     private static Logger log = Logger.getLogger("SokobanToolkit");
 
-    public static int estimateLowerBound(GameBoard toSolve) {
+    /*
+        Public facade method to obtain a heuristic estimate of a given state.
+        The heuristic used will be the one that was set by the client before the search was started.
+    */
+    public static int heuristicEstimate(GameBoard toSolve) {
         switch (heuristic) {
             case NAIVE_MATCHING: {
                 return estimateNaively(toSolve);
@@ -32,6 +36,14 @@ public class SokobanToolkit {
         }
 
         return -1;
+    }
+
+    /*
+        Public method to obtain an initial lower bound of the solution, before starting the search.
+        The most accurate heuristic is always used for this task, regardless of the choice of the client.
+    */
+    public static int estimateLowerBound (GameBoard toSolve) {
+        return estimateProperly(toSolve);
     }
 
     /*

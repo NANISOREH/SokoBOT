@@ -86,7 +86,7 @@ public class SolverView {
         top.setLeft(back);
         top.setCenter(label1);
         top.setRight(dummy);
-        top.setPadding(new Insets(5,5,5,5));
+        top.setPadding(new Insets(10,5,10,5));
 
         //Creating the board
         game = new GameBoard(toLoad);

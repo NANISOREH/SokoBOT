@@ -22,8 +22,8 @@ public class IDAStar extends Algorithm{
         //initializing variables, adding root node to the cache, starting with the initial lower bound of the solution
         //as the first limit for the iterative deepening
         solution = null;
-        InformedNode root = new InformedNode(new Node(game, new ArrayList<>()), null, 0 + SokobanToolkit.estimateLowerBound(game));
-        int lowerBound = root.getLabel();
+        InformedNode root = new InformedNode(new Node(game, new ArrayList<>()), null, 0 + SokobanToolkit.heuristicEstimate(game));
+        int lowerBound = SokobanToolkit.estimateLowerBound(game);
         int limit = lowerBound;
 
         //Loop of the iterative deepening
@@ -58,7 +58,8 @@ public class IDAStar extends Algorithm{
                 "\n");
 
         //SOLUTION OR INTERRUPTED SEARCH
-        if (root.isGoal(solution) || solution != null || SokobanSolver.isInterrupted()) {
+        if (root.isBetterGoalThan(solution) || SokobanSolver.isInterrupted()) {
+            solution = root;
             return 0;
         }
 
@@ -69,7 +70,7 @@ public class IDAStar extends Algorithm{
 
         //this queue will keep the expanded batch of nodes ordered by heuristic estimate
         //we're reusing the PQueue comparing method from vanilla A*
-        PriorityQueue<InformedNode> queue = new PriorityQueue<>(VanillaAStar::astarCompare);
+        PriorityQueue<InformedNode> queue = new PriorityQueue<>(VanillaAStar::compare);
 
         //expanding the current node and launching the search on its children
         //ordered by their labels
@@ -78,7 +79,7 @@ public class IDAStar extends Algorithm{
             if (!Transposer.transpose(n))
                 continue;
             else {
-                n.setLabel(pathLength + SokobanToolkit.estimateLowerBound(n.getGame()));
+                n.setLabel(pathLength + SokobanToolkit.heuristicEstimate(n.getGame()));
                 queue.add(n);
             }
         }
@@ -91,7 +92,10 @@ public class IDAStar extends Algorithm{
         int min = Integer.MAX_VALUE;
         int temp;
         for (int i = 0; i < size; i++) {
-            if (queue.peek().isGoal(solution)) return 0;
+            if (queue.peek().isBetterGoalThan(solution)) {
+                solution = queue.peek();
+                return 0;
+            }
             else temp = recursiveComponent(queue.remove(), pathLength + 1, limit);
 
             if (temp < min) min = temp;

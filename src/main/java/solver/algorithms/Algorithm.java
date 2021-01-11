@@ -7,6 +7,7 @@ import solver.configuration.Strategy;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.PriorityQueue;
+import java.util.logging.Logger;
 
 /*
 Abstract algorithm. The class provides a static method to get an instance of algorithm by showing a Strategy enum.
@@ -15,6 +16,7 @@ they don't really know or care which algorithms are available and how they opera
 and flip it to getInstance, then they use the launch(game) method on it
 */
 public abstract class Algorithm {
+    static final Logger log = Logger.getLogger("Algorithm");
 
     public static Algorithm getInstance(Strategy strategy) {
         switch (strategy) {
@@ -39,22 +41,32 @@ public abstract class Algorithm {
 
     abstract public Node launch (GameBoard game) throws CloneNotSupportedException;
 
+
+/*
+    Functional interface with the label assignment method
+    Used to abstract label assignment in the generic PQueue algorithm below
+*/
+    interface Labeler {
+        public void assignLabel (InformedNode informedNode);
+    }
+
 /*
     This method can generalize any "Dijkstra-like" PQueue based search algorithm. It can be used for A*,
-    for a best-first search as well as a uniform cost search. You just have to pass it a proper comparator to keep
-    the PQueue ordered the way the algorithm requires and to update the label variable in the InformedNode after expansion.
+    for a best-first search as well as a uniform cost search.
+    You just have to pass it a proper comparator to keep the PQueue ordered the way the algorithm requires
+    and a label assigning method to update the label variable in the InformedNode after expansion.
 
     For A*, the label f(n) of a node n is equals to g(n) + h(n), where g(n) is the path cost and h(n) is the heuristic estimation.
     In a best-first search f(n) = h(n), whereas for a uniform cost search it would be f(n) = g(n).
 */
-    protected Node launchPQueueSearch (GameBoard game, Comparator <InformedNode> c) throws CloneNotSupportedException {
+    protected Node launchPQueueSearch (GameBoard game, Comparator <InformedNode> c, Labeler l) throws CloneNotSupportedException {
         SokobanSolver.setLogLine("Top h(n) value: " + "\nFrontier size: 0" + "\nNumber of visited nodes: " + Transposer.getExaminedNodes());
 
         //comparing criteria for the PQueue ordering is passed in the Comparator variable
         PriorityQueue<InformedNode> frontier = new PriorityQueue<InformedNode>(c);
 
         //Inserting the root node in the queue, in the accounting structure and the transposition table
-        InformedNode root = new InformedNode(game, new ArrayList<>(), null, SokobanToolkit.estimateLowerBound(game));
+        InformedNode root = new InformedNode(game, new ArrayList<>(), null, SokobanToolkit.heuristicEstimate(game));
         frontier.add(root);
         Transposer.transpose(root);
         Transposer.saveLabel(root);
@@ -77,8 +89,11 @@ public abstract class Algorithm {
             //expanding the current node and adding the resulting nodes to the frontier Pqueue
             ArrayList<InformedNode> expanded = (ArrayList<InformedNode>) examined.expand();
 
-            //examining the expanded nodes
+            //examining the expanded nodes and determining if we should add them to the frontier
+            //note that label updating is not concretely implemented here, to keep this method generalized
             for (InformedNode n : expanded) {
+                l.assignLabel(n);
+
                 //SOLUTION
                 if (n.isGoal()) {
                     return n;

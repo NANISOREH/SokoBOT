@@ -61,7 +61,9 @@ public class InformedNode extends Node{
         ArrayList<InformedNode> exNodes = new ArrayList<>();
 
         for (Node n : nodes) {
-            exNodes.add(new InformedNode(n, this, 0));
+            //we assign a negative label to the new nodes so that we can recognize newborn, unlabeled nodes
+            //we can't label them right now because we don't necessarily know what is the labeling criteria
+            exNodes.add(new InformedNode(n, this, -1));
         }
 
         return exNodes;
