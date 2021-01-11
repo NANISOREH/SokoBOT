@@ -177,6 +177,7 @@ public class MainMenu extends Application {
 
         //setting and showing the primary stage for the first start of the application
         primaryStage.setTitle("SokoBOT");
+        primaryStage.setResizable(false);
         primaryStage.setScene(menu);
         primaryStage.show();
     }
@@ -187,7 +188,10 @@ public class MainMenu extends Application {
 
     protected static int scaleByResolution (int value) {
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
-        double ratio = (primaryScreenBounds.getWidth() / 1920) + 0.05;
+        int width = (int) primaryScreenBounds.getWidth();
+        if (width >= 1920) return value;
+
+        double ratio = (primaryScreenBounds.getWidth() / 1920) + 0.07;
         return (int) (value * ratio);
     }
 

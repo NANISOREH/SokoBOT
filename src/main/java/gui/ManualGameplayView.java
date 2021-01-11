@@ -51,6 +51,7 @@ public class ManualGameplayView {
         Stage gameStage = new Stage();
         gameStage.setScene(gameScene);
         gameStage.setTitle("Level " + MainMenu.levelValue);
+        gameStage.setResizable(false);
         gameStage.show();
 
         DeadlockDetector.setRoutine(DDRoutine.DEAD_POSITIONS);
