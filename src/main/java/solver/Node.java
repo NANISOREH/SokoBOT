@@ -308,21 +308,20 @@ public class Node {
     }
 
 /*
-    Checks if the node is a solution and updates a solution variable if the new solution is an improvement
+    Checks if the node is a solution and improves upon a different solution node given as a parameter
 */
-    public boolean isGoal(Node solution) {
-        if (this.isGoal() && solution.isGoal()) {
-            if (solution == null) {
-                solution = this;
+    public boolean isBetterGoalThan(Node solution) throws CloneNotSupportedException {
+        if (this.isGoal()) {
+            if (solution == null || !solution.isGoal()) {
+                return true;
             }
             else if (solution != null && this.getPathCost() < solution.getPathCost()) {
-                solution = this;
+                return true;
             }
             else if (solution != null && this.getPathCost() == solution.getPathCost()) {
                 if (this.getActionHistory().size() < solution.getActionHistory().size())
-                    solution = this;
+                    return true;
             }
-            return true;
         }
 
         return false;

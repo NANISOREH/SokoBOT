@@ -26,7 +26,7 @@ public class IDDFS extends Algorithm{
         //as the first limit for the iterative deepening
         solution = null;
         Node root = new Node(game, new ArrayList<>());
-        int limit = SokobanToolkit.estimateLowerBound(root.getGame());
+        int limit = SokobanToolkit.estimateLowerBound(game);
 
         //Loop of the iterative deepening
         for (int count = 0; true; count++) {
@@ -42,7 +42,7 @@ public class IDDFS extends Algorithm{
                 current = visited.pop();
 
                 //SOLUTION
-                if (current.isGoal(solution)) return current;
+                if (current.isBetterGoalThan(solution)) return current;
 
                 //we surpassed the depth limit, we won't expand this node
                 if (current.getPathCost() == limit) continue;
@@ -53,7 +53,7 @@ public class IDDFS extends Algorithm{
                 for (int i = expanded.size() - 1; i >= 0; i--) {
                     Node n = expanded.get(i);
 
-                    if (n.isGoal(solution)) return n;
+                    if (n.isBetterGoalThan(solution)) return n;
                     if (current.getPathCost() == limit) continue;
 
                     if (Transposer.transpose(n)) {

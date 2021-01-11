@@ -69,7 +69,7 @@ public class ManualGameplayView {
                             if (game.takeAction(Action.MOVE_UP))
                                 moves++;
                         }
-                        log.info("hash " + test.hash() + "\nlower bound " + SokobanToolkit.estimateLowerBound(game));
+                        log.info("hash " + test.hash() + "\nlower bound " + SokobanToolkit.heuristicEstimate(game));
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
@@ -82,7 +82,7 @@ public class ManualGameplayView {
                             if (game.takeAction(Action.MOVE_DOWN))
                                 moves++;
                         }
-                        log.info("hash " + test.hash() + "\nlower bound " + SokobanToolkit.estimateLowerBound(game));
+                        log.info("hash " + test.hash() + "\nlower bound " + SokobanToolkit.heuristicEstimate(game));
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
@@ -95,7 +95,7 @@ public class ManualGameplayView {
                             if (game.takeAction(Action.MOVE_RIGHT))
                                 moves++;
                         }
-                        log.info("hash " + test.hash() + "\nlower bound " + SokobanToolkit.estimateLowerBound(game));
+                        log.info("hash " + test.hash() + "\nlower bound " + SokobanToolkit.heuristicEstimate(game));
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }
@@ -108,7 +108,7 @@ public class ManualGameplayView {
                             if (game.takeAction(Action.MOVE_LEFT))
                                 moves++;
                         }
-                        log.info("hash " + test.hash() + "\nlower bound " + SokobanToolkit.estimateLowerBound(game));
+                        log.info("hash " + test.hash() + "\nlower bound " + SokobanToolkit.heuristicEstimate(game));
                     } catch (CloneNotSupportedException e) {
                         e.printStackTrace();
                     }

@@ -28,7 +28,8 @@ public class SokobanSolver {
 /*
     Static method that acts as a façade between the client and the actual algorithms.
     It takes a GameBoard configured with the level to solve, and the strategy chosen by the client to solve it,
-    and launches the search accordingly. If a solution is found, it acts upon the original GameBoard to show it.
+    then configures and launches the search accordingly.
+    If a solution is found, it acts upon the original GameBoard to show it.
 */
     public static void solve(GameBoard toSolve, Configuration c) throws InterruptedException, CloneNotSupportedException {
 

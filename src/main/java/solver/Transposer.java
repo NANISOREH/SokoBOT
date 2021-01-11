@@ -23,7 +23,7 @@ public class Transposer {
     Note that we update the transposition if the node was already found at a deeper level, and we return true
     anyway. This allows dfs-like algorithms to function properly, without cutting proper paths after backtracking.
 
-    Sidenote: I've crammed a isPresent(node) type of method and a transpose(node) type of method into the same one,
+    Sidenote: I've crammed an isPresent(node) type of method and a transpose(node) type of method into the same one,
     because the transposition table is ALWAYS used in a "if not present then add" fashion anyway...
     this way, you'll often find something like:
     if (Transposer.transpose(node))
@@ -37,8 +37,10 @@ public class Transposer {
         }
 
         int oldDepth = transpositionTable.get(nodeHash);
-        if ( (SokobanSolver.getConfiguration().getStrategy().equals(Strategy.IDDFS) || (SokobanSolver.getConfiguration().getStrategy().equals(Strategy.IDASTAR)))
-                && oldDepth > n.getPathCost()) {
+        if ((SokobanSolver.getConfiguration().getStrategy().equals(Strategy.IDDFS) ||
+            (SokobanSolver.getConfiguration().getStrategy().equals(Strategy.IDASTAR)))
+            && oldDepth > n.getPathCost()
+        ) {
             transpositionTable.put(nodeHash, n.getPathCost());
             return true;
         }
