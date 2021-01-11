@@ -107,6 +107,7 @@ public class SolverView {
         Scene gameScene = new Scene(boardLayout);
         primaryStage.close();
         primaryStage.setScene(gameScene);
+        primaryStage.setResizable(false);
         primaryStage.setTitle("SokoBOT - Level " + MainMenu.levelValue);
         primaryStage.show();
 
@@ -138,6 +139,7 @@ public class SolverView {
             primaryStage.close();
             primaryStage.setTitle("SokoBOT");
             primaryStage.setScene(MainMenu.menu);
+            primaryStage.setResizable(false);
             primaryStage.show();
         });
     }
