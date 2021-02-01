@@ -94,11 +94,6 @@ public abstract class Algorithm {
             for (InformedNode n : expanded) {
                 l.assignLabel(n);
 
-                //SOLUTION
-                if (n.isGoal()) {
-                    return n;
-                }
-
                 //checking if the expanded node is already in the frontier with a worse label
                 if (Transposer.hasBetterLabel(n)) {
                     //we remove the node from the frontier and insert it again with the new label
